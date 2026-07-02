@@ -1,2 +1,2 @@
 # SimpleForum
-SimpleLogin Fullstack
+SimpleForum Fullstack
