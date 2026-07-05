@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 export function Signup() {
+    document.title ="Signup | SimpleForum";
+
     return (
         <>
             <nav className="p-7">
@@ -44,7 +46,7 @@ export function Signup() {
                             </form>
                         </CardContent>
                         <CardFooter>
-                            <Button className="cursor-pointer hover:bg-[#9ec1a3] transition-all duration-500 ease-in-out">Sign Up</Button>
+                            <Button className="cursor-pointer hover:bg-[#9ec1a3] transition-all duration-300 ease-in-out">Sign Up</Button>
                         </CardFooter>
                     </Card>
                 </div>
