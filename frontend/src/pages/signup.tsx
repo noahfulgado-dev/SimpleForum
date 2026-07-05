@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
-export function Login() {
+export function Signup() {
     return (
         <>
             <nav className="p-7">
@@ -25,8 +25,8 @@ export function Login() {
                     </h1>
                     <Card className="w-125 h-[400] rounded-none drop-shadow-none font-lexend">
                         <CardHeader>
-                            <CardTitle className="text-4xl text-left text-box-trim">Login</CardTitle>
-                            <Link to="/signup"><CardAction className="under">Sign Up</CardAction></Link>
+                            <CardTitle className="text-4xl text-left text-box-trim">Sign Up</CardTitle>
+                            <Link to="/login"><CardAction className="under">Login</CardAction></Link>
                         </CardHeader>
                         <CardContent>
                             <form>
@@ -36,13 +36,15 @@ export function Login() {
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <Input className="rounded-none" id="password" type="password" placeholder="Password" required />
-                                        <a className="text-[0.7em] cursor-pointer hover:text-[#9ec1a3] transition-all duration-500 ease-in-out underline">Forgot your password?</a>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <Input className="rounded-none" id="password" type="password" placeholder="Confirm Password" required />
                                     </div>
                                 </div>
                             </form>
                         </CardContent>
                         <CardFooter>
-                            <Button className="cursor-pointer hover:bg-[#9ec1a3] transition-all duration-500 ease-in-out">Login</Button>
+                            <Button className="cursor-pointer hover:bg-[#9ec1a3] transition-all duration-500 ease-in-out">Sign Up</Button>
                         </CardFooter>
                     </Card>
                 </div>
