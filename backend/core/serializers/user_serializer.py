@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username']
         read_only_fields = ['id', 'username', 'email']
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -17,7 +17,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     replies = serializers.SerializerMethodField()
 
     # Counts
-    topic_count = serializers.IntegerField(source='topic.count', read_only=True)
+    topic_count = serializers.IntegerField(source='topics.count', read_only=True)
     reply_count = serializers.IntegerField(source='replies.count', read_only=True)
 
     class Meta:
@@ -25,9 +25,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'username',
-            'email',
-            'first_name',
-            'last_name',
             'topics',
             'replies',
             'topic_count',
@@ -43,6 +40,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_replies(self, obj):
         """Get all replies by this user with limited fields"""
         from core.serializers.reply_serializer import ReplySerializer
-        replies = obj.topics.all()[:10]
+        replies = obj.replies.all()[:10]
         return ReplySerializer(replies, many=True, context=self.context).data
     

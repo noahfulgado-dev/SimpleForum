@@ -24,7 +24,7 @@ schema_view = get_schema_view(
         default_version="v1",
         description="SimpleForum API"
     ),
-    public=True,  # Update this to false before deploying
+    public=True,
     permission_classes=[AllowAny],
 )
 
@@ -35,9 +35,8 @@ urlpatterns = [
     # Authentication
     path('auth/', include("dj_rest_auth.urls")),
     path('auth/registration/', include("dj_rest_auth.registration.urls")),
-    path('', include('core.urls')),
 
-    # Reset Password
+    # Password Reset
     path('auth/password/reset/', PasswordResetView.as_view(), name="password_reset"),
     path(
         'auth/password/reset/confirm/<uidb64>/<str:token>/',
@@ -56,17 +55,15 @@ urlpatterns = [
     path('api/topics/', TopicListView.as_view(), name='topic-list'),
     path('api/topics/<int:pk>/', TopicDetailView.as_view(), name='topic-detail'),
 
-    # Replies (nested under topics)
+    # Replies
     path('api/topics/<int:topic_id>/replies/', ReplyCreateView.as_view(), name='reply-create'),
     path('api/replies/<int:pk>/', ReplyDeleteView.as_view(), name='reply-delete'),
 
     # Likes
     path('api/topics/<int:topic_id>/like/', toggle_topic_like, name='topic-like'),
-    path('api/replies/<int:reply_id>/like/', toggle_reply_like, name='reply-like'),  # ✅ Fixed!
+    path('api/replies/<int:reply_id>/like/', toggle_reply_like, name='reply-like'),
 
     # ========== API DOCUMENTATION ==========
-    
-    # Swagger URLs
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name="schema-json"),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name="schema-swagger-ui"),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name="schema-redoc"),
