@@ -4,10 +4,35 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
 
 from core.models import Topic, Reply, Likes
-from core.serializers import TopicSerializer, ReplySerializer
+from core.serializers import TopicSerializer, ReplySerializer, UserSerializer, UserDetailSerializer
 from core.permissions import IsAuthorOrAdmin
+
+
+# ========== USER VIEWS ==========
+
+class UserListView(generics.ListAPIView):
+    """ List all users with basic info."""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.AllowAny]
+
+class UserDetailView(generics.RetrieveAPIView):
+    """ Get a specific user with their topics and replies"""
+    queryset = User.objects.all()
+    serializer_class = UserDetailSerializer
+    permission_classes = [permissions.AllowAny]
+
+class CurrentUserView(generics.RetrieveAPIView):
+    """ Get the current user's profile with their topics and replies."""
+    serializer_class = UserDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        """ Return the current authenticated user"""
+        return self.request.user
 
 
 # ========== TOPIC VIEWS ==========

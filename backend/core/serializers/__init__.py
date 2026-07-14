@@ -5,6 +5,7 @@ from .like_serializer import LikeSerializer
 
 __all__ = [
     'UserSerializer',
+    'UserDetailSerializer',
     'TopicSerializer',
     'ReplySerializer',
     'LikeSerializer',
