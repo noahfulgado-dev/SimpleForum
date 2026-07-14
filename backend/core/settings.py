@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 
     'drf_yasg',
+
+    'core',
 ]
 
 SITE_ID = 1
