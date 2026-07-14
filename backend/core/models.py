@@ -21,7 +21,7 @@ class Topic(models.Model):
         ordering = ['-created']  # Newest topics first
 
 class Reply(models.Model):
-    topic = models.ForeignKey(Topic, on_delete=models.CASCADE)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE,  related_name='replies')
     user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE,
