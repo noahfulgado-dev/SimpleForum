@@ -1,0 +1,64 @@
+from django.test import TestCase
+from django.contrib.auth.models import User
+from rest_framework.test import APIClient
+from rest_framework import status
+
+
+class AuthenticationTest(TestCase):
+    """Test authentication endpoints."""
+    
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+    
+    def test_user_registration(self):
+        """Test user registration."""
+        response = self.client.post('/auth/registration/', {
+            'username': 'newuser',
+            'email': 'new@example.com',
+            'password1': 'newpass123',
+            'password2': 'newpass123'
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(User.objects.filter(username='newuser').exists())
+    
+    def test_user_login(self):
+        """Test user login."""
+        response = self.client.post('/auth/login/', {
+            'username': 'testuser',
+            'password': 'testpass123'
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access_token', response.data)
+    
+    def test_user_login_invalid_credentials(self):
+        """Test login with invalid credentials."""
+        response = self.client.post('/auth/login/', {
+            'username': 'testuser',
+            'password': 'wrongpassword'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    
+    def test_get_user_profile_authenticated(self):
+        """Test getting user profile with authentication."""
+        # Login to get token
+        login_response = self.client.post('/auth/login/', {
+            'username': 'testuser',
+            'password': 'testpass123'
+        })
+        token = login_response.data.get('access_token')
+        
+        # Get profile
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        response = self.client.get('/api/users/me/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], 'testuser')
+    
+    def test_get_user_profile_unauthenticated(self):
+        """Test getting user profile without authentication."""
+        response = self.client.get('/api/users/me/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
