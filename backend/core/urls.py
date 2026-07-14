@@ -13,6 +13,9 @@ from core.views import (
     ReplyDeleteView,
     toggle_topic_like,
     toggle_reply_like,
+    UserListView,
+    UserDetailView,
+    CurrentUserView,
 )
 
 schema_view = get_schema_view(
@@ -32,6 +35,7 @@ urlpatterns = [
     # Authentication
     path('auth/', include("dj_rest_auth.urls")),
     path('auth/registration/', include("dj_rest_auth.registration.urls")),
+    path('', include('core.urls')),
 
     # Reset Password
     path('auth/password/reset/', PasswordResetView.as_view(), name="password_reset"),
@@ -43,6 +47,11 @@ urlpatterns = [
 
     # ========== FORUM ENDPOINTS ==========
     
+    # Users
+    path('api/users/', UserListView.as_view(), name='user-list'),
+    path('api/users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
+    path('api/users/me/', CurrentUserView.as_view(), name='user-me'),
+
     # Topics
     path('api/topics/', TopicListView.as_view(), name='topic-list'),
     path('api/topics/<int:pk>/', TopicDetailView.as_view(), name='topic-detail'),
