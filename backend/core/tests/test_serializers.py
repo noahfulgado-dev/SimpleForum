@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
+from django.db.models import Count
 from core.models import Topic, Reply, Likes
 from core.serializers import (
     TopicSerializer,
@@ -19,7 +20,8 @@ class TopicSerializerTest(TestCase):
             description='Test description',
             user=self.user
         )
-    
+        self.topic = Topic.objects.annotate(like_count=Count('likes')).get(pk=self.topic.pk)
+
     def test_topic_serializer_fields(self):
         """Test TopicSerializer returns expected fields."""
         serializer = TopicSerializer(self.topic)

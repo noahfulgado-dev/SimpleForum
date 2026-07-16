@@ -33,7 +33,7 @@ class TopicAPITest(TestCase):
         """Test listing topics doesn't require authentication."""
         response = self.client.get('/api/topics/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
+        self.assertIsInstance(response.data['results'], list)
     
     def test_create_topic_authenticated(self):
         """Test creating a topic requires authentication."""
