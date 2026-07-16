@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.db.models import Count
 
 from core.models import Topic, Reply, Likes
 from core.serializers import TopicSerializer, ReplySerializer, UserSerializer, UserDetailSerializer
@@ -39,7 +40,10 @@ class CurrentUserView(generics.RetrieveAPIView):
 
 class TopicListView(generics.ListCreateAPIView):
     """List all topics or create a new one."""
-    queryset = Topic.objects.all()
+    queryset = Topic.objects.select_related('user').prefetch_related(
+        'replies__user',
+        'likes'
+    ).annotate(like_count=Count('likes'))
     serializer_class = TopicSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -53,7 +57,10 @@ class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
     - Anyone can view (GET)
     - Only author or admin can edit/delete (PUT/DELETE)
     """
-    queryset = Topic.objects.all()
+    queryset = Topic.objects.select_related('user').prefetch_related(
+        'replies__user',
+        'likes'
+    ).annotate(like_count=Count('likes'))
     serializer_class = TopicSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 

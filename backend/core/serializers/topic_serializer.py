@@ -8,7 +8,7 @@ class TopicSerializer(serializers.ModelSerializer):
     
     user = UserSerializer(read_only=True)
     replies = ReplySerializer(many=True, read_only=True)
-    like_count = serializers.IntegerField(source='likes.count', read_only=True)
+    like_count = serializers.IntegerField(read_only=True)
     user_has_liked = serializers.SerializerMethodField()
     
     class Meta:
@@ -26,10 +26,10 @@ class TopicSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created', 'user']
     
     def get_user_has_liked(self, obj):
-        """Check if the current user has liked this topic."""
+        """Check if the current user has liked this topic using prefetched data."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.likes.filter(user=request.user).exists()
+            return any(like.user_id == request.user.id for like in obj.likes.all())
         return False
     
     def create(self, validated_data):

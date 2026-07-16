@@ -26,7 +26,7 @@ class ReplySerializer(serializers.ModelSerializer):
         """Check if the current user has liked this reply."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.likes.filter(user=request.user).exists()
+            return any(like.user_id == request.user.id for like in obj.likes.all())
         return False
     
     def create(self, validated_data):
