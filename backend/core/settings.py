@@ -161,6 +161,15 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication"
     ],
+    "DEFAULT_TROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle"
+    ],
+        'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/minute',  # Limit for unauthenticated users
+        'user': '1000/day',   # Limit for logged-in users
+    }
+    
 }
 
 REST_AUTH = {
