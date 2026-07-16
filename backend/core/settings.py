@@ -155,6 +155,9 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 DEFAULT_FROM_EMAIL = os.environ['DEFAULT_FROM_EMAIL']
 
 REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10 , # Number of items per page
+
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated"
     ],
@@ -169,6 +172,7 @@ REST_FRAMEWORK = {
         'anon': '10/minute',  # Limit for unauthenticated users
         'user': '1000/day',   # Limit for logged-in users
     }
+    
     
 }
 

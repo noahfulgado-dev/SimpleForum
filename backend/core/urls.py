@@ -10,7 +10,7 @@ from core.views import (
     TopicListView,
     TopicDetailView,
     ReplyCreateView,
-    ReplyDeleteView,
+    ReplyDetailView,
     toggle_topic_like,
     toggle_reply_like,
     UserListView,
@@ -57,7 +57,7 @@ urlpatterns = [
 
     # Replies
     path('api/topics/<int:topic_id>/replies/', ReplyCreateView.as_view(), name='reply-create'),
-    path('api/replies/<int:pk>/', ReplyDeleteView.as_view(), name='reply-delete'),
+    path('api/replies/<int:pk>/', ReplyDetailView.as_view(), name='reply-detail'),
 
     # Likes
     path('api/topics/<int:topic_id>/like/', toggle_topic_like, name='topic-like'),
