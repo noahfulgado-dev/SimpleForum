@@ -116,14 +116,14 @@ class LikesModelTest(TestCase):
         """Test duplicate topic like is prevented."""
         Likes.objects.create(user=self.user2, topic=self.topic)
         
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             Likes.objects.create(user=self.user2, topic=self.topic)
     
     def test_cannot_like_same_reply_twice(self):
         """Test duplicate reply like is prevented."""
         Likes.objects.create(user=self.user2, reply=self.reply)
         
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             Likes.objects.create(user=self.user2, reply=self.reply)
     
     def test_like_validation_topic_and_reply(self):
