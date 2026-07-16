@@ -32,6 +32,9 @@ class Reply(models.Model):
     content = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Reply by {self.user.username if self.user else 'Anonymous'} on {self.topic.title}"
+
 class Likes(models.Model):
     user = models.ForeignKey(
         User, 

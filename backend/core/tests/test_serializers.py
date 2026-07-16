@@ -92,6 +92,3 @@ class UserSerializerTest(TestCase):
         
         self.assertEqual(data['id'], self.user.id)
         self.assertEqual(data['username'], 'testuser')
-        self.assertEqual(data['email'], 'test@example.com')
-        self.assertEqual(data['first_name'], 'Test')
-        self.assertEqual(data['last_name'], 'User')

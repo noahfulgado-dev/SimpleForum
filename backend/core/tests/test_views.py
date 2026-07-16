@@ -1,8 +1,11 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 from core.models import Topic, Reply, Likes
+
+User = get_user_model()
 
 
 class TopicAPITest(TestCase):
@@ -19,35 +22,36 @@ class TopicAPITest(TestCase):
             description='Test description',
             user=self.user
         )
-        self.token = self.get_token()
-    
-    def get_token(self):
-        """Get JWT token for testing."""
-        response = self.client.post('/auth/login/', {
-            'username': 'testuser',
-            'password': 'testpass123'
-        })
-        return response.data.get('access_token')
+        # Generate JWT token directly
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+        self.refresh_token = str(refresh)
+        
+        print(f"Access Token: {self.access_token[:50]}...")  # Debug
     
     def test_list_topics_public(self):
         """Test listing topics doesn't require authentication."""
         response = self.client.get('/api/topics/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('results', response.data)  # If paginated
+        self.assertIsInstance(response.data, list)
     
     def test_create_topic_authenticated(self):
         """Test creating a topic requires authentication."""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        # Use Bearer token for JWT
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.post('/api/topics/', {
             'title': 'New Topic',
             'description': 'New description'
         })
+        print(f"Response status: {response.status_code}")
+        print(f"Response data: {response.data}")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['title'], 'New Topic')
         self.assertEqual(response.data['user']['username'], 'testuser')
     
     def test_create_topic_unauthenticated(self):
         """Test unauthenticated users cannot create topics."""
+        self.client.credentials()  # Clear any credentials
         response = self.client.post('/api/topics/', {
             'title': 'New Topic',
             'description': 'New description'
@@ -62,7 +66,7 @@ class TopicAPITest(TestCase):
     
     def test_update_topic_author(self):
         """Test author can update their topic."""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.put(f'/api/topics/{self.topic.id}/', {
             'title': 'Updated Topic',
             'description': 'Updated description'
@@ -76,13 +80,11 @@ class TopicAPITest(TestCase):
             username='otheruser',
             password='otherpass123'
         )
-        response = self.client.post('/auth/login/', {
-            'username': 'otheruser',
-            'password': 'otherpass123'
-        })
-        token = response.data.get('access_token')
+        # Generate JWT for other user
+        refresh = RefreshToken.for_user(other_user)
+        other_token = str(refresh.access_token)
         
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
         response = self.client.put(f'/api/topics/{self.topic.id}/', {
             'title': 'Hacked Topic',
             'description': 'Hacked description'
@@ -91,7 +93,7 @@ class TopicAPITest(TestCase):
     
     def test_delete_topic_author(self):
         """Test author can delete their topic."""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.delete(f'/api/topics/{self.topic.id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Topic.objects.filter(id=self.topic.id).exists())
@@ -116,18 +118,13 @@ class ReplyAPITest(TestCase):
             user=self.user,
             content='Test reply'
         )
-        self.token = self.get_token()
-    
-    def get_token(self):
-        response = self.client.post('/auth/login/', {
-            'username': 'testuser',
-            'password': 'testpass123'
-        })
-        return response.data.get('access_token')
+        # Generate JWT token
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
     
     def test_create_reply_authenticated(self):
         """Test authenticated user can create a reply."""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.post(f'/api/topics/{self.topic.id}/replies/', {
             'content': 'New reply content'
         })
@@ -137,6 +134,7 @@ class ReplyAPITest(TestCase):
     
     def test_create_reply_unauthenticated(self):
         """Test unauthenticated user cannot create a reply."""
+        self.client.credentials()  # Clear credentials
         response = self.client.post(f'/api/topics/{self.topic.id}/replies/', {
             'content': 'New reply content'
         })
@@ -144,7 +142,7 @@ class ReplyAPITest(TestCase):
     
     def test_delete_reply_author(self):
         """Test author can delete their reply."""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.delete(f'/api/replies/{self.reply.id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Reply.objects.filter(id=self.reply.id).exists())
@@ -168,33 +166,28 @@ class LikeAPITest(TestCase):
             description='Test description',
             user=self.other_user  # Other user owns the topic
         )
-        self.token = self.get_token()
-    
-    def get_token(self):
-        response = self.client.post('/auth/login/', {
-            'username': 'testuser',
-            'password': 'testpass123'
-        })
-        return response.data.get('access_token')
+        # Generate JWT token
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
     
     def test_like_topic(self):
         """Test liking a topic."""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.post(f'/api/topics/{self.topic.id}/like/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'liked')
-        self.assertEqual(response.data['like_count'], 1)
+        self.assertEqual(response.data.get('status'), 'liked')
+        self.assertEqual(response.data.get('like_count'), 1)
     
     def test_unlike_topic(self):
         """Test unliking a topic."""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         # Like first
         self.client.post(f'/api/topics/{self.topic.id}/like/')
-        # Unlike
+        # Unlike (toggle)
         response = self.client.post(f'/api/topics/{self.topic.id}/like/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'unliked')
-        self.assertEqual(response.data['like_count'], 0)
+        self.assertEqual(response.data.get('status'), 'unliked')
+        self.assertEqual(response.data.get('like_count'), 0)
     
     def test_cannot_like_own_topic(self):
         """Test users cannot like their own topic."""
@@ -204,7 +197,7 @@ class LikeAPITest(TestCase):
             description='My description',
             user=self.user
         )
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.post(f'/api/topics/{own_topic.id}/like/')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['error'], 'You cannot like your own topic.')
+        self.assertEqual(response.data.get('error'), 'You cannot like your own topic.')
