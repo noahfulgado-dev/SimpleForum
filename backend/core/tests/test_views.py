@@ -140,6 +140,46 @@ class ReplyAPITest(TestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
     
+    def test_get_reply_authenticated(self):
+        """Test authenticated user can view a reply."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/replies/{self.reply.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['content'], 'Test reply')
+        self.assertEqual(response.data['user']['username'], 'testuser')
+
+    def test_update_reply_author(self):
+        """Test author can update their reply."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.patch(f'/api/replies/{self.reply.id}/', {
+            'content': 'Updated reply content'
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['content'], 'Updated reply content')
+
+    def test_update_reply_non_author(self):
+        """Test non-author cannot update a reply."""
+        other_user = User.objects.create_user(
+            username='otheruser',
+            password='otherpass123'
+        )
+        refresh = RefreshToken.for_user(other_user)
+        other_token = str(refresh.access_token)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
+        response = self.client.patch(f'/api/replies/{self.reply.id}/', {
+            'content': 'Hacked reply content'
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_reply_unauthenticated(self):
+        """Test unauthenticated user cannot update a reply."""
+        self.client.credentials()
+        response = self.client.patch(f'/api/replies/{self.reply.id}/', {
+            'content': 'Hacked reply content'
+        })
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_delete_reply_author(self):
         """Test author can delete their reply."""
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')

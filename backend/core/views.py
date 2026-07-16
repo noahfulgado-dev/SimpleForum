@@ -18,13 +18,13 @@ class UserListView(generics.ListAPIView):
     """ List all users with basic info."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
 
 class UserDetailView(generics.RetrieveAPIView):
     """ Get a specific user with their topics and replies"""
     queryset = User.objects.all()
     serializer_class = UserDetailSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
 
 class CurrentUserView(generics.RetrieveAPIView):
     """ Get the current user's profile with their topics and replies."""
@@ -91,13 +91,23 @@ class ReplyCreateView(generics.CreateAPIView):
         serializer.save(topic=topic, user=self.request.user)
 
 
-class ReplyDeleteView(generics.DestroyAPIView):
-    """Delete a reply (only the author or admin can delete)."""
-    queryset = Reply.objects.all()
+class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update, or delete a reply.
+    - Anyone authenticated can view (GET)
+    - Only author or admin can edit/delete (PUT/PATCH/DELETE)
+    """
+    queryset = Reply.objects.select_related('user', 'topic').prefetch_related('likes')
+    serializer_class = ReplySerializer
     permission_classes = [IsAuthenticated]
 
+    def perform_update(self, serializer):
+        reply = self.get_object()
+        if reply.user != self.request.user and not self.request.user.is_staff:
+            raise PermissionDenied("You do not have permission to edit this reply.")
+        serializer.save()
+
     def perform_destroy(self, instance):
-        """Only allow author or admin to delete."""
         if instance.user != self.request.user and not self.request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this reply.")
         instance.delete()
