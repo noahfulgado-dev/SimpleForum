@@ -55,7 +55,9 @@ INSTALLED_APPS = [
 
     'drf_yasg',
 
-    'core',
+    'accounts',
+    'forum',
+    'interactions',
     'corsheaders',
 ]
 
