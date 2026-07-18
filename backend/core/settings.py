@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -100,12 +101,18 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': os.environ['DB_ENGINE'],
-        'NAME': os.environ['DB_NAME'],
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600),
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.environ['DB_ENGINE'],
+            'NAME': os.environ['DB_NAME'],
+        }
+    }
 
 
 # Password validation
@@ -141,6 +148,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_UNIQUE_EMAIL = True
 
