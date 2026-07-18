@@ -22,6 +22,7 @@ A fullstack discussion forum — create topics, reply, and like. Built with Djan
 | django-allauth | Tailwind CSS v4 |
 | PostgreSQL / SQLite | ShadCN UI + Radix |
 | Gunicorn + Whitenoise | Lucide Icons |
+| GitHub Actions (CI/CD) | — |
 
 ## Getting Started
 
@@ -93,8 +94,9 @@ The app is now at `http://localhost:5173`.
 | `SECRET_KEY` | Yes | Django secret key — generate a random one | `django-insecure-abc...` |
 | `DEBUG` | Yes | Enable debug mode (`True`/`False`) | `True` |
 | `ALLOWED_HOSTS` | Yes | Comma-separated allowed hosts | `localhost,127.0.0.1` |
-| `DB_ENGINE` | Yes | Database engine class | `django.db.backends.sqlite3` |
-| `DB_NAME` | Yes | Database name or file path | `db.sqlite3` |
+| `DATABASE_URL` | No | PostgreSQL connection string (overrides `DB_ENGINE`/`DB_NAME`) | `postgresql://user:pass@host:5432/db?sslmode=require` |
+| `DB_ENGINE` | No | Database engine class (fallback when no `DATABASE_URL`) | `django.db.backends.sqlite3` |
+| `DB_NAME` | No | Database name or file path (fallback when no `DATABASE_URL`) | `db.sqlite3` |
 | `EMAIL_BACKEND` | Yes | Email backend — use `console` for dev | `django.core.mail.backends.console.EmailBackend` |
 | `EMAIL_HOST` | No | SMTP server host | `smtp.gmail.com` |
 | `EMAIL_PORT` | No | SMTP server port | `587` |
@@ -167,30 +169,17 @@ The app is now at `http://localhost:5173`.
 
 ```
 simpleforum/
+├── .github/workflows/
+│   ├── ci.yml                 # Backend tests on push/PR
+│   └── cd.yml                 # Auto-deploy to Render on push to main
 ├── backend/
-│   ├── core/
-│   │   ├── migrations/        # Database migrations
-│   │   ├── serializers/       # DRF serializers
-│   │   ├── tests/             # Test suite
-│   │   ├── __init__.py
-│   │   ├── admin.py
-│   │   ├── models.py          # Topic, Reply, Likes
-│   │   ├── permissions.py     # Custom permissions
-│   │   ├── settings.py        # Django configuration
-│   │   ├── urls.py            # URL routing
-│   │   └── views.py           # API views
+│   ├── core/                  # Django project config (settings, urls)
+│   ├── accounts/              # User management app
+│   ├── forum/                 # Topics & replies app
+│   ├── interactions/          # Likes app
 │   ├── manage.py
 │   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/ui/     # ShadCN-styled components
-│   │   ├── lib/               # Utility functions
-│   │   ├── pages/             # Landing, Login, Signup
-│   │   ├── App.tsx            # App root with routing
-│   │   ├── main.tsx           # Entry point
-│   │   └── index.css          # Global styles (Tailwind)
-│   ├── package.json
-│   └── vite.config.ts
+├── frontend/                  # React + Vite SPA (WIP)
 ├── .env                       # Environment variables (gitignored)
 ├── .env.example               # Example environment file
 ├── .gitignore
@@ -205,19 +194,34 @@ source .venv/bin/activate
 python manage.py test
 ```
 
-The test suite covers models, serializers, views, and authentication flows.
+The test suite covers models, serializers, views, and authentication flows. Tests run automatically via GitHub Actions CI on every push and pull request to `main`.
 
 ## Deployment
 
-1. **Set `DEBUG=False`** and generate a fresh `SECRET_KEY`
-2. **Use PostgreSQL** — set `DB_ENGINE=django.db.backends.postgresql` and configure `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
-3. **Update `ALLOWED_HOSTS`** — add your domain
-4. **Configure email** — set a real SMTP backend for password resets
-5. **Run with Gunicorn:**
+### Render (auto-deploy via GitHub Actions)
+
+1. Push to `main` — CI runs tests, CD deploys to Render
+2. Set these environment variables in Render dashboard:
+   - `SECRET_KEY` — generate a fresh one
+   - `DEBUG=False`
+   - `ALLOWED_HOSTS` — add your Render domain
+   - `DATABASE_URL` — PostgreSQL connection string (Neon, Supabase, or Render PostgreSQL)
+   - Email settings for password resets
+3. **Build Command:** `pip install -r backend/requirements.txt`
+4. **Start Command:**
    ```bash
-   gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 4
+   python backend/manage.py collectstatic --noinput && python backend/manage.py migrate --run-syncdb && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 4
    ```
-6. **Static files** are served automatically via Whitenoise
+5. Static files are served automatically via Whitenoise
+
+### Manual
+
+```bash
+cd backend
+python manage.py collectstatic --noinput
+python manage.py migrate --run-syncdb
+gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 4
+```
 
 ## Contributing
 
