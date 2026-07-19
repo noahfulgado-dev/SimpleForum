@@ -11,7 +11,7 @@ from interactions.models import Likes
 class TopicListView(generics.ListCreateAPIView):
     queryset = Topic.objects.select_related('user').prefetch_related(
         'replies__user',
-    ).annotate(like_count=Count('likes')).order_by('-created')
+    ).annotate(like_count=Count('likes'))
     serializer_class = TopicSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
