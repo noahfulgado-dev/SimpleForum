@@ -16,7 +16,7 @@ A fullstack discussion forum — create topics, reply, and like. Built with Djan
 
 | Backend | Frontend |
 |---|---|
-| Django 5.1 | React 18 |
+| Django 5.2 | React 18 |
 | Django REST Framework 3.15 | TypeScript |
 | dj-rest-auth + SimpleJWT | Vite 6 |
 | django-allauth | Tailwind CSS v4 |
@@ -74,6 +74,8 @@ python manage.py runserver
 ```
 
 The API is now at `http://localhost:8000`.
+
+> See [`backend/README.md`](backend/README.md) for detailed API docs and app structure.
 
 ### 4. Frontend Setup
 
@@ -210,7 +212,7 @@ The test suite covers models, serializers, views, and authentication flows. Test
 3. **Build Command:** `pip install -r backend/requirements.txt`
 4. **Start Command:**
    ```bash
-   python backend/manage.py collectstatic --noinput && python backend/manage.py migrate --run-syncdb && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 4
+   python backend/manage.py collectstatic --noinput && python backend/manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 4
    ```
 5. Static files are served automatically via Whitenoise
 
@@ -219,7 +221,7 @@ The test suite covers models, serializers, views, and authentication flows. Test
 ```bash
 cd backend
 python manage.py collectstatic --noinput
-python manage.py migrate --run-syncdb
+python manage.py migrate
 gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 4
 ```
 
