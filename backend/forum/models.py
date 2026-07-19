@@ -1,12 +1,12 @@
+from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import User
 
 
 class Topic(models.Model):
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=500)
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -25,7 +25,7 @@ class Topic(models.Model):
 class Reply(models.Model):
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='replies')
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,

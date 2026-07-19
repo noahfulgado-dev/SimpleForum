@@ -1,7 +1,9 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from rest_framework import status
+
+User = get_user_model()
 
 
 class AuthenticationTest(TestCase):
@@ -42,6 +44,20 @@ class AuthenticationTest(TestCase):
             'password': 'wrongpassword'
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_token_refresh(self):
+        """Test token refresh with valid refresh token."""
+        login_response = self.client.post('/auth/login/', {
+            'email': 'test@example.com',
+            'password': 'testpass123'
+        })
+        refresh = login_response.data.get('refresh')
+
+        response = self.client.post('/auth/token/refresh/', {
+            'refresh': refresh
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
 
     def test_get_user_profile_authenticated(self):
         """Test getting user profile with authentication."""

@@ -1,8 +1,10 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.contrib.auth.models import User
 from django.db.models import Count
 from forum.models import Topic, Reply
 from forum.serializers import TopicSerializer, ReplySerializer
+
+User = get_user_model()
 
 
 class TopicSerializerTest(TestCase):
@@ -39,6 +41,12 @@ class TopicSerializerTest(TestCase):
         self.assertEqual(data['user']['id'], self.user.id)
         self.assertEqual(data['user']['username'], self.user.username)
 
+    def test_user_has_liked_false_without_request(self):
+        """Test user_has_liked defaults to False when no request in context."""
+        serializer = TopicSerializer(self.topic)
+        data = serializer.data
+        self.assertFalse(data['user_has_liked'])
+
 
 class ReplySerializerTest(TestCase):
     """Test ReplySerializer."""
@@ -68,3 +76,9 @@ class ReplySerializerTest(TestCase):
         self.assertIn('created', data)
         self.assertIn('like_count', data)
         self.assertIn('user_has_liked', data)
+
+    def test_reply_user_has_liked_false_without_request(self):
+        """Test reply user_has_liked defaults to False when no request."""
+        serializer = ReplySerializer(self.reply)
+        data = serializer.data
+        self.assertFalse(data['user_has_liked'])
