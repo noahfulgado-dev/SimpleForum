@@ -65,6 +65,8 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
+AUTH_USER_MODEL = 'accounts.User'
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
