@@ -1,19 +1,30 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from django.db.models import Count
+from django.db.models import Count, Exists, OuterRef, Value, BooleanField
 
 from forum.models import Topic, Reply
 from forum.serializers import TopicSerializer, ReplySerializer
+from interactions.models import Likes
 
 
 class TopicListView(generics.ListCreateAPIView):
     queryset = Topic.objects.select_related('user').prefetch_related(
         'replies__user',
-        'likes'
     ).annotate(like_count=Count('likes'))
     serializer_class = TopicSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated:
+            return qs.annotate(
+                user_has_liked=Exists(
+                    Likes.objects.filter(user=user, topic=OuterRef('pk'))
+                )
+            )
+        return qs.annotate(user_has_liked=Value(False, output_field=BooleanField()))
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -22,10 +33,20 @@ class TopicListView(generics.ListCreateAPIView):
 class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Topic.objects.select_related('user').prefetch_related(
         'replies__user',
-        'likes'
     ).annotate(like_count=Count('likes'))
     serializer_class = TopicSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated:
+            return qs.annotate(
+                user_has_liked=Exists(
+                    Likes.objects.filter(user=user, topic=OuterRef('pk'))
+                )
+            )
+        return qs.annotate(user_has_liked=Value(False, output_field=BooleanField()))
 
     def perform_update(self, serializer):
         topic = self.get_object()
@@ -50,9 +71,20 @@ class ReplyCreateView(generics.CreateAPIView):
 
 
 class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Reply.objects.select_related('user', 'topic').prefetch_related('likes')
+    queryset = Reply.objects.select_related('user', 'topic')
     serializer_class = ReplySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated:
+            return qs.annotate(
+                user_has_liked=Exists(
+                    Likes.objects.filter(user=user, reply=OuterRef('pk'))
+                )
+            )
+        return qs.annotate(user_has_liked=Value(False, output_field=BooleanField()))
 
     def perform_update(self, serializer):
         reply = self.get_object()
