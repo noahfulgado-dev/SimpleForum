@@ -4,8 +4,9 @@ Django REST Framework API for the SimpleForum discussion platform.
 
 ## Stack
 
-| Package | Version |
+| Component | Version |
 |---|---|
+| Python | 3.12 |
 | Django | 5.2 |
 | Django REST Framework | 3.15 |
 | dj-rest-auth + SimpleJWT | JWT auth |
@@ -16,7 +17,11 @@ Django REST Framework API for the SimpleForum discussion platform.
 
 ## Quick Start
 
+Requires **Python 3.12**. Use `pyenv` to match:
+
 ```bash
+pyenv install 3.12
+pyenv local 3.12
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
