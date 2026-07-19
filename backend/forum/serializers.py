@@ -28,9 +28,11 @@ class TopicSerializer(serializers.ModelSerializer):
         return ReplySerializer(replies, many=True, context=self.context).data
 
     def get_user_has_liked(self, obj):
+        if hasattr(obj, 'user_has_liked'):
+            return obj.user_has_liked
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return any(like.user_id == request.user.id for like in obj.likes.all())
+            return obj.likes.filter(user=request.user).exists()
         return False
 
     def create(self, validated_data):
@@ -58,9 +60,11 @@ class ReplySerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created', 'user', 'topic']
 
     def get_user_has_liked(self, obj):
+        if hasattr(obj, 'user_has_liked'):
+            return obj.user_has_liked
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return any(like.user_id == request.user.id for like in obj.likes.all())
+            return obj.likes.filter(user=request.user).exists()
         return False
 
     def create(self, validated_data):
