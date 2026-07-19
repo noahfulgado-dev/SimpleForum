@@ -69,9 +69,5 @@ class ReplySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        topic_id = self.context.get('topic_id')
-        if topic_id:
-            topic = Topic.objects.get(id=topic_id)
-            validated_data['topic'] = topic
         validated_data['user'] = request.user
         return super().create(validated_data)
