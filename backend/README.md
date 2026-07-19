@@ -83,6 +83,8 @@ No manual token handling needed — cookies are sent automatically.
 
 Uses `DATABASE_URL` env var for PostgreSQL. Falls back to SQLite (`db.sqlite3`) if not set.
 
+For PostgreSQL locally, install `psycopg2-binary` (not included in `requirements.txt` since it requires `libpq-dev`).
+
 ## Tests
 
 ```bash
