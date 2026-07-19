@@ -38,4 +38,5 @@ class Reply(models.Model):
         return f"Reply by {self.user.username if self.user else 'Anonymous'} on {self.topic.title}"
 
     class Meta:
+        ordering = ['created']
         db_table = 'core_reply'
