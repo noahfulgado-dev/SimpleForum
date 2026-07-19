@@ -83,7 +83,16 @@ No manual token handling needed — cookies are sent automatically.
 
 Uses `DATABASE_URL` env var for PostgreSQL. Falls back to SQLite (`db.sqlite3`) if not set.
 
-For PostgreSQL locally, install `psycopg2-binary` (not included in `requirements.txt` since it requires `libpq-dev`).
+## Requirements
+
+Two files split by environment:
+
+| File | Use | Install |
+|---|---|---|
+| `requirements.txt` | Local dev & CI | `pip install -r requirements.txt` |
+| `requirements-prod.txt` | Production (Render) | `pip install -r requirements-prod.txt` |
+
+Production adds `psycopg2-binary` (PostgreSQL driver, needs `libpq-dev`) and `gunicorn` (WSGI server). Local dev uses SQLite + `manage.py runserver`, so neither is needed.
 
 ## Tests
 
