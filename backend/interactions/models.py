@@ -56,4 +56,6 @@ class Likes(models.Model):
     def __str__(self):
         if self.topic:
             return f"{self.user.username} likes Topic: {self.topic.title}"
-        return f"{self.user.username} likes Reply #{self.reply.id}"
+        if self.reply:
+            return f"{self.user.username} likes Reply #{self.reply.id}"
+        return f"{self.user.username}'s orphaned like"
