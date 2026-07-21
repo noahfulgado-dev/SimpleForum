@@ -1,12 +1,13 @@
 # SimpleForum
 
-A fullstack discussion forum — create topics, reply, and like. Built with Django REST Framework and React.
+A fullstack discussion forum — create topics, reply, like, and bookmark. Built with Django REST Framework and React.
 
 ## Features
 
 - **Topic CRUD** — Create, read, update, and delete forum topics
 - **Nested replies** — Reply to any topic
 - **Likes** — Like and unlike topics and replies (no self-liking)
+- **Bookmarks** — Bookmark and unbookmark topics and replies
 - **JWT authentication** — Secure HttpOnly cookie-based auth with email login
 - **Rate limiting** — Anonymous (10/min) and authenticated (1000/day) throttle rates
 - **API documentation** — Auto-generated Swagger UI and ReDoc
@@ -158,6 +159,14 @@ The app is now at `http://localhost:5173`.
 | POST | `/api/topics/<topic_id>/like/` | Yes | Toggle like on a topic |
 | POST | `/api/replies/<reply_id>/like/` | Yes | Toggle like on a reply |
 
+### Bookmarks
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/topics/<topic_id>/bookmark/` | Yes | Toggle bookmark on a topic |
+| POST | `/api/replies/<reply_id>/bookmark/` | Yes | Toggle bookmark on a reply |
+| GET | `/api/bookmarks/` | Yes | List your bookmarked items |
+
 ### Documentation
 
 | Endpoint | Description |
@@ -178,7 +187,7 @@ simpleforum/
 │   ├── core/                  # Django project config (settings, urls)
 │   ├── accounts/              # User management app
 │   ├── forum/                 # Topics & replies app
-│   ├── interactions/          # Likes app
+│   ├── interactions/          # Likes & bookmarks app
 │   ├── manage.py
 │   └── requirements.txt
 ├── frontend/                  # React + Vite SPA (WIP)
