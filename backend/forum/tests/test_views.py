@@ -3,8 +3,9 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.contenttypes.models import ContentType
 from forum.models import Topic, Reply
-from interactions.models import Likes
+from interactions.models import Likes, Bookmark
 
 User = get_user_model()
 
@@ -122,6 +123,38 @@ class TopicAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['user_has_liked'])
 
+    def test_topic_list_includes_user_has_bookmarked(self):
+        """Test topic list includes user_has_bookmarked field."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/topics/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for topic in response.data['results']:
+            self.assertIn('user_has_bookmarked', topic)
+            self.assertIsInstance(topic['user_has_bookmarked'], bool)
+
+    def test_topic_detail_user_has_bookmarked_true_when_bookmarked(self):
+        """Test user_has_bookmarked is true when current user bookmarked the topic."""
+        topic_type = ContentType.objects.get_for_model(Topic)
+        Bookmark.objects.create(user=self.user, content_type=topic_type, object_id=self.topic.id)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['user_has_bookmarked'])
+
+    def test_topic_detail_user_has_bookmarked_false_when_not_bookmarked(self):
+        """Test user_has_bookmarked is false when current user has not bookmarked."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['user_has_bookmarked'])
+
+    def test_topic_detail_user_has_bookmarked_false_for_anon(self):
+        """Test user_has_bookmarked is false for anonymous users."""
+        self.client.credentials()
+        response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['user_has_bookmarked'])
+
 
 class ReplyAPITest(TestCase):
     """Test Reply API endpoints."""
@@ -217,3 +250,21 @@ class ReplyAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('user_has_liked', response.data)
         self.assertFalse(response.data['user_has_liked'])
+
+    def test_reply_detail_user_has_bookmarked_true_when_bookmarked(self):
+        """Test reply detail includes user_has_bookmarked when bookmarked."""
+        reply_type = ContentType.objects.get_for_model(Reply)
+        Bookmark.objects.create(user=self.user, content_type=reply_type, object_id=self.reply.id)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/replies/{self.reply.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('user_has_bookmarked', response.data)
+        self.assertTrue(response.data['user_has_bookmarked'])
+
+    def test_reply_detail_user_has_bookmarked_false_when_not_bookmarked(self):
+        """Test reply detail user_has_bookmarked is false when not bookmarked."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/replies/{self.reply.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('user_has_bookmarked', response.data)
+        self.assertFalse(response.data['user_has_bookmarked'])

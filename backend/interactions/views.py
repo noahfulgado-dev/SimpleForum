@@ -1,10 +1,13 @@
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.contrib.contenttypes.models import ContentType
 
 from forum.models import Topic, Reply
-from interactions.models import Likes
+from interactions.models import Likes, Bookmark
+from interactions.serializers import BookmarkSerializer
 
 
 @api_view(['POST'])
@@ -51,3 +54,67 @@ def toggle_reply_like(request, reply_id):
         'status': 'liked',
         'like_count': reply.likes.count()
     })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_topic_bookmark(request, topic_id):
+    topic = get_object_or_404(Topic, id=topic_id)
+    topic_type = ContentType.objects.get_for_model(Topic)
+
+    bookmark, created = Bookmark.objects.get_or_create(
+        user=request.user,
+        content_type=topic_type,
+        object_id=topic.id
+    )
+
+    if not created:
+        bookmark.delete()
+        return Response({
+            'status': 'unbookmarked',
+            'bookmark_count': Bookmark.objects.filter(content_type=topic_type, object_id=topic.id).count()
+        })
+
+    return Response({
+        'status': 'bookmarked',
+        'bookmark_count': Bookmark.objects.filter(content_type=topic_type, object_id=topic.id).count()
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_reply_bookmark(request, reply_id):
+    reply = get_object_or_404(Reply, id=reply_id)
+    reply_type = ContentType.objects.get_for_model(Reply)
+
+    bookmark, created = Bookmark.objects.get_or_create(
+        user=request.user,
+        content_type=reply_type,
+        object_id=reply.id
+    )
+
+    if not created:
+        bookmark.delete()
+        return Response({
+            'status': 'unbookmarked',
+            'bookmark_count': Bookmark.objects.filter(content_type=reply_type, object_id=reply.id).count()
+        })
+
+    return Response({
+        'status': 'bookmarked',
+        'bookmark_count': Bookmark.objects.filter(content_type=reply_type, object_id=reply.id).count()
+    })
+
+
+class UserBookmarkListView(generics.ListAPIView):
+    serializer_class = BookmarkSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Bookmark.objects.filter(
+            user=self.request.user
+        ).select_related(
+            'content_type'
+        ).prefetch_related(
+            'content_object'
+        ).order_by('-created')
