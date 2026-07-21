@@ -2,10 +2,11 @@ from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.db.models import Count, Exists, OuterRef, Value, BooleanField
+from django.contrib.contenttypes.models import ContentType
 
 from forum.models import Topic, Reply
 from forum.serializers import TopicSerializer, ReplySerializer
-from interactions.models import Likes
+from interactions.models import Likes, Bookmark
 
 
 class TopicListView(generics.ListCreateAPIView):
@@ -19,12 +20,19 @@ class TopicListView(generics.ListCreateAPIView):
         qs = super().get_queryset()
         user = self.request.user
         if user.is_authenticated:
+            topic_type = ContentType.objects.get_for_model(Topic)
             return qs.annotate(
                 user_has_liked=Exists(
                     Likes.objects.filter(user=user, topic=OuterRef('pk'))
+                ),
+                user_has_bookmarked=Exists(
+                    Bookmark.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
                 )
             )
-        return qs.annotate(user_has_liked=Value(False, output_field=BooleanField()))
+        return qs.annotate(
+            user_has_liked=Value(False, output_field=BooleanField()),
+            user_has_bookmarked=Value(False, output_field=BooleanField())
+        )
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -41,12 +49,19 @@ class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
         qs = super().get_queryset()
         user = self.request.user
         if user.is_authenticated:
+            topic_type = ContentType.objects.get_for_model(Topic)
             return qs.annotate(
                 user_has_liked=Exists(
                     Likes.objects.filter(user=user, topic=OuterRef('pk'))
+                ),
+                user_has_bookmarked=Exists(
+                    Bookmark.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
                 )
             )
-        return qs.annotate(user_has_liked=Value(False, output_field=BooleanField()))
+        return qs.annotate(
+            user_has_liked=Value(False, output_field=BooleanField()),
+            user_has_bookmarked=Value(False, output_field=BooleanField())
+        )
 
     def perform_update(self, serializer):
         topic = self.get_object()
@@ -79,12 +94,19 @@ class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
         qs = super().get_queryset()
         user = self.request.user
         if user.is_authenticated:
+            reply_type = ContentType.objects.get_for_model(Reply)
             return qs.annotate(
                 user_has_liked=Exists(
                     Likes.objects.filter(user=user, reply=OuterRef('pk'))
+                ),
+                user_has_bookmarked=Exists(
+                    Bookmark.objects.filter(user=user, content_type=reply_type, object_id=OuterRef('pk'))
                 )
             )
-        return qs.annotate(user_has_liked=Value(False, output_field=BooleanField()))
+        return qs.annotate(
+            user_has_liked=Value(False, output_field=BooleanField()),
+            user_has_bookmarked=Value(False, output_field=BooleanField())
+        )
 
     def perform_update(self, serializer):
         reply = self.get_object()

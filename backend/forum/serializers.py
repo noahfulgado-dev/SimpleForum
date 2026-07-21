@@ -8,6 +8,7 @@ class TopicSerializer(serializers.ModelSerializer):
     replies = serializers.SerializerMethodField()
     like_count = serializers.IntegerField(read_only=True)
     user_has_liked = serializers.SerializerMethodField()
+    user_has_bookmarked = serializers.SerializerMethodField()
 
     class Meta:
         model = Topic
@@ -20,6 +21,7 @@ class TopicSerializer(serializers.ModelSerializer):
             'replies',
             'like_count',
             'user_has_liked',
+            'user_has_bookmarked',
         ]
         read_only_fields = ['id', 'created', 'user']
 
@@ -35,6 +37,17 @@ class TopicSerializer(serializers.ModelSerializer):
             return obj.likes.filter(user=request.user).exists()
         return False
 
+    def get_user_has_bookmarked(self, obj):
+        if hasattr(obj, 'user_has_bookmarked'):
+            return obj.user_has_bookmarked
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            from django.contrib.contenttypes.models import ContentType
+            from interactions.models import Bookmark
+            topic_type = ContentType.objects.get_for_model(Topic)
+            return Bookmark.objects.filter(user=request.user, content_type=topic_type, object_id=obj.id).exists()
+        return False
+
     def create(self, validated_data):
         request = self.context.get('request')
         validated_data['user'] = request.user
@@ -45,6 +58,7 @@ class ReplySerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     like_count = serializers.IntegerField(source='likes.count', read_only=True)
     user_has_liked = serializers.SerializerMethodField()
+    user_has_bookmarked = serializers.SerializerMethodField()
 
     class Meta:
         model = Reply
@@ -56,6 +70,7 @@ class ReplySerializer(serializers.ModelSerializer):
             'created',
             'like_count',
             'user_has_liked',
+            'user_has_bookmarked',
         ]
         read_only_fields = ['id', 'created', 'user', 'topic']
 
@@ -65,6 +80,17 @@ class ReplySerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return obj.likes.filter(user=request.user).exists()
+        return False
+
+    def get_user_has_bookmarked(self, obj):
+        if hasattr(obj, 'user_has_bookmarked'):
+            return obj.user_has_bookmarked
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            from django.contrib.contenttypes.models import ContentType
+            from interactions.models import Bookmark
+            reply_type = ContentType.objects.get_for_model(Reply)
+            return Bookmark.objects.filter(user=request.user, content_type=reply_type, object_id=obj.id).exists()
         return False
 
     def create(self, validated_data):
