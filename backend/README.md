@@ -38,7 +38,7 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 | `core/` | Project settings, URLs, WSGI/ASGI |
 | `accounts/` | User list, detail, current user |
 | `forum/` | Topics and replies CRUD |
-| `interactions/` | Like/unlike topics and replies |
+| `interactions/` | Like/unlike and bookmark topics and replies |
 
 ## API Endpoints
 
@@ -69,6 +69,13 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 ### Likes (`/api/`)
 - `POST /api/topics/<topic_id>/like/` — Toggle like (auth required)
 - `POST /api/replies/<reply_id>/like/` — Toggle like (auth required)
+
+### Bookmarks (`/api/`)
+- `POST /api/topics/<topic_id>/bookmark/` — Toggle bookmark (auth required)
+- `POST /api/replies/<reply_id>/bookmark/` — Toggle bookmark (auth required)
+- `GET /api/bookmarks/` — List your bookmarked items (auth required)
+
+Topic and reply responses include `user_has_liked` and `user_has_bookmarked`.
 
 ## Auth
 
