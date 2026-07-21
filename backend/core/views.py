@@ -1,7 +1,7 @@
 from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_GET
 
 
-@require_http_methods(["GET", "HEAD"])
+@require_GET
 def health(request):
     return JsonResponse({"status": "ok"})
