@@ -5,6 +5,8 @@ from rest_framework.permissions import AllowAny
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from core.views import health
+
 schema_view = get_schema_view(
     openapi.Info(
         title="API Docs",
@@ -16,6 +18,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path('health/', health, name='health'),
     path('admin/', admin.site.urls),
 
     path('auth/', include("dj_rest_auth.urls")),
