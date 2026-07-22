@@ -12,7 +12,9 @@ from interactions.models import Likes, Bookmark
 class TopicListView(generics.ListCreateAPIView):
     queryset = Topic.objects.select_related('user').prefetch_related(
         'replies__user',
-    ).annotate(like_count=Count('likes'))
+    ).annotate(
+        like_count=Count('likes'), reply_count=Count('replies')
+    )
     serializer_class = TopicSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
@@ -41,7 +43,9 @@ class TopicListView(generics.ListCreateAPIView):
 class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Topic.objects.select_related('user').prefetch_related(
         'replies__user',
-    ).annotate(like_count=Count('likes'))
+    ).annotate(
+        like_count=Count('likes'), reply_count=Count('replies')
+    )
     serializer_class = TopicSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
