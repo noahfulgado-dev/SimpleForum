@@ -9,6 +9,7 @@ A fullstack discussion forum — create topics, reply, like, and bookmark. Built
 - **Likes** — Like and unlike topics and replies (no self-liking)
 - **Bookmarks** — Bookmark and unbookmark topics and replies
 - **JWT authentication** — Secure HttpOnly cookie-based auth with email login
+- **Google OAuth** — Sign in with Google via allauth
 - **Rate limiting** — Anonymous (10/min) and authenticated (1000/day) throttle rates
 - **API documentation** — Auto-generated Swagger UI and ReDoc
 - **RESTful API** — Clean, well-structured endpoints
@@ -20,7 +21,7 @@ A fullstack discussion forum — create topics, reply, like, and bookmark. Built
 | Django 5.2 | React 18 |
 | Django REST Framework 3.15 | TypeScript |
 | dj-rest-auth + SimpleJWT | Vite 6 |
-| django-allauth | Tailwind CSS v4 |
+| django-allauth (Google OAuth) | Tailwind CSS v4 |
 | PostgreSQL / SQLite | ShadCN UI + Radix |
 | Gunicorn + Whitenoise | Lucide Icons |
 | GitHub Actions (CI/CD) | — |
@@ -108,7 +109,9 @@ The app is now at `http://localhost:5173`.
 | `EMAIL_HOST_PASSWORD` | No* | SMTP password or app password | (Gmail app password) |
 | `DEFAULT_FROM_EMAIL` | No | Default sender address | `your-email@gmail.com` |
 | `CORS_ALLOWED_ORIGINS` | Yes | Comma-separated allowed origins | `http://localhost:5173` |
-| `FRONTEND_URL` | No | Frontend URL (for password reset emails) | `http://localhost:5173` |
+| `FRONTEND_URL` | No | Frontend URL (for password reset emails & OAuth redirect) | `http://localhost:5173` |
+| `GOOGLE_CLIENT_ID` | No | Google OAuth client ID | `xxx.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | No* | Google OAuth client secret | (from Google Cloud Console) |
 
 *\*Required when using SMTP email backend.*
 
@@ -167,6 +170,21 @@ The app is now at `http://localhost:5173`.
 | POST | `/api/replies/<reply_id>/bookmark/` | Yes | Toggle bookmark on a reply |
 | GET | `/api/bookmarks/` | Yes | List your bookmarked items |
 
+### Google OAuth
+
+| Endpoint | Description |
+|---|---|
+| `GET /accounts/google/login/?process=login` | Sign in with Google |
+| `POST /auth/google/` | Exchange Google access token for JWT |
+
+Topic and reply responses include `user_has_liked` and `user_has_bookmarked`.
+
+### Health
+
+| Endpoint | Description |
+|---|---|
+| `GET /health/` | Health check (for uptime monitoring) |
+
 ### Documentation
 
 | Endpoint | Description |
@@ -184,7 +202,7 @@ simpleforum/
 │   ├── ci.yml                 # Backend tests on push/PR
 │   └── cd.yml                 # Auto-deploy to Render on push to main
 ├── backend/
-│   ├── core/                  # Django project config (settings, urls)
+│   ├── core/                  # Django project config (settings, urls, health)
 │   ├── accounts/              # User management app
 │   ├── forum/                 # Topics & replies app
 │   ├── interactions/          # Likes & bookmarks app
@@ -218,12 +236,17 @@ The test suite covers models, serializers, views, and authentication flows. Test
    - `ALLOWED_HOSTS` — add your Render domain
    - `DATABASE_URL` — PostgreSQL connection string (Neon, Supabase, or Render PostgreSQL)
    - Email settings for password resets
+   - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (for Google OAuth)
+   - `FRONTEND_URL` — set to your Render domain for OAuth redirects
 3. **Build Command:** `pip install -r backend/requirements.txt`
 4. **Start Command:**
    ```bash
    python backend/manage.py collectstatic --noinput && python backend/manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 4
    ```
 5. Static files are served automatically via Whitenoise
+6. **Post-deploy:** In Django admin (`/admin/`):
+   - Go to **Sites** → ensure your domain is set (e.g., `simpleforum.onrender.com`)
+   - Go to **Social Applications** → add a Google app with your Client ID, Secret, and link it to the site
 
 ### Manual
 
