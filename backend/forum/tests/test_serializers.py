@@ -30,6 +30,7 @@ class TopicSerializerTest(TestCase):
         self.assertIn('user', data)
         self.assertIn('created', data)
         self.assertIn('replies', data)
+        self.assertIn('reply_count', data)
         self.assertIn('like_count', data)
         self.assertIn('user_has_liked', data)
 

@@ -6,6 +6,7 @@ from accounts.serializers import UserSerializer
 class TopicSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     replies = serializers.SerializerMethodField()
+    reply_count = serializers.IntegerField(source='replies.count', read_only=True)
     like_count = serializers.IntegerField(read_only=True)
     user_has_liked = serializers.SerializerMethodField()
     user_has_bookmarked = serializers.SerializerMethodField()
@@ -19,11 +20,16 @@ class TopicSerializer(serializers.ModelSerializer):
             'user',
             'created',
             'replies',
+            'reply_count',
             'like_count',
             'user_has_liked',
             'user_has_bookmarked',
         ]
         read_only_fields = ['id', 'created', 'user']
+
+    def get_replies(self, obj):
+        replies = obj.replies.select_related('user').prefetch_related('likes').all()
+        return ReplySerializer(replies, many=True, context=self.context).data
 
     def get_replies(self, obj):
         replies = obj.replies.select_related('user').prefetch_related('likes').all()
