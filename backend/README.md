@@ -39,6 +39,7 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 | `accounts/` | User list, detail, current user |
 | `forum/` | Topics and replies CRUD |
 | `interactions/` | Like/unlike and bookmark topics and replies |
+| `notifications/` | Notifications for replies and likes with rate-limited batching |
 
 ## API Endpoints
 
@@ -76,6 +77,15 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 - `GET /api/bookmarks/` — List your bookmarked items (auth required)
 
 Topic and reply responses include `user_has_liked` and `user_has_bookmarked`.
+
+### Notifications (`/api/notifications/`)
+
+- `GET /api/notifications/` — List your notifications (paginated, newest first)
+- `PATCH /api/notifications/<id>/read/` — Mark single as read
+- `PATCH /api/notifications/read-all/` — Mark all as read
+- `GET /api/notifications/unread-count/` — Unread badge count
+
+Notifications fire on reply and like events. A 30-minute cooldown per target merges duplicates into one entry with an incremented `count` field. Self-actions are excluded.
 
 ### Google OAuth
 
