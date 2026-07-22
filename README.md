@@ -11,6 +11,7 @@ A fullstack discussion forum — create topics, reply, like, and bookmark. Built
 - **JWT authentication** — Secure HttpOnly cookie-based auth with email login
 - **Google OAuth** — Sign in with Google via allauth
 - **Rate limiting** — Anonymous (10/min) and authenticated (1000/day) throttle rates
+- **Notifications** — Real-time alerts for replies and likes with rate-limited batching
 - **API documentation** — Auto-generated Swagger UI and ReDoc
 - **RESTful API** — Clean, well-structured endpoints
 
@@ -170,6 +171,17 @@ The app is now at `http://localhost:5173`.
 | POST | `/api/replies/<reply_id>/bookmark/` | Yes | Toggle bookmark on a reply |
 | GET | `/api/bookmarks/` | Yes | List your bookmarked items |
 
+### Notifications
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/notifications/` | Yes | List your notifications (paginated, newest first) |
+| PATCH | `/api/notifications/<id>/read/` | Yes | Mark a notification as read |
+| PATCH | `/api/notifications/read-all/` | Yes | Mark all notifications as read |
+| GET | `/api/notifications/unread-count/` | Yes | Get unread count for badge |
+
+Notifications are created when someone replies to your topic or likes your content. Multiple events on the same target within 30 minutes merge into a single notification with an incremented count (e.g. *"X, Y and 3 others liked your post"*).
+
 ### Google OAuth
 
 | Endpoint | Description |
@@ -206,6 +218,7 @@ simpleforum/
 │   ├── accounts/              # User management app
 │   ├── forum/                 # Topics & replies app
 │   ├── interactions/          # Likes & bookmarks app
+│   ├── notifications/         # Notification system with rate-limiting
 │   ├── manage.py
 │   └── requirements.txt
 ├── frontend/                  # React + Vite SPA (WIP)
