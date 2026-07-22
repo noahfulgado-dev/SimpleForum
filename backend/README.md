@@ -10,7 +10,7 @@ Django REST Framework API for the SimpleForum discussion platform.
 | Django | 5.2 |
 | Django REST Framework | 3.15 |
 | dj-rest-auth + SimpleJWT | JWT auth |
-| django-allauth | Email-based auth |
+| django-allauth | Email-based + Google OAuth auth |
 | PostgreSQL / SQLite | Database |
 | Gunicorn + Whitenoise | Serving |
 | drf-yasg | Swagger / ReDoc |
@@ -76,6 +76,25 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 - `GET /api/bookmarks/` — List your bookmarked items (auth required)
 
 Topic and reply responses include `user_has_liked` and `user_has_bookmarked`.
+
+### Google OAuth
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/accounts/google/login/?process=login` | Sign in with Google (browser redirect) |
+| POST | `/auth/google/` | Exchange Google access token for app JWT |
+
+**Setup steps:**
+1. Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com)
+2. Add redirect URI: `https://yourdomain.com/accounts/google/login/callback/`
+3. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in environment
+4. In Django admin, add the site and create a Social Application for Google
+
+### Health
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET / HEAD | `/health/` | Lightweight health check (no DB) |
 
 ## Auth
 
