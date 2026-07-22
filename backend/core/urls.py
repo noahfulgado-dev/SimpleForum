@@ -31,6 +31,8 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
 
+    path('accounts/', include('allauth.urls')),
+
     path('api/', include('accounts.urls')),
     path('api/', include('forum.urls')),
     path('api/', include('interactions.urls')),
