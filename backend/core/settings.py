@@ -33,6 +33,54 @@ DEBUG = os.environ['DEBUG'].strip().lower() == 'true'
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 
 
+# ──────────────────────────────────────────────
+# Production security settings
+# These only activate when DEBUG is off so they
+# don't break local development over HTTP.
+# ──────────────────────────────────────────────
+if not DEBUG:
+
+    # ── Render SSL ────────────────────────────
+    # Render's load balancer terminates HTTPS at the edge, then forwards
+    # requests to Django over plain HTTP internally.  Without this header
+    # Django thinks every request is HTTP and will refuse to set secure
+    # cookies / redirect to HTTPS.
+    #
+    # Do NOT add SECURE_SSL_REDIRECT here — Render already redirects HTTP
+    # → HTTPS at the proxy.  Enabling it would create a redirect loop.
+    # ──────────────────────────────────────────
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # ── HSTS (HTTP Strict Transport Security) ─
+    # Tells browsers to *only* connect to this site over HTTPS for the
+    # next year.  The first visit still happens over HTTP, but after that
+    # the browser hard-forces HTTPS — even if the user types http:// or
+    # follows an http:// link.
+    # ──────────────────────────────────────────
+    SECURE_HSTS_SECONDS = 31536000          # 1 year (start with 3600 for testing)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True   # Apply to all subdomains
+    SECURE_HSTS_PRELOAD = True              # Allow preload lists (e.g. Chrome)
+
+    # ── Secure cookies ────────────────────────
+    # Django session cookies and CSRF cookies are only sent over HTTPS.
+    # Without this, a MITM attacker could steal them over an open WiFi
+    # network and hijack the user's session.
+    #
+    # This also protects the JWT httpOnly cookies (core-app-auth /
+    # core-refresh-token) once the frontend switches to using them
+    # instead of localStorage.
+    # ──────────────────────────────────────────
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # ── Clickjacking protection ───────────────
+    # Prevents the site from being embedded in an <iframe> on another
+    # domain (e.g. a malicious site overlaying invisible buttons on top
+    # of your login form).
+    # ──────────────────────────────────────────
+    X_FRAME_OPTIONS = 'DENY'
+
+
 # Application definition
 
 INSTALLED_APPS = [
