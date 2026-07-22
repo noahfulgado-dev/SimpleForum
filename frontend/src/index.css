@@ -1,10 +1,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Lexend+Exa:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cousine:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Unna:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Martel+Sans:wght@200;300;400;600;700;800;900&display=swap');
+
+@font-face {
+  font-family: 'Muli';
+  src: url('./assets/fonts/Muli-Regular.woff2') format('woff2'),
+       url('./assets/fonts/Muli-Bold.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.primary-font {
+  font-family: 'Muli', sans-serif;
+}
+
+.secondary-font {
+  font-family: 'Unna', serif  ;
+}
+
+.tertiary-font {
+  font-family: 'Martel Sans', sans-serif;
+}
+
+.neutral-color {
+  color: #2d2a32;
+}
+
+.neutral-bg-color {
+  background-color: #2d2a32;
+}
 
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @theme {
   --font-lexend: "Lexend Exa";
+  --font-cousine: "Cousine";
 }
 
 @custom-variant dark (&:is(.dark *));
