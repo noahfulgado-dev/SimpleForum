@@ -6,7 +6,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://simpleforum-1m94.onrender.com/api';
 
 // Create axios instance
 const axiosInstance: AxiosInstance = axios.create({
@@ -23,7 +23,7 @@ const axiosInstance: AxiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config: CustomAxiosRequestConfig) => {
     const token = localStorage.getItem('access_token');
-    if (token) {
+    if (token && !config.url?.includes('/auth/')) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -41,6 +41,11 @@ axiosInstance.interceptors.response.use(
 
     // If error is 401 and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Don't intercept auth endpoints (login, register, etc.)
+      if (originalRequest.url?.includes('/auth/')) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       try {

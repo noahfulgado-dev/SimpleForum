@@ -34,6 +34,7 @@ export function Signup() {
 
         try {
             await authAPI.register({
+                username,
                 email,
                 password1: password,
                 password2: confirmPassword,
