@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'accounts',
     'forum',
     'interactions',
+    'notifications',
     'corsheaders',
 ]
 
