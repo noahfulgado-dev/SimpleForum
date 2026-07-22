@@ -10,6 +10,7 @@ def create_notification(actor, recipient, verb, target):
         return
 
     cooldown = timedelta(minutes=30)
+    cutoff = timezone.now() - cooldown
 
     existing = Notification.objects.filter(
         recipient=recipient,
@@ -17,16 +18,21 @@ def create_notification(actor, recipient, verb, target):
         target_ct=ContentType.objects.get_for_model(target),
         target_id=target.id,
         is_read=False,
-        created__gte=timezone.now() - cooldown,
     ).first()
 
     if existing:
-        existing.count += 1
-        existing.save(update_fields=['count'])
+        if existing.created >= cutoff:
+            existing.count += 1
+            existing.save(update_fields=['count'])
+        else:
+            existing.count = 1
+            existing.created = timezone.now()
+            existing.actor = actor
+            existing.save(update_fields=['count', 'created', 'actor'])
     else:
         Notification.objects.create(
             recipient=recipient,
             actor=actor,
             verb=verb,
-            target=target
+            target=target,
         )
