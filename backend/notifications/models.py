@@ -4,8 +4,6 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 
-
-# Create your models here.
 class Notification(models.Model):
 
     class VerbType(models.TextChoices):
@@ -58,4 +56,3 @@ class Notification(models.Model):
                 name='unique_unread_notification_per_target'
             )
         ]
-    
