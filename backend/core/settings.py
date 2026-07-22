@@ -101,7 +101,6 @@ INSTALLED_APPS = [
     'dj_rest_auth.registration',
 
     'rest_framework',
-    'rest_framework.authtoken',
     'rest_framework_simplejwt',
 
     'drf_yasg',
