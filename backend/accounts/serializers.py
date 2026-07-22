@@ -32,10 +32,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     def get_topics(self, obj):
         from forum.serializers import TopicSerializer
-        topics = obj.topics.all()[:10]
+        from django.db.models import Count
+        topics = obj.topics.select_related('user').prefetch_related('likes').annotate(
+            like_count=Count('likes')
+        )[:10]
         return TopicSerializer(topics, many=True, context=self.context).data
 
     def get_replies(self, obj):
         from forum.serializers import ReplySerializer
-        replies = obj.replies.all()[:10]
+        replies = obj.replies.select_related('user', 'topic').prefetch_related('likes').all()[:10]
         return ReplySerializer(replies, many=True, context=self.context).data

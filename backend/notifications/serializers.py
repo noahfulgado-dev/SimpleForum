@@ -13,7 +13,3 @@ class NotificationSerializer(serializers.ModelSerializer):
             'verb', 'count', 'is_read', 'created',
         ]
         read_only_fields = ['id', 'recipient', 'created']
-
-
-class UnreadCountSerializer(serializers.Serializer):
-    count = serializers.IntegerField()
