@@ -219,6 +219,39 @@ class ReplyAPITest(TestCase):
         self.assertEqual(response.data['content'], 'New reply content')
         self.assertEqual(response.data['user']['username'], 'testuser')
 
+    def test_create_nested_reply(self):
+        """Test authenticated user can create a nested reply."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.post(f'/api/topics/{self.topic.id}/replies/', {
+            'content': 'Parent reply'
+        })
+        parent_id = response.data['id']
+        response = self.client.post(f'/api/topics/{self.topic.id}/replies/', {
+            'content': 'Child reply',
+            'parent': parent_id
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['content'], 'Child reply')
+        self.assertEqual(response.data['parent'], parent_id)
+
+    def test_create_nested_reply_wrong_topic(self):
+        """Test nested reply must belong to the same topic."""
+        other_topic = Topic.objects.create(
+            title='Other Topic',
+            description='Other description',
+            user=self.user
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        parent_resp = self.client.post(f'/api/topics/{self.topic.id}/replies/', {
+            'content': 'Parent reply'
+        })
+        parent_id = parent_resp.data['id']
+        response = self.client.post(f'/api/topics/{other_topic.id}/replies/', {
+            'content': 'Child reply',
+            'parent': parent_id
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_create_reply_unauthenticated(self):
         """Test unauthenticated user cannot create a reply."""
         self.client.credentials()
