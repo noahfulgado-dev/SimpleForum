@@ -6,8 +6,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.contenttypes.models import ContentType
 
 from forum.models import Topic, Reply
-from interactions.models import Likes, Bookmark
-from interactions.serializers import BookmarkSerializer
+from interactions.models import Likes, Bookmark, Share
+from interactions.serializers import BookmarkSerializer, ShareSerializer
 
 
 @api_view(['POST'])
@@ -112,6 +112,70 @@ class UserBookmarkListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Bookmark.objects.filter(
+            user=self.request.user
+        ).select_related(
+            'content_type'
+        ).prefetch_related(
+            'content_object'
+        ).order_by('-created')
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_topic_share(request, topic_id):
+    topic = get_object_or_404(Topic, id=topic_id)
+    topic_type = ContentType.objects.get_for_model(Topic)
+
+    share, created = Share.objects.get_or_create(
+        user=request.user,
+        content_type=topic_type,
+        object_id=topic.id
+    )
+
+    if not created:
+        share.delete()
+        return Response({
+            'status': 'unshared',
+            'shared_count': Share.objects.filter(content_type=topic_type, object_id=topic.id).count()
+        })
+
+    return Response({
+        'status': 'shared',
+        'shared_count': Share.objects.filter(content_type=topic_type, object_id=topic.id).count()
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_reply_share(request, reply_id):
+    reply = get_object_or_404(Reply, id=reply_id)
+    reply_type = ContentType.objects.get_for_model(Reply)
+
+    share, created = Share.objects.get_or_create(
+        user=request.user,
+        content_type=reply_type,
+        object_id=reply.id
+    )
+
+    if not created:
+        share.delete()
+        return Response({
+            'status': 'unshared',
+            'shared_count': Share.objects.filter(content_type=reply_type, object_id=reply.id).count()
+        })
+
+    return Response({
+        'status': 'shared',
+        'shared_count': Share.objects.filter(content_type=reply_type, object_id=reply.id).count()
+    })
+
+class UserShareListView(generics.ListAPIView):
+    serializer_class = ShareSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Share.objects.filter(
             user=self.request.user
         ).select_related(
             'content_type'

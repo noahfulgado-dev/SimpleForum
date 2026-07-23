@@ -10,6 +10,8 @@ class TopicSerializer(serializers.ModelSerializer):
     like_count = serializers.IntegerField(read_only=True)
     user_has_liked = serializers.SerializerMethodField()
     user_has_bookmarked = serializers.SerializerMethodField()
+    shared_count = serializers.SerializerMethodField()
+    user_has_shared = serializers.SerializerMethodField()
 
     class Meta:
         model = Topic
@@ -24,6 +26,8 @@ class TopicSerializer(serializers.ModelSerializer):
             'like_count',
             'user_has_liked',
             'user_has_bookmarked',
+            'shared_count',
+            'user_has_shared',
         ]
         read_only_fields = ['id', 'created', 'user']
 
@@ -50,6 +54,23 @@ class TopicSerializer(serializers.ModelSerializer):
             return Bookmark.objects.filter(user=request.user, content_type=topic_type, object_id=obj.id).exists()
         return False
 
+    def get_shared_count(self, obj):
+        from django.contrib.contenttypes.models import ContentType
+        from interactions.models import Share
+        topic_type = ContentType.objects.get_for_model(Topic)
+        return Share.objects.filter(content_type=topic_type, object_id=obj.id).count()
+
+    def get_user_has_shared(self, obj):
+        if hasattr(obj, 'user_has_shared'):
+            return obj.user_has_shared
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            from django.contrib.contenttypes.models import ContentType
+            from interactions.models import Share
+            topic_type = ContentType.objects.get_for_model(Topic)
+            return Share.objects.filter(user=request.user, content_type=topic_type, object_id=obj.id).exists()
+        return False
+
     def create(self, validated_data):
         request = self.context.get('request')
         validated_data['user'] = request.user
@@ -61,6 +82,8 @@ class ReplySerializer(serializers.ModelSerializer):
     like_count = serializers.IntegerField(source='likes.count', read_only=True)
     user_has_liked = serializers.SerializerMethodField()
     user_has_bookmarked = serializers.SerializerMethodField()
+    shared_count = serializers.SerializerMethodField()
+    user_has_shared = serializers.SerializerMethodField()
 
     class Meta:
         model = Reply
@@ -73,6 +96,8 @@ class ReplySerializer(serializers.ModelSerializer):
             'like_count',
             'user_has_liked',
             'user_has_bookmarked',
+            'shared_count',
+            'user_has_shared',
         ]
         read_only_fields = ['id', 'created', 'user', 'topic']
 
@@ -93,6 +118,23 @@ class ReplySerializer(serializers.ModelSerializer):
             from interactions.models import Bookmark
             reply_type = ContentType.objects.get_for_model(Reply)
             return Bookmark.objects.filter(user=request.user, content_type=reply_type, object_id=obj.id).exists()
+        return False
+
+    def get_shared_count(self, obj):
+        from django.contrib.contenttypes.models import ContentType
+        from interactions.models import Share
+        reply_type = ContentType.objects.get_for_model(Reply)
+        return Share.objects.filter(content_type=reply_type, object_id=obj.id).count()
+
+    def get_user_has_shared(self, obj):
+        if hasattr(obj, 'user_has_shared'):
+            return obj.user_has_shared
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            from django.contrib.contenttypes.models import ContentType
+            from interactions.models import Share
+            reply_type = ContentType.objects.get_for_model(Reply)
+            return Share.objects.filter(user=request.user, content_type=reply_type, object_id=obj.id).exists()
         return False
 
     def create(self, validated_data):

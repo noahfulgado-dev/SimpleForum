@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.contenttypes.models import ContentType
 from forum.models import Topic, Reply
-from interactions.models import Likes, Bookmark
+from interactions.models import Likes, Bookmark, Share
 
 User = get_user_model()
 
@@ -153,6 +153,39 @@ class TopicAPITest(TestCase):
         response = self.client.get(f'/api/topics/{self.topic.id}/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_topic_list_includes_user_has_shared(self):
+        """Test topic list includes user_has_shared field."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/topics/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for topic in response.data['results']:
+            self.assertIn('user_has_shared', topic)
+            self.assertIsInstance(topic['user_has_shared'], bool)
+
+    def test_topic_detail_user_has_shared_true_when_shared(self):
+        """Test user_has_shared is true when current user shared the topic."""
+        topic_type = ContentType.objects.get_for_model(Topic)
+        Share.objects.create(user=self.user, content_type=topic_type, object_id=self.topic.id)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['user_has_shared'])
+
+    def test_topic_detail_user_has_shared_false_when_not_shared(self):
+        """Test user_has_shared is false when current user has not shared."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['user_has_shared'])
+
+    def test_topic_detail_includes_shared_count(self):
+        """Test topic detail includes shared_count."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('shared_count', response.data)
+        self.assertEqual(response.data['shared_count'], 0)
+
 
 class ReplyAPITest(TestCase):
     """Test Reply API endpoints."""
@@ -266,3 +299,29 @@ class ReplyAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('user_has_bookmarked', response.data)
         self.assertFalse(response.data['user_has_bookmarked'])
+
+    def test_reply_detail_user_has_shared(self):
+        """Test reply detail includes user_has_shared."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/replies/{self.reply.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('user_has_shared', response.data)
+        self.assertFalse(response.data['user_has_shared'])
+
+    def test_reply_detail_user_has_shared_true_when_shared(self):
+        """Test reply detail includes user_has_shared when shared."""
+        reply_type = ContentType.objects.get_for_model(Reply)
+        Share.objects.create(user=self.user, content_type=reply_type, object_id=self.reply.id)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/replies/{self.reply.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('user_has_shared', response.data)
+        self.assertTrue(response.data['user_has_shared'])
+
+    def test_reply_detail_user_has_shared_false_when_not_shared(self):
+        """Test reply detail user_has_shared is false when not shared."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/replies/{self.reply.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('user_has_shared', response.data)
+        self.assertFalse(response.data['user_has_shared'])

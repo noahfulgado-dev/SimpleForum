@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.contrib.contenttypes.models import ContentType
 from forum.models import Topic, Reply
-from interactions.models import Likes, Bookmark
+from interactions.models import Likes, Bookmark, Share
 
 User = get_user_model()
 
@@ -159,3 +159,62 @@ class BookmarkModelTest(TestCase):
             object_id=self.topic.id
         )
         self.assertEqual(Bookmark.objects.filter(content_type=self.topic_type, object_id=self.topic.id).count(), 2)
+
+
+class ShareModelTest(TestCase):
+    """Test Share model."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='pass123')
+        self.user2 = User.objects.create_user(username='testuser2', password='pass123')
+        self.topic = Topic.objects.create(
+            title='Test Topic',
+            description='Test description',
+            user=self.user
+        )
+        self.reply = Reply.objects.create(
+            topic=self.topic,
+            user=self.user,
+            content='Test reply'
+        )
+        self.topic_type = ContentType.objects.get_for_model(Topic)
+        self.reply_type = ContentType.objects.get_for_model(Reply)
+
+    def test_share_topic(self):
+        """Test sharing a topic."""
+        share = Share.objects.create(
+            user=self.user2,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        self.assertEqual(share.content_object, self.topic)
+        self.assertEqual(share.user, self.user2)
+        self.assertEqual(share.content_type, self.topic_type)
+
+    def test_share_reply(self):
+        """Test sharing a reply."""
+        share = Share.objects.create(
+            user=self.user2,
+            content_type=self.reply_type,
+            object_id=self.reply.id
+        )
+        self.assertEqual(share.content_object, self.reply)
+        self.assertEqual(share.user, self.user2)
+        self.assertEqual(share.content_type, self.reply_type)
+
+    def test_different_users_can_share_same_topic(self):
+        """Test different users can share the same topic."""
+        Share.objects.create(
+            user=self.user,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        Share.objects.create(
+            user=self.user2,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        self.assertEqual(
+            Share.objects.filter(content_type=self.topic_type, object_id=self.topic.id).count(),
+            2
+        )
