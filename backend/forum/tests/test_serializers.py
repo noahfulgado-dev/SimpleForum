@@ -86,6 +86,8 @@ class ReplySerializerTest(TestCase):
 
         self.assertIn('id', data)
         self.assertIn('topic', data)
+        self.assertIn('parent', data)
+        self.assertIn('children', data)
         self.assertIn('user', data)
         self.assertIn('content', data)
         self.assertIn('created', data)
@@ -111,3 +113,30 @@ class ReplySerializerTest(TestCase):
         serializer = ReplySerializer(self.reply)
         data = serializer.data
         self.assertFalse(data['user_has_shared'])
+
+
+    def test_reply_parent_is_none_by_default(self):
+        """Test reply parent is None for top-level replies."""
+        serializer = ReplySerializer(self.reply)
+        data = serializer.data
+        self.assertIsNone(data['parent'])
+
+    def test_reply_children_is_empty_by_default(self):
+        """Test reply children is empty list."""
+        serializer = ReplySerializer(self.reply)
+        data = serializer.data
+        self.assertEqual(data['children'], [])
+
+    def test_reply_children_with_nesting(self):
+        """Test reply children are serialized with depth limiting."""
+        child = Reply.objects.create(
+            topic=self.topic,
+            user=self.user,
+            content='Child reply',
+            parent=self.reply
+        )
+        serializer = ReplySerializer(self.reply, context={'depth': 1})
+        data = serializer.data
+        self.assertEqual(len(data['children']), 1)
+        self.assertEqual(data['children'][0]['content'], 'Child reply')
+        self.assertEqual(data['children'][0]['parent'], self.reply.id)

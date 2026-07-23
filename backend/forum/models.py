@@ -24,6 +24,7 @@ class Topic(models.Model):
 
 class Reply(models.Model):
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='replies')
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='children')
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
