@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.urls import path, include
-from dj_rest_auth.views import PasswordResetConfirmView, PasswordResetView
 from rest_framework.permissions import AllowAny
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from core.auth_urls import auth_urlpatterns, registration_urlpatterns
 from core.views import health
 
 schema_view = get_schema_view(
@@ -21,15 +21,8 @@ urlpatterns = [
     path('health/', health, name='health'),
     path('admin/', admin.site.urls),
 
-    path('auth/', include("dj_rest_auth.urls")),
-    path('auth/registration/', include("dj_rest_auth.registration.urls")),
-
-    path('auth/password/reset/', PasswordResetView.as_view(), name="password_reset"),
-    path(
-        'auth/password/reset/confirm/<uidb64>/<str:token>/',
-        PasswordResetConfirmView.as_view(),
-        name="password_reset_confirm",
-    ),
+    path('auth/', include(auth_urlpatterns)),
+    path('auth/registration/', include(registration_urlpatterns)),
 
     path('accounts/', include('allauth.urls')),
 
