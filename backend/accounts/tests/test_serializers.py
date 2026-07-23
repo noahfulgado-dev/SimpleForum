@@ -50,5 +50,7 @@ class UserDetailSerializerTest(TestCase):
         self.assertEqual(data['avatar'], 'https://example.com/avatar.jpg')
         self.assertIn('topics', data)
         self.assertIn('replies', data)
+        self.assertIn('shares', data)
         self.assertIn('topic_count', data)
         self.assertIn('reply_count', data)
+        self.assertIn('share_count', data)

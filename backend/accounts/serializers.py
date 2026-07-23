@@ -14,8 +14,10 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
     topics = serializers.SerializerMethodField()
     replies = serializers.SerializerMethodField()
+    shares = serializers.SerializerMethodField()
     topic_count = serializers.IntegerField(source='topics.count', read_only=True)
     reply_count = serializers.IntegerField(source='replies.count', read_only=True)
+    share_count = serializers.IntegerField(source='shares.count', read_only=True)
 
     class Meta:
         model = User
@@ -26,8 +28,10 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'avatar',
             'topics',
             'replies',
+            'shares',
             'topic_count',
             'reply_count',
+            'share_count',
         ]
 
     def get_topics(self, obj):
@@ -42,3 +46,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
         from forum.serializers import ReplySerializer
         replies = obj.replies.select_related('user', 'topic').prefetch_related('likes').all()[:10]
         return ReplySerializer(replies, many=True, context=self.context).data
+
+    def get_shares(self, obj):
+        from interactions.serializers import ShareSerializer
+        shares = obj.shares.select_related('content_type').order_by('-created')[:10]
+        return ShareSerializer(shares, many=True, context=self.context).data
