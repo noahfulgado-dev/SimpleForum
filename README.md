@@ -10,7 +10,7 @@ A fullstack discussion forum — create topics, reply, like, and bookmark. Built
 - **Bookmarks** — Bookmark and unbookmark topics and replies
 - **JWT authentication** — Secure HttpOnly cookie-based auth with email login
 - **Google OAuth** — Sign in with Google via allauth
-- **Rate limiting** — Anonymous (10/min) and authenticated (1000/day) throttle rates
+- **Rate limiting** — Anonymous (5/min), authenticated (200/day), with stricter limits on login (3/min) and registration (2/min)
 - **Notifications** — Real-time alerts for replies and likes with rate-limited batching
 - **API documentation** — Auto-generated Swagger UI and ReDoc
 - **RESTful API** — Clean, well-structured endpoints
@@ -196,6 +196,15 @@ Topic and reply responses include `user_has_liked` and `user_has_bookmarked`.
 | Endpoint | Description |
 |---|---|
 | `GET /health/` | Health check (for uptime monitoring) |
+
+### Rate Limiting
+
+| Scope | Rate | Applies To |
+|-------|------|------------|
+| `anon` | 5/minute | All unauthenticated requests |
+| `user` | 200/day | All authenticated requests |
+| `login` | 3/minute | `POST /auth/login/` |
+| `register` | 2/minute | `POST /auth/registration/` |
 
 ### Documentation
 

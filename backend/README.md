@@ -100,6 +100,15 @@ Notifications fire on reply and like events. A 30-minute cooldown per target mer
 3. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in environment
 4. In Django admin, add the site and create a Social Application for Google
 
+### Rate Limiting
+
+| Scope | Rate | Endpoints |
+|-------|------|-----------|
+| `anon` | 5/minute | All unauthenticated requests |
+| `user` | 200/day | All authenticated requests |
+| `login` | 3/minute | `POST /auth/login/` |
+| `register` | 2/minute | `POST /auth/registration/` |
+
 ### Health
 
 | Method | Endpoint | Description |
