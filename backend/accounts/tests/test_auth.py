@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -16,6 +18,17 @@ class AuthenticationTest(TestCase):
             email='test@example.com',
             password='testpass123'
         )
+        self._throttle_patches = [
+            patch('rest_framework.throttling.ScopedRateThrottle.allow_request', return_value=True),
+            patch('rest_framework.throttling.AnonRateThrottle.allow_request', return_value=True),
+            patch('rest_framework.throttling.UserRateThrottle.allow_request', return_value=True),
+        ]
+        for p in self._throttle_patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self._throttle_patches:
+            p.stop()
 
     def test_user_registration(self):
         """Test user registration."""
