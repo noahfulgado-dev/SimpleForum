@@ -8,8 +8,8 @@ urlpatterns = [
     path('replies/<int:reply_id>/bookmark/', toggle_reply_bookmark, name='reply-bookmark'),
     path('bookmarks/', UserBookmarkListView.as_view(), name='user-bookmarks'),
 
-    path('topics/<int:topic_id>/shares/', toggle_topic_bookmark, name='topic-share'),
-    path('replies/<int:reply_id>/shares/', toggle_reply_bookmark, name='reply-share'),
-    path('shares/', UserBookmarkListView.as_view(), name='user-shares'),
+    path('topics/<int:topic_id>/shares/', toggle_topic_share, name='topic-share'),
+    path('replies/<int:reply_id>/shares/', toggle_reply_share, name='reply-share'),
+    path('shares/', UserShareListView.as_view(), name='user-shares'),
     
 ]
