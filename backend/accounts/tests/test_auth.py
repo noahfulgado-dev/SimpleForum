@@ -90,3 +90,31 @@ class AuthenticationTest(TestCase):
         """Test getting user profile without authentication."""
         response = self.client.get('/api/users/me/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_login_sets_auth_cookie(self):
+        """Test login response sets httpOnly auth cookie."""
+        response = self.client.post('/auth/login/', {
+            'email': 'test@example.com',
+            'password': 'testpass123'
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('core-app-auth', response.cookies)
+        self.assertIn('core-refresh-token', response.cookies)
+
+    def test_cookie_authentication(self):
+        """Test authenticating via httpOnly cookie instead of Authorization header."""
+        login_resp = self.client.post('/auth/login/', {
+            'email': 'test@example.com',
+            'password': 'testpass123'
+        })
+        self.client.cookies['core-app-auth'] = login_resp.data['access']
+        self.client.credentials()  # Clear any Authorization header
+        response = self.client.get('/api/users/me/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], 'testuser')
+
+    def test_cookie_authentication_invalid(self):
+        """Test that invalid cookie value does not authenticate."""
+        self.client.cookies['core-app-auth'] = 'invalid-token'
+        response = self.client.get('/api/users/me/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
