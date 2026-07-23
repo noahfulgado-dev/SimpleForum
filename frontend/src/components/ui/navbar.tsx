@@ -7,7 +7,7 @@ import defaultAvatar from './../../assets/image/default_avatar.jpg';
 export function Navbar() {
   return (
     <>
-        <nav className="border border-gray-300 rounded-[10px] p-2 pl-5 pr-5 flex items-center justify-between bg-[#fafdf6]">
+        <nav className="[grid-area:navbar] border border-gray-300 rounded-[10px] p-2 pl-5 pr-5 flex items-center justify-between bg-[#fafdf6]">
             <div className="text-[1.2rem] text-[#2d2a32] font-medium font-cousine w-[33.3%] flex items-center justify-start rounded-[10px]">
                 SimpleForum
             </div>
@@ -23,7 +23,7 @@ export function Navbar() {
                 <div className="relative group w-8 h-8 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer">
                     <img src={defaultAvatar} alt="Default Avatar" className="w-8 h-8 border border-gray-800 rounded-full"/>
                     <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-[#e5e5e5]/30"></div>
-                </div>
+                </div>  
             </div>
         </nav>
     </>

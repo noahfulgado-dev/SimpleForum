@@ -31,6 +31,16 @@
   background-color: #2d2a32;
 }
 
+.main-container {
+  display: grid;
+  grid-template-areas: 
+    "navbar navbar navbar"
+    "sidebar-left main sidebar-right";
+  grid-template-columns: 1fr 3fr 1fr;
+  grid-template-rows: auto 1fr; 
+  gap: 20px;
+}
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
