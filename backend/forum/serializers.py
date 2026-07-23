@@ -31,10 +31,6 @@ class TopicSerializer(serializers.ModelSerializer):
         replies = obj.replies.select_related('user').prefetch_related('likes').all()
         return ReplySerializer(replies, many=True, context=self.context).data
 
-    def get_replies(self, obj):
-        replies = obj.replies.select_related('user').prefetch_related('likes').all()
-        return ReplySerializer(replies, many=True, context=self.context).data
-
     def get_user_has_liked(self, obj):
         if hasattr(obj, 'user_has_liked'):
             return obj.user_has_liked
