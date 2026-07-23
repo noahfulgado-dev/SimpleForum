@@ -4,7 +4,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from forum.models import Topic, Reply
-from interactions.models import Bookmark
+from interactions.models import Bookmark, Share
 from django.contrib.contenttypes.models import ContentType
 
 User = get_user_model()
@@ -240,4 +240,123 @@ class BookmarkAPITest(TestCase):
     def test_bookmark_topic_unauthenticated(self):
         """Test unauthenticated users cannot bookmark."""
         response = self.client.post(f'/api/topics/{self.topic.id}/bookmark/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class ShareAPITest(TestCase):
+    """Test Share API endpoints."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.other_user = User.objects.create_user(
+            username='otheruser',
+            password='otherpass123'
+        )
+        self.topic = Topic.objects.create(
+            title='Test Topic',
+            description='Test description',
+            user=self.other_user
+        )
+        self.reply = Reply.objects.create(
+            topic=self.topic,
+            user=self.other_user,
+            content='Test reply'
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+        self.topic_type = ContentType.objects.get_for_model(Topic)
+        self.reply_type = ContentType.objects.get_for_model(Reply)
+
+    def test_share_topic(self):
+        """Test sharing a topic."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.post(f'/api/topics/{self.topic.id}/shares/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('status'), 'shared')
+        self.assertEqual(response.data.get('shared_count'), 1)
+        self.assertTrue(
+            Share.objects.filter(
+                user=self.user,
+                content_type=self.topic_type,
+                object_id=self.topic.id
+            ).exists()
+        )
+
+    def test_unshare_topic(self):
+        """Test unsharing a topic."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.post(f'/api/topics/{self.topic.id}/shares/')
+        response = self.client.post(f'/api/topics/{self.topic.id}/shares/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('status'), 'unshared')
+        self.assertEqual(response.data.get('shared_count'), 0)
+
+    def test_share_reply(self):
+        """Test sharing a reply."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.post(f'/api/replies/{self.reply.id}/shares/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('status'), 'shared')
+
+    def test_unshare_reply(self):
+        """Test unsharing a reply."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.post(f'/api/replies/{self.reply.id}/shares/')
+        response = self.client.post(f'/api/replies/{self.reply.id}/shares/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('status'), 'unshared')
+
+    def test_share_nonexistent_topic(self):
+        """Test sharing a non-existent topic returns 404."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.post('/api/topics/99999/shares/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_share_unauthenticated(self):
+        """Test unauthenticated users cannot share."""
+        response = self.client.post(f'/api/topics/{self.topic.id}/shares/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_share_list_empty(self):
+        """Test listing shares when user has none."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/shares/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 0)
+
+    def test_share_list_with_items(self):
+        """Test listing shares returns the user's shares."""
+        Share.objects.create(
+            user=self.user,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        Share.objects.create(
+            user=self.user,
+            content_type=self.reply_type,
+            object_id=self.reply.id
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/shares/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 2)
+
+    def test_share_list_other_user_not_visible(self):
+        """Test a user cannot see another user's shares."""
+        Share.objects.create(
+            user=self.other_user,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/shares/')
+        self.assertEqual(response.data.get('count'), 0)
+
+    def test_share_list_unauthenticated(self):
+        """Test unauthenticated users cannot access the share list."""
+        response = self.client.get('/api/shares/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
