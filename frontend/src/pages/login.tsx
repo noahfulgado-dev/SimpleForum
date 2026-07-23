@@ -12,12 +12,14 @@ import { Input } from "@/components/ui/input";
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export function Login() {
-    document.title ="Login | SimpleForum";
+    document.title = "Login | SimpleForum";
 
     const navigate = useNavigate();
+    const { login } = useAuth();
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -27,11 +29,8 @@ export function Login() {
         setError('');
 
         try {
-            const response = await authAPI.login({ email, password });
-            const { access, refresh } = response.data;
-            localStorage.setItem('access_token', access);
-            localStorage.setItem('refresh_token', refresh);
-            navigate('/');
+            await login(username, email, password);
+            navigate('/feed');
         } catch (err: any) {
             const data = err.response?.data;
             if (data?.non_field_errors) {
@@ -59,6 +58,17 @@ export function Login() {
                         <CardContent>
                             <form onSubmit={handleSubmit}>
                                 <div className="flex flex-col gap-6">
+                                    <div className="">
+                                        <Input
+                                            className="rounded-none primary-font"
+                                            id="username"
+                                            type="username"
+                                            placeholder="Username"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                     <div className="">
                                         <Input
                                             className="rounded-none"
