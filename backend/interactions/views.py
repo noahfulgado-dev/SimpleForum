@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from forum.models import Topic, Reply
 from interactions.models import Likes, Bookmark, Share
-from interactions.serializers import BookmarkSerializer
+from interactions.serializers import BookmarkSerializer, ShareSerializer
 
 
 @api_view(['POST'])
@@ -148,7 +148,7 @@ def toggle_topic_share(request, topic_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def toggle_reply_sharek(request, reply_id):
+def toggle_reply_share(request, reply_id):
     reply = get_object_or_404(Reply, id=reply_id)
     reply_type = ContentType.objects.get_for_model(Reply)
 
@@ -169,3 +169,16 @@ def toggle_reply_sharek(request, reply_id):
         'status': 'shared',
         'shared_count': Share.objects.filter(content_type=reply_type, object_id=reply.id).count()
     })
+
+class UserShareListView(generics.ListAPIView):
+    serializer_class = ShareSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Share.objects.filter(
+            user=self.request.user
+        ).select_related(
+            'content_type'
+        ).prefetch_related(
+            'content_object'
+        ).order_by('-created')
