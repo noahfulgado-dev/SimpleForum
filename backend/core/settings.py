@@ -243,6 +243,8 @@ REST_FRAMEWORK = {
         'DEFAULT_THROTTLE_RATES': {
         'anon': '5/minute',  # Limit for unauthenticated users
         'user': '200/day',   # Limit for logged-in users
+        'login': '3/minute',
+        'register': '2/minute', 
     }
     
     
