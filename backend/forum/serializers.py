@@ -32,8 +32,8 @@ class TopicSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created', 'user']
 
     def get_replies(self, obj):
-        replies = obj.replies.select_related('user').prefetch_related('likes').all()
-        return ReplySerializer(replies, many=True, context=self.context).data
+        replies = obj.replies.filter(parent__isnull=True).select_related('user').prefetch_related('likes').all()
+        return ReplySerializer(replies, many=True, context={**self.context, 'depth': 1}).data
 
     def get_user_has_liked(self, obj):
         if hasattr(obj, 'user_has_liked'):
@@ -79,6 +79,8 @@ class TopicSerializer(serializers.ModelSerializer):
 
 class ReplySerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    parent = serializers.PrimaryKeyRelatedField(queryset=Reply.objects.all(), required=False, allow_null=True)
+    children = serializers.SerializerMethodField()
     like_count = serializers.IntegerField(source='likes.count', read_only=True)
     user_has_liked = serializers.SerializerMethodField()
     user_has_bookmarked = serializers.SerializerMethodField()
@@ -90,6 +92,8 @@ class ReplySerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'topic',
+            'parent',
+            'children',
             'user',
             'content',
             'created',
@@ -100,6 +104,13 @@ class ReplySerializer(serializers.ModelSerializer):
             'user_has_shared',
         ]
         read_only_fields = ['id', 'created', 'user', 'topic']
+
+    def get_children(self, obj):
+        depth = self.context.get('depth', 0)
+        if depth <= 0:
+            return []
+        children = obj.children.select_related('user').prefetch_related('likes').all()
+        return ReplySerializer(children, many=True, context={**self.context, 'depth': depth - 1}).data
 
     def get_user_has_liked(self, obj):
         if hasattr(obj, 'user_has_liked'):

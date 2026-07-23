@@ -94,6 +94,10 @@ class ReplyCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         topic = get_object_or_404(Topic, id=self.kwargs['topic_id'])
+        parent = serializer.validated_data.get('parent')
+        if parent and parent.topic != topic:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'parent': 'Parent reply must belong to the same topic.'})
         serializer.save(topic=topic, user=self.request.user)
 
 
