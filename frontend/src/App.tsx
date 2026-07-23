@@ -5,7 +5,6 @@ import { Signup } from './pages/signup';
 import { Feed } from './pages/feed';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
-#
 function App() {
   return (
     
