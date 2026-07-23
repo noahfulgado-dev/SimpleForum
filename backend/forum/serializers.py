@@ -73,6 +73,8 @@ class ReplySerializer(serializers.ModelSerializer):
             'like_count',
             'user_has_liked',
             'user_has_bookmarked',
+            'share_count',
+            'user_has_shared',
         ]
         read_only_fields = ['id', 'created', 'user', 'topic']
 
@@ -93,6 +95,17 @@ class ReplySerializer(serializers.ModelSerializer):
             from interactions.models import Bookmark
             reply_type = ContentType.objects.get_for_model(Reply)
             return Bookmark.objects.filter(user=request.user, content_type=reply_type, object_id=obj.id).exists()
+        return False
+
+    def get_user_has_shared(self, obj):
+        if hasattr(obj, 'user_has_shared'):
+            return obj.user_has_shared
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            from django.contrib.contenttypes.models import ContentType
+            from interactions.models import Share
+            topic_type = ContentType.objects.get_for_model(Topic)
+            return Share.objects.filter(user=request.user, content_type=topic_type, object_id=obj.id).exists()
         return False
 
     def create(self, validated_data):
