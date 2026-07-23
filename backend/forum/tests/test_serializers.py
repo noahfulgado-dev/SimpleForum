@@ -33,6 +33,8 @@ class TopicSerializerTest(TestCase):
         self.assertIn('reply_count', data)
         self.assertIn('like_count', data)
         self.assertIn('user_has_liked', data)
+        self.assertIn('shared_count', data)
+        self.assertIn('user_has_shared', data)
 
     def test_topic_serializer_user_field(self):
         """Test TopicSerializer includes user data."""
@@ -47,6 +49,18 @@ class TopicSerializerTest(TestCase):
         serializer = TopicSerializer(self.topic)
         data = serializer.data
         self.assertFalse(data['user_has_liked'])
+
+    def test_shared_count_defaults_to_zero(self):
+        """Test shared_count defaults to 0 when no shares exist."""
+        serializer = TopicSerializer(self.topic)
+        data = serializer.data
+        self.assertEqual(data['shared_count'], 0)
+
+    def test_user_has_shared_false_without_request(self):
+        """Test user_has_shared defaults to False when no request in context."""
+        serializer = TopicSerializer(self.topic)
+        data = serializer.data
+        self.assertFalse(data['user_has_shared'])
 
 
 class ReplySerializerTest(TestCase):
@@ -77,9 +91,23 @@ class ReplySerializerTest(TestCase):
         self.assertIn('created', data)
         self.assertIn('like_count', data)
         self.assertIn('user_has_liked', data)
+        self.assertIn('shared_count', data)
+        self.assertIn('user_has_shared', data)
 
     def test_reply_user_has_liked_false_without_request(self):
         """Test reply user_has_liked defaults to False when no request."""
         serializer = ReplySerializer(self.reply)
         data = serializer.data
         self.assertFalse(data['user_has_liked'])
+
+    def test_reply_shared_count_defaults_to_zero(self):
+        """Test reply shared_count defaults to 0 when no shares exist."""
+        serializer = ReplySerializer(self.reply)
+        data = serializer.data
+        self.assertEqual(data['shared_count'], 0)
+
+    def test_reply_user_has_shared_false_without_request(self):
+        """Test reply user_has_shared defaults to False when no request."""
+        serializer = ReplySerializer(self.reply)
+        data = serializer.data
+        self.assertFalse(data['user_has_shared'])
