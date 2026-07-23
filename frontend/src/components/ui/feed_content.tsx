@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Post } from './post'
 import PostButton from './post_button'
-import type { Topic } from '@/services/api'
-import axios from 'axios'
+import { forumAPI, type Topic } from '@/services/api'
+import { useAuth } from '@/context/AuthContext'
 
-const API_URL = 'https://simpleforum-1m94.onrender.com/api/topics/';
 const PAGE_SIZE = 10;
 
 export function FeedContent() {
+    const { user } = useAuth();
     const [topics, setTopics] = useState<Topic[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
@@ -20,9 +20,7 @@ export function FeedContent() {
         setError('');
 
         try {
-            const response = await axios.get<{ count: number; results: Topic[] }>(API_URL, {
-                params: { page },
-            });
+            const response = await forumAPI.getTopics({ page });
 
             setTopics(response.data.results);
             setTotalPages(Math.ceil(response.data.count / PAGE_SIZE));
@@ -89,7 +87,7 @@ export function FeedContent() {
         <>
             <div className="[grid-area:main] rounded-[10px] p-5 flex flex-col gap-5 pl-10 pr-10">
                 <h1 className="text-[clamp(0.5rem,5vw,2.5rem)] font-semibold leading-none text-[#2d2a32] font-geist">
-                    What's up, User! 👋
+                    What's up, {user?.username}! 👋
                 </h1>
                 <div className="flex flex-col gap-5">
                     <PostButton onPostCreated={handlePostCreated} />
