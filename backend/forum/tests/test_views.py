@@ -27,11 +27,10 @@ class TopicAPITest(TestCase):
         refresh = RefreshToken.for_user(self.user)
         self.access_token = str(refresh.access_token)
 
-    def test_list_topics_public(self):
-        """Test listing topics doesn't require authentication."""
+    def test_list_topics_unauthenticated(self):
+        """Test listing topics requires authentication."""
         response = self.client.get('/api/topics/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data['results'], list)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_topic_authenticated(self):
         """Test creating a topic requires authentication."""
@@ -55,6 +54,7 @@ class TopicAPITest(TestCase):
 
     def test_get_topic_detail(self):
         """Test getting a single topic."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.get(f'/api/topics/{self.topic.id}/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Test Topic')
@@ -116,12 +116,11 @@ class TopicAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['user_has_liked'])
 
-    def test_topic_detail_user_has_liked_false_for_anon(self):
-        """Test user_has_liked is false for anonymous users."""
+    def test_topic_detail_user_has_liked_requires_auth(self):
+        """Test anonymous users cannot access topic detail."""
         self.client.credentials()
         response = self.client.get(f'/api/topics/{self.topic.id}/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(response.data['user_has_liked'])
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_topic_list_includes_user_has_bookmarked(self):
         """Test topic list includes user_has_bookmarked field."""
@@ -148,12 +147,11 @@ class TopicAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['user_has_bookmarked'])
 
-    def test_topic_detail_user_has_bookmarked_false_for_anon(self):
-        """Test user_has_bookmarked is false for anonymous users."""
+    def test_topic_detail_user_has_bookmarked_requires_auth(self):
+        """Test anonymous users cannot access topic detail."""
         self.client.credentials()
         response = self.client.get(f'/api/topics/{self.topic.id}/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(response.data['user_has_bookmarked'])
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class ReplyAPITest(TestCase):

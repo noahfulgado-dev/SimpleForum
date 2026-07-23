@@ -16,7 +16,7 @@ class TopicListView(generics.ListCreateAPIView):
         like_count=Count('likes'), reply_count=Count('replies')
     )
     serializer_class = TopicSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -47,7 +47,7 @@ class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
         like_count=Count('likes'), reply_count=Count('replies')
     )
     serializer_class = TopicSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         qs = super().get_queryset()
