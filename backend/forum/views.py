@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from forum.models import Topic, Reply
 from forum.serializers import TopicSerializer, ReplySerializer
-from interactions.models import Likes, Bookmark
+from interactions.models import Likes, Bookmark, Share
 
 
 class TopicListView(generics.ListCreateAPIView):
@@ -29,11 +29,15 @@ class TopicListView(generics.ListCreateAPIView):
                 ),
                 user_has_bookmarked=Exists(
                     Bookmark.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
-                )
+                ),
+                user_has_shared=Exists(
+                    Share.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
+                ),
             )
         return qs.annotate(
             user_has_liked=Value(False, output_field=BooleanField()),
-            user_has_bookmarked=Value(False, output_field=BooleanField())
+            user_has_bookmarked=Value(False, output_field=BooleanField()),
+            user_has_shared=Value(False, output_field=BooleanField())
         )
 
     def perform_create(self, serializer):
@@ -60,11 +64,15 @@ class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
                 ),
                 user_has_bookmarked=Exists(
                     Bookmark.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
+                ),
+                user_has_shared=Exists(
+                    Share.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
                 )
             )
         return qs.annotate(
             user_has_liked=Value(False, output_field=BooleanField()),
-            user_has_bookmarked=Value(False, output_field=BooleanField())
+            user_has_bookmarked=Value(False, output_field=BooleanField()),
+            user_has_shared=Value(False, output_field=BooleanField())
         )
 
     def perform_update(self, serializer):
@@ -105,11 +113,15 @@ class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
                 ),
                 user_has_bookmarked=Exists(
                     Bookmark.objects.filter(user=user, content_type=reply_type, object_id=OuterRef('pk'))
+                ),
+                user_has_shared=Exists(
+                    Share.objects.filter(user=user, content_type=reply_type, object_id=OuterRef('pk'))
                 )
             )
         return qs.annotate(
             user_has_liked=Value(False, output_field=BooleanField()),
-            user_has_bookmarked=Value(False, output_field=BooleanField())
+            user_has_bookmarked=Value(False, output_field=BooleanField()),
+            user_has_shared=Value(False, output_field=BooleanField())
         )
 
     def perform_update(self, serializer):
