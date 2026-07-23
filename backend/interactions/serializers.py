@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from interactions.models import Likes, Bookmark
+from interactions.models import Likes, Bookmark, Share
 from accounts.serializers import UserSerializer
 from forum.serializers import TopicSerializer, ReplySerializer
 from forum.models import Topic, Reply
@@ -20,6 +20,26 @@ class BookmarkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Bookmark
+        fields = ['id', 'content_type', 'content', 'created']
+        read_only_fields = ['id', 'created']
+
+    def get_content_type(self, obj):
+        return obj.content_type.model
+
+    def get_content(self, obj):
+        if isinstance(obj.content_object, Topic):
+            return TopicSerializer(obj.content_object, context=self.context).data
+        if isinstance(obj.content_object, Reply):
+            return ReplySerializer(obj.content_object, context=self.context).data
+        return None
+
+class ShareSerializer(serializers.ModelSerializer):
+    content_type = serializers.SerializerMethodField()
+    content = serializers.SerializerMethodField()
+
+
+    class Meta:
+        model = Share
         fields = ['id', 'content_type', 'content', 'created']
         read_only_fields = ['id', 'created']
 
