@@ -87,3 +87,15 @@ class Share(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'content_type', 'object_id'], name='unique_user_share')
+        ]
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['user', 'created']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} shared {self.content_type.model} #{self.object_id}"
