@@ -18,6 +18,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
     topic_count = serializers.IntegerField(source='topics.count', read_only=True)
     reply_count = serializers.IntegerField(source='replies.count', read_only=True)
     share_count = serializers.IntegerField(source='shares.count', read_only=True)
+    follower_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -32,6 +35,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'topic_count',
             'reply_count',
             'share_count',
+            'follower_count',
+            'following_count',
+            'is_following',
         ]
 
     def get_topics(self, obj):
@@ -51,3 +57,15 @@ class UserDetailSerializer(serializers.ModelSerializer):
         from interactions.serializers import ShareSerializer
         shares = obj.shares.select_related('content_type').order_by('-created')[:10]
         return ShareSerializer(shares, many=True, context=self.context).data
+
+    def get_follower_count(self, obj):
+        return obj.followers.count()
+
+    def get_following_count(self, obj):
+        return obj.following.count()
+
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.followers.filter(follower=request.user).exists()
+        return False

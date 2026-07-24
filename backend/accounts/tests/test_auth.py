@@ -4,6 +4,9 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from accounts.models import Follow
 
 User = get_user_model()
 
@@ -118,3 +121,103 @@ class AuthenticationTest(TestCase):
         self.client.cookies['core-app-auth'] = 'invalid-token'
         response = self.client.get('/api/users/me/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class FollowAPITest(TestCase):
+    """Test Follow API endpoints."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.target = User.objects.create_user(
+            username='targetuser',
+            email='target@example.com',
+            password='targetpass123'
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+
+    def test_follow_user(self):
+        """Test following a user."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.post(f'/api/users/{self.target.id}/follow/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('status'), 'followed')
+        self.assertEqual(response.data.get('follower_count'), 1)
+        self.assertTrue(
+            Follow.objects.filter(follower=self.user, following=self.target).exists()
+        )
+
+    def test_unfollow_user(self):
+        """Test unfollowing a user."""
+        Follow.objects.create(follower=self.user, following=self.target)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.post(f'/api/users/{self.target.id}/follow/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('status'), 'unfollowed')
+        self.assertEqual(response.data.get('follower_count'), 0)
+
+    def test_cannot_follow_self(self):
+        """Test users cannot follow themselves."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.post(f'/api/users/{self.user.id}/follow/')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data.get('error'), 'You cannot follow yourself.')
+
+    def test_follow_nonexistent_user(self):
+        """Test following a non-existent user returns 404."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.post('/api/users/99999/follow/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_follow_unauthenticated(self):
+        """Test unauthenticated users cannot follow."""
+        response = self.client.post(f'/api/users/{self.target.id}/follow/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_follower_count_increases(self):
+        """Test follower count increases when multiple users follow."""
+        other_user = User.objects.create_user(
+            username='otheruser',
+            email='other@example.com',
+            password='otherpass123'
+        )
+        other_refresh = RefreshToken.for_user(other_user)
+        other_token = str(other_refresh.access_token)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.post(f'/api/users/{self.target.id}/follow/')
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
+        response = self.client.post(f'/api/users/{self.target.id}/follow/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('follower_count'), 2)
+
+    def test_user_detail_includes_follow_counts(self):
+        """Test user detail includes follower/following counts."""
+        Follow.objects.create(follower=self.user, following=self.target)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/users/{self.target.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['follower_count'], 1)
+        self.assertEqual(response.data['following_count'], 0)
+
+    def test_user_detail_is_following_true(self):
+        """Test is_following is true when current user follows."""
+        Follow.objects.create(follower=self.user, following=self.target)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/users/{self.target.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['is_following'])
+
+    def test_user_detail_is_following_false(self):
+        """Test is_following is false when not following."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/users/{self.target.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['is_following'])

@@ -8,13 +8,13 @@ export function Feed() {
     document.title = "Feed | SimpleForum";
 
     return (
-        <> 
+        <>
             <div className="absolute inset-0 -z-10 h-fit w-full bg-[#fafdf6] bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-size-[40px_40px]">
-            <div className="p-5 main-container w-full h-full">
-                <Navbar />
-                <SidebarLeft />
-                <FeedContent />
-                <SidebarRight />
+                <div className="p-5 main-container w-full min-h-screen">
+                    <Navbar />
+                    <SidebarLeft />
+                    <FeedContent />
+                    <SidebarRight />
                 </div>
             </div>
         </>
