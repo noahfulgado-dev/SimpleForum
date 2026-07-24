@@ -1,3 +1,4 @@
+import bleach
 from rest_framework import serializers
 from forum.models import Topic, Reply
 from accounts.serializers import UserSerializer
@@ -70,6 +71,15 @@ class TopicSerializer(serializers.ModelSerializer):
             topic_type = ContentType.objects.get_for_model(Topic)
             return Share.objects.filter(user=request.user, content_type=topic_type, object_id=obj.id).exists()
         return False
+
+    def validate_title(self, value):
+        value = bleach.clean(value, tags=[], strip=True).strip()
+        if len(value) < 3:
+            raise serializers.ValidationError('Title must be at least 3 characters.')
+        return value
+
+    def validate_description(self, value):
+        return bleach.clean(value, tags=[], strip=True).strip()
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -147,6 +157,9 @@ class ReplySerializer(serializers.ModelSerializer):
             reply_type = ContentType.objects.get_for_model(Reply)
             return Share.objects.filter(user=request.user, content_type=reply_type, object_id=obj.id).exists()
         return False
+
+    def validate_content(self, value):
+        return bleach.clean(value, tags=[], strip=True).strip()
 
     def create(self, validated_data):
         request = self.context.get('request')
