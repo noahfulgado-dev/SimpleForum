@@ -34,11 +34,11 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 ## Apps
 
 | App | Role |
-|---|---|
+|---|---|---|
 | `core/` | Project settings, URLs, WSGI/ASGI |
-| `accounts/` | User list, detail, current user |
-| `forum/` | Topics and replies CRUD |
-| `interactions/` | Like/unlike and bookmark topics and replies |
+| `accounts/` | User management, follow system, follower/following counts |
+| `forum/` | Topics and nested (threaded) replies |
+| `interactions/` | Like, bookmark, and share topics and replies |
 | `notifications/` | Notifications for replies and likes with rate-limited batching |
 
 ## API Endpoints
@@ -53,8 +53,9 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 
 ### Users (`/api/users/`)
 - `GET /api/users/` — List all
-- `GET /api/users/<id>/` — Detail with topics & replies
+- `GET /api/users/<id>/` — Detail with topics, replies, shares, follow counts & `is_following`
 - `GET /api/users/me/` — Current user
+- `POST /api/users/<id>/follow/` — Toggle follow/unfollow (auth required)
 
 ### Topics (`/api/topics/`)
 - `GET /api/topics/` — List (paginated)
@@ -64,8 +65,10 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 - `DELETE /api/topics/<id>/` — Delete (author/admin)
 
 ### Replies (`/api/`)
-- `POST /api/topics/<topic_id>/replies/` — Create (auth required)
-- `DELETE /api/replies/<id>/` — Delete (author/admin)
+- `POST /api/topics/<topic_id>/replies/` — Create (auth required, optional `parent` for nested replies)
+- `GET /api/replies/<id>/` — Detail (auth required)
+- `PATCH /api/replies/<id>/` — Update (author/admin, auth required)
+- `DELETE /api/replies/<id>/` — Delete (author/admin, auth required)
 
 ### Likes (`/api/`)
 - `POST /api/topics/<topic_id>/like/` — Toggle like (auth required)
@@ -76,7 +79,12 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 - `POST /api/replies/<reply_id>/bookmark/` — Toggle bookmark (auth required)
 - `GET /api/bookmarks/` — List your bookmarked items (auth required)
 
-Topic and reply responses include `user_has_liked` and `user_has_bookmarked`.
+### Shares (`/api/`)
+- `POST /api/topics/<topic_id>/shares/` — Toggle share (auth required)
+- `POST /api/replies/<reply_id>/shares/` — Toggle share (auth required)
+- `GET /api/shares/` — List your shared items (auth required)
+
+Topic and reply responses include `user_has_liked`, `user_has_bookmarked`, `user_has_shared`, `shared_count`, and nested `children` for threaded replies. User detail responses include `follower_count`, `following_count`, and `is_following`.
 
 ### Notifications (`/api/notifications/`)
 

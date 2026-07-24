@@ -1,13 +1,15 @@
 # SimpleForum
 
-A fullstack discussion forum — create topics, reply, like, and bookmark. Built with Django REST Framework and React.
+A fullstack discussion forum — create topics, reply nested threads, like, bookmark, share, and follow users. Built with Django REST Framework and React.
 
 ## Features
 
 - **Topic CRUD** — Create, read, update, and delete forum topics
-- **Nested replies** — Reply to any topic
+- **Nested replies** — Threaded replies with parent-child relationship up to any depth
 - **Likes** — Like and unlike topics and replies (no self-liking)
 - **Bookmarks** — Bookmark and unbookmark topics and replies
+- **Shares** — Share and unshare topics and replies
+- **Follow system** — Follow/unfollow users with follower and following counts
 - **JWT authentication** — Secure HttpOnly cookie-based auth with email login
 - **Google OAuth** — Sign in with Google via allauth
 - **Rate limiting** — Anonymous (5/min), authenticated (200/day), with stricter limits on login (3/min) and registration (2/min)
@@ -136,8 +138,9 @@ The app is now at `http://localhost:5173`.
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
 | GET | `/api/users/` | — | List all users |
-| GET | `/api/users/<id>/` | — | Get user with their topics and replies |
+| GET | `/api/users/<id>/` | — | Get user with their topics, replies, shares, and follow counts |
 | GET | `/api/users/me/` | Yes | Get your own profile |
+| POST | `/api/users/<id>/follow/` | Yes | Toggle follow/unfollow a user |
 
 ### Topics
 
@@ -171,6 +174,14 @@ The app is now at `http://localhost:5173`.
 | POST | `/api/replies/<reply_id>/bookmark/` | Yes | Toggle bookmark on a reply |
 | GET | `/api/bookmarks/` | Yes | List your bookmarked items |
 
+### Shares
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/topics/<topic_id>/shares/` | Yes | Toggle share on a topic |
+| POST | `/api/replies/<reply_id>/shares/` | Yes | Toggle share on a reply |
+| GET | `/api/shares/` | Yes | List your shared items |
+
 ### Notifications
 
 | Method | Endpoint | Auth | Description |
@@ -189,7 +200,7 @@ Notifications are created when someone replies to your topic or likes your conte
 | `GET /accounts/google/login/?process=login` | Sign in with Google |
 | `POST /auth/google/` | Exchange Google access token for JWT |
 
-Topic and reply responses include `user_has_liked` and `user_has_bookmarked`.
+Topic and reply responses include `user_has_liked`, `user_has_bookmarked`, `user_has_shared`, `shared_count`, and nested `children` replies. User detail responses include `follower_count`, `following_count`, and `is_following`.
 
 ### Health
 
@@ -224,9 +235,9 @@ simpleforum/
 │   └── cd.yml                 # Auto-deploy to Render on push to main
 ├── backend/
 │   ├── core/                  # Django project config (settings, urls, health)
-│   ├── accounts/              # User management app
-│   ├── forum/                 # Topics & replies app
-│   ├── interactions/          # Likes & bookmarks app
+│   ├── accounts/              # User management, follow system
+│   ├── forum/                 # Topics & nested replies
+│   ├── interactions/          # Likes, bookmarks & shares
 │   ├── notifications/         # Notification system with rate-limiting
 │   ├── manage.py
 │   └── requirements.txt
