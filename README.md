@@ -116,7 +116,7 @@ The app is now at `http://localhost:5173`.
 | `FRONTEND_URL` | No | Frontend URL (for password reset emails & OAuth redirect) | `http://localhost:5173` |
 | `GOOGLE_CLIENT_ID` | No | Google OAuth client ID | `xxx.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | No* | Google OAuth client secret | (from Google Cloud Console) |
-| `REDIS_URL` | No | Redis connection string (enables caching and global rate limiting) | `rediss://default:token@host:6379` |
+| `REDIS_URL` | No | Redis connection string (enables caching and global rate limiting) | `redis://default:token@host:6379` |
 
 *\*Required when using SMTP email backend.*
 
