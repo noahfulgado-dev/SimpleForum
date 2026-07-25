@@ -8,7 +8,7 @@ from django.db.models import BooleanField, Case, Count, Exists, IntegerField, Ou
 from django.db.models.functions import Coalesce
 from django.contrib.contenttypes.models import ContentType
 
-from forum.cache import get_cached_topic_ids, set_cached_topic_ids
+from forum.cache import clear_topic_cache, get_cached_topic_ids, set_cached_topic_ids
 from forum.models import Topic, Reply
 from forum.serializers import TopicListSerializer, TopicSerializer, ReplySerializer
 from interactions.models import Likes, Bookmark, Share
@@ -96,6 +96,7 @@ class TopicListView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        clear_topic_cache()
 
 
 class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -139,6 +140,7 @@ class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
         if instance.user != self.request.user and not self.request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this topic.")
         instance.delete()
+        clear_topic_cache()
 
 
 class ReplyCreateView(generics.CreateAPIView):

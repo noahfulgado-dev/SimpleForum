@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { Button } from './button';
-import { forumAPI } from '@/services/api';
+import { forumAPI, type Topic } from '@/services/api';
 
 interface CreatePostProps {
     onClose: () => void;
-    onPostCreated: () => void;
+    onPostCreated: (topic: Topic) => void;
 }
 
 export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
@@ -29,8 +29,8 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
         setError('');
 
         try {
-            await forumAPI.createTopic({ title: title.trim(), description: description.trim() });
-            onPostCreated();
+            const res = await forumAPI.createTopic({ title: title.trim(), description: description.trim() });
+            onPostCreated(res.data);
             onClose();
         } catch {
             setError('Failed to create post. Please try again.');
