@@ -1,7 +1,7 @@
 from django.core.cache import cache
 
 PREFIX = "tl"
-TTL = 30
+TTL = 300
 
 
 def get_cached_topic_ids(page):

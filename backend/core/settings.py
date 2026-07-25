@@ -161,6 +161,7 @@ if DATABASE_URL:
             'HOST': tmp.hostname,
             'PORT': tmp.port or 5432,
             'OPTIONS': {'sslmode': 'require'},
+            'CONN_MAX_AGE': 300,
         }
     }
 else:
@@ -168,6 +169,7 @@ else:
         'default': {
             'ENGINE': os.environ['DB_ENGINE'],
             'NAME': os.environ['DB_NAME'],
+            'CONN_MAX_AGE': 300,
         }
     }
 
