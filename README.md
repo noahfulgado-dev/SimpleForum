@@ -44,28 +44,28 @@ git clone https://github.com/your-username/simpleforum.git
 cd simpleforum
 ```
 
-### 2. Environment Setup
+### 2. Environment Variables
 
-Copy the example environment file and fill in your values:
+Secrets and configuration are managed via [Doppler](https://doppler.com). Environment variables are injected at runtime — no `.env` files are needed.
+
+To set up Doppler locally:
 
 ```bash
-cp .env.example .env
+# Install Doppler CLI (macOS)
+brew install dopplerhq/cli/doppler
+
+# Login and link your project
+doppler login
+doppler setup
 ```
 
-Open `.env` and update the variables. At minimum, set:
+Then prefix any command with `doppler run`:
 
-```env
-SECRET_KEY=generate-a-random-key
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
+```bash
+doppler run python manage.py runserver
 ```
 
-> **Generate a secret key:**
-> ```bash
-> python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-> ```
->
-> **Never commit `.env` to version control** — it contains secrets.
+> See the [Doppler docs](https://docs.doppler.com/docs) for other platforms.
 
 ### 3. Backend Setup
 
@@ -242,8 +242,6 @@ simpleforum/
 │   ├── manage.py
 │   └── requirements.txt
 ├── frontend/                  # React + Vite SPA (WIP)
-├── .env                       # Environment variables (gitignored)
-├── .env.example               # Example environment file
 ├── .gitignore
 └── README.md
 ```
@@ -293,7 +291,7 @@ gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 4
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
+2. Create a feature branch
 3. Commit your changes
 4. Push to your branch and open a Pull Request
 
