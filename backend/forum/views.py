@@ -4,10 +4,9 @@ from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import Case, Count, Exists, IntegerField, OuterRef, Value, BooleanField, When
+from django.db.models import BooleanField, Case, Count, Exists, IntegerField, OuterRef, Subquery, Value, When
+from django.db.models.functions import Coalesce
 from django.contrib.contenttypes.models import ContentType
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 
 from forum.cache import get_cached_topic_ids, set_cached_topic_ids
 from forum.models import Topic, Reply
@@ -16,11 +15,43 @@ from interactions.models import Likes, Bookmark, Share
 
 
 class TopicListView(generics.ListCreateAPIView):
-    queryset = Topic.objects.select_related('user').annotate(
-        like_count=Count('likes'), reply_count=Count('replies')
-    )
     serializer_class = TopicListSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def _build_annotated_qs(self, qs):
+        user = self.request.user
+        topic_type = ContentType.objects.get_for_model(Topic)
+
+        base = qs.select_related('user').annotate(
+            like_count=Count('likes'),
+            reply_count=Count('replies'),
+        )
+
+        if user.is_authenticated:
+            return base.annotate(
+                user_has_liked=Exists(Likes.objects.filter(user=user, topic=OuterRef('pk'))),
+                user_has_bookmarked=Exists(Bookmark.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))),
+                user_has_shared=Exists(Share.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))),
+                shared_count=Coalesce(
+                    Subquery(
+                        Share.objects.filter(content_type=topic_type, object_id=OuterRef('pk'))
+                        .values('object_id').annotate(count=Count('id')).values('count')[:1]
+                    ),
+                    Value(0)
+                ),
+            )
+        return base.annotate(
+            user_has_liked=Value(False, output_field=BooleanField()),
+            user_has_bookmarked=Value(False, output_field=BooleanField()),
+            user_has_shared=Value(False, output_field=BooleanField()),
+            shared_count=Coalesce(
+                Subquery(
+                    Share.objects.filter(content_type=topic_type, object_id=OuterRef('pk'))
+                    .values('object_id').annotate(count=Count('id')).values('count')[:1]
+                ),
+                Value(0)
+            ),
+        )
 
     def list(self, request, *args, **kwargs):
         page = request.query_params.get(self.paginator.page_query_param, 1)
@@ -31,17 +62,13 @@ class TopicListView(generics.ListCreateAPIView):
                 *[When(id=id, then=Value(i)) for i, id in enumerate(cached_ids)],
                 output_field=IntegerField(),
             )
-            qs = (
-                Topic.objects
-                .filter(id__in=cached_ids)
-                .select_related('user')
-                .annotate(like_count=Count('likes'), reply_count=Count('replies'))
-                .order_by(preserved)
+            qs = self._build_annotated_qs(
+                Topic.objects.filter(id__in=cached_ids).order_by(preserved)
             )
             topics = list(qs)
             total = cached_total
         else:
-            qs = super().get_queryset()
+            qs = self._build_annotated_qs(Topic.objects.all())
             page_obj = self.paginate_queryset(qs)
             topics = list(page_obj)
             total = self.paginator.page.paginator.count
@@ -50,7 +77,6 @@ class TopicListView(generics.ListCreateAPIView):
             if ids:
                 set_cached_topic_ids(page, ids, total)
 
-        self._attach_user_data(topics, request.user)
         serializer = self.get_serializer(topics, many=True)
 
         if cached_ids is not None:
@@ -67,43 +93,6 @@ class TopicListView(generics.ListCreateAPIView):
             ]))
 
         return self.get_paginated_response(serializer.data)
-
-    def _attach_user_data(self, topics, user):
-        if not topics:
-            return
-        ids = [t.id for t in topics]
-
-        if user.is_authenticated:
-            topic_type = ContentType.objects.get_for_model(Topic)
-            liked_ids = set(
-                Likes.objects.filter(user=user, topic__in=ids)
-                .values_list('topic_id', flat=True)
-            )
-            bookmarked_ids = set(
-                Bookmark.objects.filter(user=user, content_type=topic_type, object_id__in=ids)
-                .values_list('object_id', flat=True)
-            )
-            shared_ids = set(
-                Share.objects.filter(user=user, content_type=topic_type, object_id__in=ids)
-                .values_list('object_id', flat=True)
-            )
-            share_counts = dict(
-                Share.objects.filter(content_type=topic_type, object_id__in=ids)
-                .values('object_id').annotate(count=Count('id'))
-                .values_list('object_id', 'count')
-            )
-
-            for topic in topics:
-                topic.user_has_liked = topic.id in liked_ids
-                topic.user_has_bookmarked = topic.id in bookmarked_ids
-                topic.user_has_shared = topic.id in shared_ids
-                topic.shared_count = share_counts.get(topic.id, 0)
-        else:
-            for topic in topics:
-                topic.user_has_liked = False
-                topic.user_has_bookmarked = False
-                topic.user_has_shared = False
-                topic.shared_count = 0
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
