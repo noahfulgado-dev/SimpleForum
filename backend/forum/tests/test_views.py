@@ -1,5 +1,6 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -14,6 +15,7 @@ class TopicAPITest(TestCase):
     """Test Topic API endpoints."""
 
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
@@ -186,11 +188,50 @@ class TopicAPITest(TestCase):
         self.assertIn('shared_count', response.data)
         self.assertEqual(response.data['shared_count'], 0)
 
+    def test_topic_list_cache_miss_populates_cache(self):
+        """Test first request populates the cache."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/topics/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        from forum.cache import get_cached_topic_ids
+        ids, total = get_cached_topic_ids(1)
+        self.assertIsNotNone(ids)
+        self.assertEqual(total, 1)
+
+    def test_topic_list_cache_hit_returns_same_structure(self):
+        """Test cache-hit path returns the same response structure as miss."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response1 = self.client.get('/api/topics/')
+        self.assertEqual(response1.status_code, status.HTTP_200_OK)
+        from forum.cache import get_cached_topic_ids
+        ids, total = get_cached_topic_ids(1)
+        self.assertIsNotNone(ids)
+        response2 = self.client.get('/api/topics/')
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertIn('count', response2.data)
+        self.assertIn('results', response2.data)
+        self.assertEqual(len(response2.data['results']), len(response1.data['results']))
+
+    def test_topic_list_cache_hit_includes_user_flags(self):
+        """Test cache-hit response includes fresh user flags."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.get('/api/topics/')
+        from forum.cache import get_cached_topic_ids
+        ids, total = get_cached_topic_ids(1)
+        self.assertIsNotNone(ids)
+        response = self.client.get('/api/topics/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for topic in response.data['results']:
+            self.assertIn('user_has_liked', topic)
+            self.assertIn('user_has_bookmarked', topic)
+            self.assertIn('user_has_shared', topic)
+
 
 class ReplyAPITest(TestCase):
     """Test Reply API endpoints."""
 
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
