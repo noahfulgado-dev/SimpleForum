@@ -262,14 +262,10 @@ The test suite covers models, serializers, views, and authentication flows. Test
 ### Render (auto-deploy via GitHub Actions)
 
 1. Push to `main` — CI runs tests, CD deploys to Render
-2. Set these environment variables in Render dashboard:
-   - `SECRET_KEY` — generate a fresh one
-   - `DEBUG=False`
-   - `ALLOWED_HOSTS` — add your Render domain
-   - `DATABASE_URL` — PostgreSQL connection string (Neon, Supabase, or Render PostgreSQL)
-   - Email settings for password resets
-   - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (for Google OAuth)
-   - `FRONTEND_URL` — set to your Render domain for OAuth redirects
+2. Environment variables are managed via [Doppler](https://doppler.com). For Render, either:
+   - **Doppler Sync** (recommended) — link your Doppler project in Integrations → Render, secrets sync automatically
+   - **Service Token** — set `DOPPLER_TOKEN` in Render dashboard and prefix commands with `doppler run`
+3. **Build Command:** `pip install -r backend/requirements.txt`
 3. **Build Command:** `pip install -r backend/requirements.txt`
 4. **Start Command:**
    ```bash
