@@ -6,6 +6,7 @@ import type { Topic } from '@/services/api';
 import PostMenu from './post_menu';
 import { forumAPI } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import Replies from './replies';
 
 interface PostProps {
     topic: Topic;
@@ -19,19 +20,29 @@ export function Post({ topic, onDelete }: PostProps) {
     const [likeCount, setLikeCount] = useState(topic.like_count);
 
     const handleLike = () => {
-        setIsLiked(!isLiked);
-        setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+        const newIsLiked = !isLiked;
+        const newCount = isLiked ? likeCount - 1 : likeCount + 1;
+        setIsLiked(newIsLiked);
+        setLikeCount(newCount);
+        forumAPI.likeTopic(topic.id).catch(() => {
+            setIsLiked(isLiked);
+            setLikeCount(likeCount);
+        });
     };
 
-    const formattedDate = new Date(topic.created).toLocaleDateString('en-US', {
+    const formattedDate = new Date(topic.created).toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
     });
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [isRepliesOpen, setIsRepliesOpen] = useState<boolean>(false);
     const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    
 
     const deletePost = async (id: number) => {
         if (!confirmDelete) {
@@ -90,12 +101,15 @@ export function Post({ topic, onDelete }: PostProps) {
                                 {likeCount}
                             </span>
                         </button>
-                        <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer">
+                        <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsRepliesOpen(true); document.body.style.overflow = 'hidden'; }}>
                             <Reply />
                             <span className={`text-sm m-1 text-gray-500`}>
-                                {topic.replies?.length ?? 0}
+                                {topic.reply_count ?? topic.replies?.length ?? 0}
                             </span>
                         </button>
+                        { isRepliesOpen && (
+                            <Replies topic={topic} onClose={() => { setIsRepliesOpen(false); document.body.style.overflow = 'visible'; }} />
+                        )}
                     </div>
                 </div>
 
