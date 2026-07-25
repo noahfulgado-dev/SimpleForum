@@ -6,12 +6,15 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Case, Count, Exists, IntegerField, OuterRef, Value, BooleanField, When
 from django.contrib.contenttypes.models import ContentType
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 from forum.cache import get_cached_topic_ids, set_cached_topic_ids
 from forum.models import Topic, Reply
 from forum.serializers import TopicSerializer, ReplySerializer
 from interactions.models import Likes, Bookmark, Share
 
+@method_decorator(cache_page(30), name='dispatch')
 class TopicListView(generics.ListCreateAPIView):
     queryset = Topic.objects.select_related('user').prefetch_related(
         'replies__user',
