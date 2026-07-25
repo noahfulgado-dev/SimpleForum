@@ -1,46 +1,83 @@
+from collections import OrderedDict
+
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import Count, Exists, OuterRef, Value, BooleanField
+from django.db.models import Case, Count, Exists, IntegerField, OuterRef, Value, BooleanField, When
 from django.contrib.contenttypes.models import ContentType
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
+from forum.cache import get_cached_topic_ids, set_cached_topic_ids
 from forum.models import Topic, Reply
-from forum.serializers import TopicSerializer, ReplySerializer
+from forum.serializers import TopicListSerializer, TopicSerializer, ReplySerializer
 from interactions.models import Likes, Bookmark, Share
 
-@method_decorator(cache_page(30), name='dispatch')
 class TopicListView(generics.ListCreateAPIView):
-    queryset = Topic.objects.select_related('user').prefetch_related(
-        'replies__user',
-    ).annotate(
+    queryset = Topic.objects.select_related('user').annotate(
         like_count=Count('likes'), reply_count=Count('replies')
     )
-    serializer_class = TopicSerializer
+    serializer_class = TopicListSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        return self._annotate_user_flags(super().get_queryset())
+
+    def _annotate_user_flags(self, qs):
         user = self.request.user
         if user.is_authenticated:
             topic_type = ContentType.objects.get_for_model(Topic)
             return qs.annotate(
-                user_has_liked=Exists(
-                    Likes.objects.filter(user=user, topic=OuterRef('pk'))
-                ),
-                user_has_bookmarked=Exists(
-                    Bookmark.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
-                ),
-                user_has_shared=Exists(
-                    Share.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
-                ),
+                user_has_liked=Exists(Likes.objects.filter(user=user, topic=OuterRef('pk'))),
+                user_has_bookmarked=Exists(Bookmark.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))),
+                user_has_shared=Exists(Share.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))),
             )
         return qs.annotate(
             user_has_liked=Value(False, output_field=BooleanField()),
             user_has_bookmarked=Value(False, output_field=BooleanField()),
-            user_has_shared=Value(False, output_field=BooleanField())
+            user_has_shared=Value(False, output_field=BooleanField()),
         )
+
+    def list(self, request, *args, **kwargs):
+        page = request.query_params.get(self.paginator.page_query_param, 1)
+        cached_ids, cached_total = get_cached_topic_ids(page)
+
+        if cached_ids is not None:
+            preserved = Case(
+                *[When(id=id, then=Value(i)) for i, id in enumerate(cached_ids)],
+                output_field=IntegerField(),
+            )
+            qs = (
+                Topic.objects
+                .filter(id__in=cached_ids)
+                .select_related('user')
+                .annotate(like_count=Count('likes'), reply_count=Count('replies'))
+                .order_by(preserved)
+            )
+            qs = self._annotate_user_flags(qs)
+            serializer = self.get_serializer(qs, many=True)
+
+            total = cached_total
+            page_size = self.paginator.get_page_size(request)
+            total_pages = (total - 1) // page_size + 1
+            current = int(page)
+            next_url = request.build_absolute_uri(f"?page={current + 1}") if current < total_pages else None
+            previous_url = request.build_absolute_uri(f"?page={current - 1}") if current > 1 else None
+
+            return Response(OrderedDict([
+                ('count', total),
+                ('next', next_url),
+                ('previous', previous_url),
+                ('results', serializer.data),
+            ]))
+
+        response = super().list(request, *args, **kwargs)
+        results = response.data.get('results', [])
+        ids = [item['id'] for item in results]
+        if ids:
+            set_cached_topic_ids(page, ids, response.data.get('count', 0))
+        return response
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

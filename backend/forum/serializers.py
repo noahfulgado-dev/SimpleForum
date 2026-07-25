@@ -87,6 +87,25 @@ class TopicSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class TopicListSerializer(TopicSerializer):
+    reply_count = serializers.IntegerField(read_only=True)
+
+    class Meta(TopicSerializer.Meta):
+        fields = [
+            'id',
+            'title',
+            'description',
+            'user',
+            'created',
+            'reply_count',
+            'like_count',
+            'user_has_liked',
+            'user_has_bookmarked',
+            'shared_count',
+            'user_has_shared',
+        ]
+
+
 class ReplySerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     parent = serializers.PrimaryKeyRelatedField(queryset=Reply.objects.all(), required=False, allow_null=True)
