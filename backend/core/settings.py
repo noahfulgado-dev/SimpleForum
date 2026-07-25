@@ -171,6 +171,23 @@ else:
         }
     }
 
+REDIS_URL = os.environ.get("REDIS_URL")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "CONNECTION_POOL_CLASS": "redis.ConnectionPool",
+                "CONNECTION_POOL_CLASS_KWARGS": {
+                    "ssl_cert_reqs": None,
+                },
+            },
+            "KEY_PREFIX": "simpleforum",
+        }
+    }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

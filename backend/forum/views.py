@@ -3,12 +3,14 @@ from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.db.models import Count, Exists, OuterRef, Value, BooleanField
 from django.contrib.contenttypes.models import ContentType
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 from forum.models import Topic, Reply
 from forum.serializers import TopicSerializer, ReplySerializer
 from interactions.models import Likes, Bookmark, Share
 
-
+@method_decorator(cache_page(30), name='dispatch')
 class TopicListView(generics.ListCreateAPIView):
     queryset = Topic.objects.select_related('user').prefetch_related(
         'replies__user',
