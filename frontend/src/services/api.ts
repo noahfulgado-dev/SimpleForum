@@ -19,7 +19,7 @@ export interface Topic {
   description: string;
   user: User;
   created: string;
-  replies: Reply[];
+  replies?: Reply[];
   like_count: number;
   user_has_liked: boolean;
 }
