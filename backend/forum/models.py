@@ -20,6 +20,9 @@ class Topic(models.Model):
     class Meta:
         ordering = ['-created']
         db_table = 'core_topic'
+        indexes = [
+            models.Index(fields=['-created']),
+        ]
 
 
 class Reply(models.Model):
