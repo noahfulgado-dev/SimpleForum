@@ -271,6 +271,7 @@ REST_AUTH = {
     "JWT_AUTH_REFRESH_COOKIE": "core-refresh-token",
     "JWT_AUTH_SAMESITE": "None",
     "JWT_AUTH_SECURE": True,
+    "USER_DETAILS_SERIALIZER": "accounts.serializers.UserSerializer",
 }
 
 SOCIALACCOUNT_PROVIDERS = {
