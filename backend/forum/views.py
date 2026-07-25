@@ -9,16 +9,14 @@ from django.contrib.contenttypes.models import ContentType
 
 from forum.cache import get_cached_topic_ids, set_cached_topic_ids
 from forum.models import Topic, Reply
-from forum.serializers import TopicSerializer, ReplySerializer
+from forum.serializers import TopicListSerializer, TopicSerializer, ReplySerializer
 from interactions.models import Likes, Bookmark, Share
 
 class TopicListView(generics.ListCreateAPIView):
-    queryset = Topic.objects.select_related('user').prefetch_related(
-        'replies__user',
-    ).annotate(
+    queryset = Topic.objects.select_related('user').annotate(
         like_count=Count('likes'), reply_count=Count('replies')
     )
-    serializer_class = TopicSerializer
+    serializer_class = TopicListSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -52,7 +50,6 @@ class TopicListView(generics.ListCreateAPIView):
                 Topic.objects
                 .filter(id__in=cached_ids)
                 .select_related('user')
-                .prefetch_related('replies__user')
                 .annotate(like_count=Count('likes'), reply_count=Count('replies'))
                 .order_by(preserved)
             )
