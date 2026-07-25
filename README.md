@@ -30,6 +30,47 @@ A fullstack discussion forum — create topics, reply nested threads, like, book
 | Gunicorn + Whitenoise | — |
 | GitHub Actions (CI/CD) | — |
 
+## Architecture
+
+```mermaid
+graph TB
+    subgraph Frontend
+        React[React + Vite + TypeScript]
+    end
+
+    subgraph Backend
+        DRF[Django REST Framework]
+        subgraph Apps
+            Accounts[accounts]
+            Forum[forum]
+            Interactions[interactions]
+            Notifications[notifications]
+        end
+        Auth[JWT httpOnly Cookies<br/>Google OAuth]
+    end
+
+    subgraph Services
+        DB[(PostgreSQL - Neon)]
+        Redis[(Redis - Upstash)]
+        Secrets[Doppler Env Vars]
+    end
+
+    subgraph Deploy
+        Render[Render]
+        CI[GitHub Actions CI/CD]
+    end
+
+    React -->|REST API| DRF
+    DRF --> Apps
+    DRF --> Auth
+    DRF --> DB
+    DRF -->|Rate Limit & Cache| Redis
+    Secrets --> Render
+    CI -->|auto-deploy| Render
+    Render --> DRF
+    Render --> React
+```
+
 ## Getting Started
 
 ### Prerequisites
