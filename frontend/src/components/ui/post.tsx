@@ -93,7 +93,7 @@ export function Post({ topic, onDelete }: PostProps) {
                         <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer">
                             <Reply />
                             <span className={`text-sm m-1 text-gray-500`}>
-                                {topic.replies.length}
+                                {topic.replies?.length ?? 0}
                             </span>
                         </button>
                     </div>
