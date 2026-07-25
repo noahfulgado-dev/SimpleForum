@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Button } from './button'
 import { CreatePost } from './post_modal';
+import type { Topic } from '@/services/api';
 
 interface PostButtonProps {
-    onPostCreated: () => void;
+    onPostCreated: (topic: Topic) => void;
 }
 
 export function PostButton({ onPostCreated }: PostButtonProps) {

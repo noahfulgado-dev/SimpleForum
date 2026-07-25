@@ -20,6 +20,7 @@ export interface Topic {
   user: User;
   created: string;
   replies?: Reply[];
+  reply_count?: number;
   like_count: number;
   user_has_liked: boolean;
 }
@@ -32,6 +33,7 @@ export interface Reply {
   created: string;
   like_count: number;
   user_has_liked: boolean;
+  children?: Reply[];
 }
 
 export interface LoginCredentials {

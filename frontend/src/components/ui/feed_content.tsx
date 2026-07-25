@@ -13,7 +13,6 @@ export function FeedContent() {
     const [totalPages, setTotalPages] = useState(0);
     const [topicsLoading, setTopicsLoading] = useState(true);
     const [error, setError] = useState('');
-    const [refreshKey, setRefreshKey] = useState(0);
 
     const fetchTopics = async (page: number) => {
         setTopicsLoading(true);
@@ -33,11 +32,11 @@ export function FeedContent() {
 
     useEffect(() => {
         fetchTopics(currentPage);
-    }, [currentPage, refreshKey]);
+    }, [currentPage]);
 
-    const handlePostCreated = () => {
+    const handlePostCreated = (newTopic: Topic) => {
         setCurrentPage(1);
-        setRefreshKey((k) => k + 1);
+        setTopics(prev => [newTopic, ...prev]);
     };
 
     const handleDeleteTopic = (id: number) => {

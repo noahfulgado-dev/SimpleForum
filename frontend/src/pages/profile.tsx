@@ -8,6 +8,8 @@ import { usersAPI, type User } from '@/services/api';
 import defaultAvatar from './../assets/image/default_avatar.jpg';
 
 export function Profile() {
+  document.title = "Profile | SimpleForum";
+
   const { user: authUser } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,7 +99,7 @@ export function Profile() {
       <div className="p-5 main-container w-full min-h-screen">
         <Navbar />
 
-        <div className="max-w-2xl mx-auto mt-8 space-y-6">
+        <div className="w-fit mx-auto mt-8 space-y-6">
           <Card className="bg-[#fafdf6]">
             <CardHeader>
               <div className="flex items-center gap-6">
