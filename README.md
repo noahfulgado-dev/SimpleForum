@@ -26,7 +26,8 @@ A fullstack discussion forum — create topics, reply nested threads, like, book
 | dj-rest-auth + SimpleJWT | Vite 6 |
 | django-allauth (Google OAuth) | Tailwind CSS v4 |
 | PostgreSQL / SQLite | ShadCN UI + Radix |
-| Gunicorn + Whitenoise | Lucide Icons |
+| Redis (Upstash) | Lucide Icons |
+| Gunicorn + Whitenoise | — |
 | GitHub Actions (CI/CD) | — |
 
 ## Getting Started
