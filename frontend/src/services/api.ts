@@ -3,6 +3,14 @@ import axiosInstance from './axios';
 export interface User {
   id: number;
   username: string;
+  email?: string;
+  bio?: string;
+  avatar?: string;
+  follower_count?: number;
+  following_count?: number;
+  topic_count?: number;
+  reply_count?: number;
+  is_following?: boolean;
 }
 
 export interface Topic {
@@ -56,6 +64,14 @@ export const authAPI = {
 
   getCurrentUser: () =>
     axiosInstance.get<User>('/auth/user/'),
+};
+
+export const usersAPI = {
+  getProfile: () =>
+    axiosInstance.get<User>('/api/users/me/'),
+
+  updateProfile: (data: { username?: string; bio?: string; avatar?: string }) =>
+    axiosInstance.patch<User>('/api/users/me/', data),
 };
 
 export const forumAPI = {

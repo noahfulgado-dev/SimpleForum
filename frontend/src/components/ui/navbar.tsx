@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBell } from '@fortawesome/free-regular-svg-icons'
 import bellIcon from './../../assets/svg/bell.svg';
@@ -10,8 +11,12 @@ export function Navbar() {
     return (
         <>
             <nav className="[grid-area:navbar] border border-gray-300 rounded-[10px] p-2 pl-5 pr-5 flex items-center justify-between bg-[#fafdf6] z-50">
-                <div className="text-[1.2rem] text-[#2d2a32] font-medium font-cousine w-[33.3%] flex items-center justify-start rounded-[10px]">
-                    SimpleForum
+                <div className="w-[33.3%] flex items-center justify-start">
+                    <Link to="/feed">
+                        <div className="text-[1.2rem] text-[#2d2a32] font-medium font-cousine rounded-[10px]">
+                            SimpleForum
+                        </div>
+                    </Link>
                 </div>
                 <div className="search-holder w-[33.3%] flex items-center justify-center">
                     <div className="border w-full border-gray-300 rounded-[10px] p-2 flex items-center justify-between gap-2">
@@ -28,7 +33,7 @@ export function Navbar() {
                     </div>
                     {isOpen && (
                         <div className="absolute top-20 right-5 w-48 bg-[#fafdf6] border border-gray-300 rounded-[10px] p-2 flex flex-col gap-2 z-50">
-                            <button className="w-full text-left p-2 rounded-[5px] hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer">Profile</button>
+                            <Link to="/profile"><button className="w-full text-left p-2 rounded-[5px] hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer">Profile</button></Link>
                         </div>
                     )}
                 </div>
