@@ -37,7 +37,6 @@ export interface Reply {
 }
 
 export interface LoginCredentials {
-  username: string;
   email: string;
   password: string;
 }
@@ -52,6 +51,7 @@ export interface RegisterData {
 export interface AuthTokens {
   access: string;
   refresh: string;
+  user: User;
 }
 
 export const authAPI = {

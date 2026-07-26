@@ -19,17 +19,18 @@ export function Login() {
 
     const navigate = useNavigate();
     const { login } = useAuth();
-    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setIsSubmitting(true);
 
         try {
-            await login(username, email, password);
+            await login(email, password);
             navigate('/feed');
         } catch (err: any) {
             const data = err.response?.data;
@@ -40,6 +41,8 @@ export function Login() {
             } else {
                 setError('Login failed. Please try again.');
             }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -58,17 +61,6 @@ export function Login() {
                         <CardContent>
                             <form onSubmit={handleSubmit}>
                                 <div className="flex flex-col gap-6">
-                                    <div className="">
-                                        <Input
-                                            className="rounded-none primary-font"
-                                            id="username"
-                                            type="username"
-                                            placeholder="Username"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            required
-                                        />
-                                    </div>
                                     <div className="">
                                         <Input
                                             className="rounded-none"
@@ -99,7 +91,7 @@ export function Login() {
                             </form>
                         </CardContent>
                         <CardFooter>
-                            <Button type="submit" onClick={handleSubmit} className="cursor-pointer neutral-bg-color hover:bg-[#9ec1a3]! transition-all duration-300 ease-in-out">Login</Button>
+                            <Button type="submit" onClick={handleSubmit} disabled={isSubmitting} className="cursor-pointer neutral-bg-color hover:bg-[#9ec1a3]! transition-all duration-300 ease-in-out">{isSubmitting ? 'Logging in...' : 'Login'}</Button>
                         </CardFooter>
                     </Card>
                 </div>
