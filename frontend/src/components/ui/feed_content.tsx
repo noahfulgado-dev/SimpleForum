@@ -18,7 +18,7 @@ export function FeedContent() {
         placeholderData: (prev) => prev,
     });
 
-    const topics = data?.results ?? [];
+    const topics = (data?.results ?? []).sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
     const totalPages = Math.ceil((data?.count ?? 0) / PAGE_SIZE);
 
     const deleteMutation = useMutation({
