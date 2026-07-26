@@ -71,14 +71,12 @@ export function Post({ topic, onDelete }: PostProps) {
                             <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full" />
                             <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                         </div>
-                        <div className="flex flex-col">
-                            <div className="flex flex-col justify-between">
+                        <div className="flex flex-col justify-center gap-0.5">
                                 <div className="text-[clamp(0.5rem,5vw,1.2rem)] font-medium leading-none text-foreground font-geist">
                                     {topic.user.username}
                                 </div>
-                                <div className="text-[clamp(0.5rem,5vw,1rem)] font-light leading-none text-foreground font-geist">
+                                <div className="text-xs font-light leading-none text-muted-foreground font-geist">
                                     {formattedDate}
-                                </div>
                             </div>
 
                         </div>

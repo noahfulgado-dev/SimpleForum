@@ -14,7 +14,7 @@ export function PostButton({ onPostCreated }: PostButtonProps) {
 
     return (
         <>
-            <Button type="submit" onClick={openModal} className="w-fit cursor-pointer neutral-bg-color hover:bg-primary! transition-all duration-300 ease-in-out">
+            <Button type="submit" onClick={openModal} className="w-fit cursor-pointer dark:bg-primary hover:brightness-75 transition-all duration-300 ease-in-out">
                 Create Post
             </Button>
 
