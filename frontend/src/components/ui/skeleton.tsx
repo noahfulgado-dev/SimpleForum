@@ -77,14 +77,20 @@ export function ReplySkeleton() {
 
 export function ProfileSkeleton() {
   return (
-    <div className="w-fit mx-auto mt-8 space-y-6">
-      <div className="rounded-xl border border-border bg-card p-6">
-        <div className="flex items-center gap-6">
-          <Skeleton className="w-24 h-24 rounded-full shrink-0" />
-          <div className="flex-1 min-w-0 flex flex-col gap-2">
+    <div className="[grid-area:main] mt-8 space-y-6 w-full max-w-[900px]">
+      <div className="rounded-xl border border-border bg-card">
+        <div className="flex flex-col p-6 gap-3">
+          <div className="flex items-center gap-6">
+            <Skeleton className="w-24 h-24 rounded-full shrink-0" />
             <Skeleton className="h-7 w-44 rounded-md" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-md" />
             <Skeleton className="h-4 w-60 rounded-md" />
-            <Skeleton className="h-4 w-3/4 rounded-md" />
+          </div>
+          <div className="flex items-start gap-2">
+            <Skeleton className="h-4 w-full rounded-md" />
+            <Skeleton className="h-4 w-4 rounded-md shrink-0" />
           </div>
         </div>
       </div>

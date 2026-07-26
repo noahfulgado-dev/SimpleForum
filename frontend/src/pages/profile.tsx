@@ -8,6 +8,10 @@ import { useAuth } from '@/context/AuthContext';
 import { usersAPI } from '@/services/api';
 import defaultAvatar from './../assets/image/default_avatar.jpg';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
+import SidebarLeft from '@/components/ui/sidebar_left';
+import { ProfileAvatar } from '@/components/ui/profile_avatar';
+import { ProfileInfo } from '@/components/ui/profile_info';
+import { ProfileStats } from '@/components/ui/profile_stats';
 
 export function Profile() {
   document.title = "Profile | SimpleForum";
@@ -67,12 +71,10 @@ export function Profile() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (file.size > 5 * 1024 * 1024) {
       alert('Image must be under 5MB.');
       return;
     }
-
     setAvatarPreview(URL.createObjectURL(file));
     avatarMutation.mutate(file);
   };
@@ -101,6 +103,7 @@ export function Profile() {
       <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
         <div className="p-5 main-container w-full min-h-screen">
           <Navbar />
+          <SidebarLeft />
           <ProfileSkeleton />
         </div>
       </div>
@@ -112,6 +115,7 @@ export function Profile() {
       <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
         <div className="p-5 main-container w-full min-h-screen">
           <Navbar />
+          <SidebarLeft />
           <div className="flex justify-center items-center mt-20">
             <p className="text-muted-foreground">Could not load profile.</p>
           </div>
@@ -124,88 +128,38 @@ export function Profile() {
     <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
       <div className="p-5 main-container w-full min-h-screen">
         <Navbar />
-
-        <div className="w-fit mx-auto mt-8 space-y-6">
+        <SidebarLeft />
+        <div className="[grid-area:main] mt-8 space-y-6 w-full max-w-[900px]">
           <Card className="bg-card">
             <CardHeader>
               <div className="flex items-center gap-6">
-                <div className="relative w-24 h-24 shrink-0 group">
-                  <img
-                    src={avatarPreview || profile.avatar || defaultAvatar}
-                    alt="Avatar"
-                    className="w-24 h-24 border border-border rounded-full object-cover"
-                  />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                    disabled={uploading}
-                  />
-                  <button
-                    onClick={handleAvatarClick}
-                    disabled={uploading}
-                    className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  >
-                    {uploading ? (
-                      <svg className="w-6 h-6 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                <div className="flex-1 min-w-0">
-                  {editingUsername ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={usernameDraft}
-                        onChange={(e) => setUsernameDraft(e.target.value)}
-                        className="max-w-xs"
-                        disabled={saving}
-                      />
-                      <Button size="sm" onClick={handleSaveUsername} disabled={saving}>
-                        Save
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={handleCancelUsername} disabled={saving}>
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-2xl">{profile.username}</CardTitle>
-                      <button
-                        onClick={() => setEditingUsername(true)}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                        title="Edit username"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                          <path d="m15 5 4 4"/>
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <ProfileAvatar
+                  src={avatarPreview || profile.avatar || defaultAvatar}
+                  uploading={uploading}
+                  fileInputRef={fileInputRef}
+                  onClick={handleAvatarClick}
+                  onChange={handleFileChange}
+                />
+                <ProfileInfo
+                  username={profile.username}
+                  editingUsername={editingUsername}
+                  usernameDraft={usernameDraft}
+                  saving={saving}
+                  onUsernameDraftChange={setUsernameDraft}
+                  onStartEditUsername={() => setEditingUsername(true)}
+                  onSaveUsername={handleSaveUsername}
+                  onCancelUsername={handleCancelUsername}
+                />
               </div>
             </CardHeader>
-
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="20" height="16" x="2" y="4" rx="2"/>
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  <rect width="20" height="16" x="2" y="4" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
                 <span>{profile.email || authUser?.email || 'No email'}</span>
               </div>
-
               <div>
                 {editingBio ? (
                   <div className="flex items-start gap-2">
@@ -217,12 +171,8 @@ export function Profile() {
                       disabled={saving}
                     />
                     <div className="flex gap-1 shrink-0">
-                      <Button size="sm" onClick={handleSaveBio} disabled={saving}>
-                        Save
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => { setEditingBio(false); setBioDraft(profile.bio ?? ''); }} disabled={saving}>
-                        Cancel
-                      </Button>
+                      <Button size="sm" onClick={handleSaveBio} disabled={saving}>Save</Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setEditingBio(false); setBioDraft(profile.bio ?? ''); }} disabled={saving}>Cancel</Button>
                     </div>
                   </div>
                 ) : (
@@ -236,8 +186,8 @@ export function Profile() {
                       title="Edit bio"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                        <path d="m15 5 4 4"/>
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        <path d="m15 5 4 4" />
                       </svg>
                     </button>
                   </div>
@@ -251,20 +201,7 @@ export function Profile() {
               <CardTitle className="text-foreground">Stats</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="flex flex-col items-center p-3 rounded-lg bg-muted border border-border">
-                  <span className="text-2xl font-bold text-foreground">{profile.follower_count ?? 0}</span>
-                  <span className="text-sm text-muted-foreground">Followers</span>
-                </div>
-                <div className="flex flex-col items-center p-3 rounded-lg bg-muted border border-border">
-                  <span className="text-2xl font-bold text-foreground">{profile.following_count ?? 0}</span>
-                  <span className="text-sm text-muted-foreground">Following</span>
-                </div>
-                <div className="flex flex-col items-center p-3 rounded-lg bg-muted border border-border">
-                  <span className="text-2xl font-bold text-foreground">{profile.topic_count ?? 0}</span>
-                  <span className="text-sm text-muted-foreground">Topics</span>
-                </div>
-              </div>
+              <ProfileStats profile={profile} />
             </CardContent>
           </Card>
         </div>
