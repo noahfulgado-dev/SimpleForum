@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { Button } from './button';
-import { forumAPI } from '@/services/api';
+import { forumAPI, type Topic } from '@/services/api';
 
 interface CreatePostProps {
     onClose: () => void;
@@ -25,8 +25,12 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
 
     const topicMutation = useMutation({
         mutationFn: () => forumAPI.createTopic({ title: title.trim(), description: description.trim() }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['topics'] });
+        onSuccess: (response) => {
+            const newTopic: Topic = response.data;
+            queryClient.setQueryData(['topics', 1, ''], (old: { results: Topic[]; count: number } | undefined) => {
+                if (!old) return { results: [newTopic], count: 1 };
+                return { ...old, results: [newTopic, ...old.results], count: old.count + 1 };
+            });
             onPostCreated();
             onClose();
         },

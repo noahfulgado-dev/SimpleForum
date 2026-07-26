@@ -36,7 +36,6 @@ export function FeedContent({ search = '' }: FeedContentProps) {
 
     const handlePostCreated = () => {
         setCurrentPage(1);
-        queryClient.invalidateQueries({ queryKey: ['topics'] });
     };
 
     const handleDeleteTopic = (id: number) => {

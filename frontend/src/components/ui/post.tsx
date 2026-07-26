@@ -42,7 +42,7 @@ export function Post({ topic, onDelete }: PostProps) {
     const [isRepliesOpen, setIsRepliesOpen] = useState<boolean>(false);
     const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
-    
+
 
     const deletePost = async (id: number) => {
         if (!confirmDelete) {
@@ -68,7 +68,7 @@ export function Post({ topic, onDelete }: PostProps) {
                 <div className="w-[100%] flex flex-col gap-2">
                     <div className="flex flex-row gap-2">
                         <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
-                            <img src={defaultAvatar} alt="Default Avatar" className="w-10 h-10 border border-gray-800 rounded-full" />
+                            <img src={defaultAvatar} alt="Default Avatar" className="w-10 h-10 rounded-full" />
                             <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-[#e5e5e5]/30"></div>
                         </div>
                         <div className="flex flex-col">
@@ -107,7 +107,7 @@ export function Post({ topic, onDelete }: PostProps) {
                                 {topic.reply_count ?? topic.replies?.length ?? 0}
                             </span>
                         </button>
-                        { isRepliesOpen && (
+                        {isRepliesOpen && (
                             <Replies topic={topic} onClose={() => { setIsRepliesOpen(false); document.body.style.overflow = 'visible'; }} />
                         )}
                     </div>
