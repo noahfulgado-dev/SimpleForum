@@ -76,7 +76,7 @@ export function FeedContent({ search = '' }: FeedContentProps) {
             <div className="rounded-[10px] p-5 flex flex-col gap-5 pl-10 pr-10 items-center">
                 <div className="flex flex-col gap-5 items-center w-fit">
                     <div className="w-full flex justify-between items-center ">
-                        <h1 className="text-[clamp(0.5rem,5vw,2.5rem)] font-semibold leading-none text-[#2d2a32] font-geist text-left">
+                        <h1 className="text-[clamp(0.5rem,5vw,2.5rem)] font-semibold leading-none text-foreground font-geist text-left">
                             What's up, {user?.username}! 👋
                         </h1>
                         <PostButton onPostCreated={handlePostCreated} />
@@ -88,22 +88,22 @@ export function FeedContent({ search = '' }: FeedContentProps) {
                             <div className="text-center text-gray-500 py-8">Loading...</div>
                         )}
                         {!authLoading && topicsLoading && (
-                            <div className="text-center text-gray-500 py-8">Loading topics...</div>
+                            <div className="text-center text-muted-foreground py-8">Loading topics...</div>
                         )}
                         {!authLoading && error && (
-                            <div className="text-center text-red-500 py-8">Failed to load topics. Please try again.</div>
+                            <div className="text-center text-destructive py-8">Failed to load topics. Please try again.</div>
                         )}
                         {!authLoading && !topicsLoading && !error && topics.length === 0 && (
-                            <div className="text-center text-gray-500 py-8">{search ? `No results for "${search}".` : 'No topics yet. Be the first to post!'}</div>
+                            <div className="text-center text-muted-foreground py-8">{search ? `No results for "${search}".` : 'No topics yet. Be the first to post!'}</div>
                         )}
                         {!authLoading && !topicsLoading && !error && topics.map((topic) => (
                             <Post key={topic.id} topic={topic} onDelete={handleDeleteTopic} />
                         ))}
                         {isFetchingNextPage && (
-                            <div className="text-center text-gray-400 py-4">Loading more...</div>
+                            <div className="text-center text-muted-foreground py-4">Loading more...</div>
                         )}
                         {!hasNextPage && !topicsLoading && topics.length > 0 && (
-                            <div className="text-center text-gray-400 py-4 text-sm">You've reached the end</div>
+                            <div className="text-center text-muted-foreground py-4 text-sm">You've reached the end</div>
                         )}
                         <div ref={sentinelRef} className="h-px" />
                     </div>
