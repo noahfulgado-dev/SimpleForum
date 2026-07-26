@@ -29,9 +29,14 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
         mutationFn: () => forumAPI.createTopic({ title: title.trim(), description: description.trim() }),
         onSuccess: (response) => {
             const newTopic: Topic = response.data;
-            queryClient.setQueryData(['topics', 1, ''], (old: { results: Topic[]; count: number } | undefined) => {
-                if (!old) return { results: [newTopic], count: 1 };
-                return { ...old, results: [newTopic, ...old.results], count: old.count + 1 };
+            queryClient.setQueryData(['topics', ''], (old: { pages: { results: Topic[]; count: number; next: string | null }[]; pageParams: number[] } | undefined) => {
+                if (!old) return { pages: [{ results: [newTopic], count: 1, next: null }], pageParams: [1] };
+                return {
+                    ...old,
+                    pages: old.pages.map((page, i) =>
+                        i === 0 ? { ...page, results: [newTopic, ...page.results], count: page.count + 1 } : page
+                    ),
+                };
             });
             onPostCreated();
             onClose();
