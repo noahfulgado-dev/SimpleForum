@@ -5,8 +5,11 @@ import { forumAPI, type Topic } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import Reply from './reply';
 import { Like, Liked } from './like';
+import { Bookmark, Bookmarked } from './bookmark';
+import { Share } from './share';
 import PostMenu from './post_menu';
 import { TopicDetailSkeleton, ReplySkeleton } from './skeleton';
+import { parseSharedDescription, SharedQuoteCard } from './shared_quote_card';
 
 interface RepliesProps {
     topic: Topic;
@@ -20,6 +23,9 @@ export function Replies({ topic, onClose }: RepliesProps) {
     const [replyContent, setReplyContent] = useState('');
     const [postIsLiked, setPostIsLiked] = useState(topic.user_has_liked);
     const [postLikeCount, setPostLikeCount] = useState(topic.like_count);
+    const [postIsBookmarked, setPostIsBookmarked] = useState(topic.user_has_bookmarked);
+    const [postIsShared, setPostIsShared] = useState(topic.user_has_shared);
+    const [postShareCount, setPostShareCount] = useState(topic.shared_count ?? 0);
     const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -73,6 +79,8 @@ export function Replies({ topic, onClose }: RepliesProps) {
     });
 
     const [replyLikes, setReplyLikes] = useState<Record<number, { isLiked: boolean; likeCount: number }>>({});
+    const [replyBookmarks, setReplyBookmarks] = useState<Record<number, boolean>>({});
+    const [replyShares, setReplyShares] = useState<Record<number, { isShared: boolean; shareCount: number }>>({});
 
     const replyLikeMutation = useMutation({
         mutationFn: (replyId: number) => forumAPI.likeReply(replyId),
@@ -87,12 +95,61 @@ export function Replies({ topic, onClose }: RepliesProps) {
         },
     });
 
+    const bookmarkMutation = useMutation({
+        mutationFn: () => forumAPI.bookmarkTopic(topic.id),
+        onError: () => {
+            setPostIsBookmarked(topic.user_has_bookmarked);
+        },
+    });
+
+    const shareMutation = useMutation({
+        mutationFn: () => forumAPI.shareTopic(topic.id),
+        onError: () => {
+            setPostIsShared(topic.user_has_shared);
+            setPostShareCount(topic.shared_count ?? 0);
+        },
+    });
+
+    const replyBookmarkMutation = useMutation({
+        mutationFn: (replyId: number) => forumAPI.bookmarkReply(replyId),
+        onError: (_err, replyId) => {
+            setReplyBookmarks(prev => ({ ...prev, [replyId]: !prev[replyId] }));
+        },
+    });
+
+    const replyShareMutation = useMutation({
+        mutationFn: (replyId: number) => forumAPI.shareReply(replyId),
+        onError: (_err, replyId) => {
+            const prev = replyShares[replyId];
+            if (prev) {
+                setReplyShares(prevState => ({
+                    ...prevState,
+                    [replyId]: { isShared: !prev.isShared, shareCount: prev.isShared ? prev.shareCount - 1 : prev.shareCount + 1 },
+                }));
+            }
+        },
+    });
+
     const handlePostLike = () => {
         const newIsLiked = !postIsLiked;
         const newCount = postIsLiked ? postLikeCount - 1 : postLikeCount + 1;
         setPostIsLiked(newIsLiked);
         setPostLikeCount(newCount);
         likeMutation.mutate();
+    };
+
+    const handlePostBookmark = () => {
+        const newIsBookmarked = !postIsBookmarked;
+        setPostIsBookmarked(newIsBookmarked);
+        bookmarkMutation.mutate();
+    };
+
+    const handlePostShare = () => {
+        const newIsShared = !postIsShared;
+        const newCount = postIsShared ? postShareCount - 1 : postShareCount + 1;
+        setPostIsShared(newIsShared);
+        setPostShareCount(newCount);
+        shareMutation.mutate();
     };
 
     const deletePost = (id: number) => {
@@ -109,6 +166,20 @@ export function Replies({ topic, onClose }: RepliesProps) {
         const newCount = current.isLiked ? current.likeCount - 1 : current.likeCount + 1;
         setReplyLikes(prev => ({ ...prev, [reply.id]: { isLiked: newIsLiked, likeCount: newCount } }));
         replyLikeMutation.mutate(reply.id);
+    };
+
+    const handleReplyBookmark = (reply: { id: number; user_has_bookmarked: boolean }) => {
+        const current = replyBookmarks[reply.id] ?? reply.user_has_bookmarked;
+        setReplyBookmarks(prev => ({ ...prev, [reply.id]: !current }));
+        replyBookmarkMutation.mutate(reply.id);
+    };
+
+    const handleReplyShare = (reply: { id: number; user_has_shared: boolean; shared_count: number }) => {
+        const current = replyShares[reply.id] ?? { isShared: reply.user_has_shared, shareCount: reply.shared_count };
+        const newIsShared = !current.isShared;
+        const newCount = current.isShared ? current.shareCount - 1 : current.shareCount + 1;
+        setReplyShares(prev => ({ ...prev, [reply.id]: { isShared: newIsShared, shareCount: newCount } }));
+        replyShareMutation.mutate(reply.id);
     };
 
     const handleSubmit = () => {
@@ -202,11 +273,22 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 {topic.title}
                             </div>
                             <div className="font-extralight tertiary-font text-foreground mt-1">
-                                {topic.description}
+                                {(() => {
+                                    const parsed = parseSharedDescription(topic.description);
+                                    if (parsed) {
+                                        return (
+                                            <>
+                                                {parsed.text && <div>{parsed.text}</div>}
+                                                <SharedQuoteCard sharedFrom={parsed.sharedFrom} />
+                                            </>
+                                        );
+                                    }
+                                    return topic.description;
+                                })()}
                             </div>
                         </div>
 
-                        <div className="flex flex-row gap-4">
+                        <div className="flex flex-row gap-4 items-center">
                             <button onClick={handlePostLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                 {postIsLiked ? (
                                     <Liked fillColor="#ef4444" />
@@ -221,6 +303,19 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 <Reply />
                                 <span className="text-sm m-1 text-muted-foreground">
                                     {replyCount}
+                                </span>
+                            </button>
+                            <button onClick={handlePostBookmark} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                {postIsBookmarked ? (
+                                    <Bookmarked fillColor="#eab308" />
+                                ) : (
+                                    <Bookmark />
+                                )}
+                            </button>
+                            <button onClick={handlePostShare} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                <Share />
+                                <span className="text-sm m-1 text-muted-foreground">
+                                    {postShareCount}
                                 </span>
                             </button>
                         </div>
@@ -260,6 +355,9 @@ export function Replies({ topic, onClose }: RepliesProps) {
                             const likeState = replyLikes[reply.id];
                             const isLiked = likeState?.isLiked ?? reply.user_has_liked;
                             const likeCount = likeState?.likeCount ?? reply.like_count;
+                            const isBookmarked = replyBookmarks[reply.id] ?? reply.user_has_bookmarked;
+                            const shareState = replyShares[reply.id];
+                            const shareCount = shareState?.shareCount ?? reply.shared_count;
                             return (
                                 <div key={reply.id} className="flex flex-row gap-3 px-1">
                                     <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
@@ -290,6 +388,25 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                             </button>
                                             <span className={`text-[0.7rem] ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}>
                                                 {likeCount}
+                                            </span>
+                                            <button
+                                                onClick={() => handleReplyBookmark(reply)}
+                                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                            >
+                                                {isBookmarked ? (
+                                                    <Bookmarked fillColor="#eab308" />
+                                                ) : (
+                                                    <Bookmark />
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => handleReplyShare(reply)}
+                                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                            >
+                                                <Share />
+                                            </button>
+                                            <span className="text-[0.7rem] text-muted-foreground">
+                                                {shareCount}
                                             </span>
                                         </div>
                                     </div>
