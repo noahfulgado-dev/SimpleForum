@@ -85,13 +85,16 @@ export function Post({ topic, onDelete }: PostProps) {
                             <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full" />
                             <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                         </div>
-                        <span className="text-sm font-medium leading-none text-foreground font-geist">
-                            {topic.user.username}
-                        </span>
-                        <span className="text-xs font-light leading-none text-muted-foreground font-geist">
-                            {timeAgo(topic.created)}
-                            {isEdited && <span className="ml-1 italic">(Edited)</span>}
-                        </span>
+                        <div className="flex flex-row items-center gap-1.5">
+                            <span className="text-sm font-medium text-foreground font-geist">
+                                {topic.user.username}
+                            </span>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-sm font-light text-muted-foreground font-geist">
+                                {timeAgo(topic.created)}
+                                {isEdited && <span className="ml-1 italic">(Edited)</span>}
+                            </span>
+                        </div>
                     </div>
 
                     <div className="font-extralight tertiary-font cursor-pointer" onClick={() => navigate(`/topic/${topic.id}`)}>
