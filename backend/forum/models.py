@@ -39,7 +39,7 @@ class Reply(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Reply by {self.user.username if self.user else 'Anonymous'} on {self.topic.title}"
+        return f"Reply by {self.user.username if self.user else 'deleted'} on {self.topic.title}"
 
     class Meta:
         ordering = ['created']
