@@ -141,7 +141,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                     <div className="overflow-y-auto px-5 pb-3 flex flex-col gap-3">
                         <div className="flex flex-row gap-3 items-start">
                             <div className="relative group w-10 h-10 flex items-center justify-center shrink-0">
-                                <img src={defaultAvatar} alt="Avatar" className="w-10 h-10 border border-gray-800 rounded-full" />
+                                <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-gray-800 rounded-full" />
                             </div>
                             <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center justify-between">
@@ -258,7 +258,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                             return (
                                 <div key={reply.id} className="flex flex-row gap-3 px-1">
                                     <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
-                                        <img src={defaultAvatar} alt="Avatar" className="w-8 h-8 border border-gray-800 rounded-full" />
+                                        <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-gray-800 rounded-full" />
                                     </div>
                                     <div className="flex flex-col gap-0.5 min-w-0">
                                         <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                     <div className="border-t border-gray-300 p-4 flex flex-col gap-2">
                         <div className="flex flex-row gap-3 items-start">
                             <div className="relative group w-8 h-8 flex items-center justify-center shrink-0">
-                                <img src={defaultAvatar} alt="Your Avatar" className="w-8 h-8 border border-gray-800 rounded-full" />
+                                <img src={user?.avatar || defaultAvatar} alt="Your Avatar" className="w-8 h-8 border border-gray-800 rounded-full" />
                             </div>
                             <textarea
                                 ref={textareaRef}

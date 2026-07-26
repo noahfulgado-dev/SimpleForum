@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Navbar } from '@/components/ui/navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -11,8 +11,10 @@ import defaultAvatar from './../assets/image/default_avatar.jpg';
 export function Profile() {
   document.title = "Profile | SimpleForum";
 
-  const { user: authUser } = useAuth();
+  const { user: authUser, refreshUser } = useAuth();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -45,6 +47,34 @@ export function Profile() {
   });
 
   const saving = profileMutation.isPending;
+
+  const avatarMutation = useMutation({
+    mutationFn: (file: File) => usersAPI.uploadAvatar(file).then(r => r.data),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['profile'], (old: any) => old ? { ...old, avatar: data.avatar } : old);
+      setAvatarPreview(null);
+      refreshUser?.();
+    },
+  });
+
+  const uploading = avatarMutation.isPending;
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5MB.');
+      return;
+    }
+
+    setAvatarPreview(URL.createObjectURL(file));
+    avatarMutation.mutate(file);
+  };
 
   const handleSaveUsername = () => {
     if (!usernameDraft.trim() || usernameDraft === profile?.username) {
@@ -100,12 +130,38 @@ export function Profile() {
           <Card className="bg-[#fafdf6]">
             <CardHeader>
               <div className="flex items-center gap-6">
-                <div className="relative w-24 h-24 shrink-0">
+                <div className="relative w-24 h-24 shrink-0 group">
                   <img
-                    src={profile.avatar || defaultAvatar}
+                    src={avatarPreview || profile.avatar || defaultAvatar}
                     alt="Avatar"
                     className="w-24 h-24 border border-gray-300 rounded-full object-cover"
                   />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                    disabled={uploading}
+                  />
+                  <button
+                    onClick={handleAvatarClick}
+                    disabled={uploading}
+                    className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    {uploading ? (
+                      <svg className="w-6 h-6 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                    )}
+                  </button>
                 </div>
                 <div className="flex-1 min-w-0">
                   {editingUsername ? (

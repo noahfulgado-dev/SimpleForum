@@ -74,6 +74,14 @@ export const usersAPI = {
 
   updateProfile: (data: { username?: string; bio?: string; avatar?: string }) =>
     axiosInstance.patch<User>('/api/users/me/', data),
+
+  uploadAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return axiosInstance.post<{ avatar: string }>('/api/users/me/avatar/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 export const forumAPI = {
