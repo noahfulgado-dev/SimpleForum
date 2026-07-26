@@ -11,6 +11,7 @@ import { forumAPI } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import Replies from './replies';
 import ShareModal from './share_modal';
+import EditPostModal from './edit_post_modal';
 import { parseSharedDescription, SharedQuoteCard } from './shared_quote_card';
 
 interface PostProps {
@@ -52,10 +53,13 @@ export function Post({ topic, onDelete }: PostProps) {
         minute: '2-digit',
     });
 
+    const isEdited = topic.updated && new Date(topic.updated).getTime() !== new Date(topic.created).getTime();
+
     const [isBookmarked, setIsBookmarked] = useState(topic.user_has_bookmarked);
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [isRepliesOpen, setIsRepliesOpen] = useState<boolean>(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
     const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -93,6 +97,7 @@ export function Post({ topic, onDelete }: PostProps) {
                                 </div>
                                 <div className="text-xs font-light leading-none text-muted-foreground font-geist">
                                     {formattedDate}
+                                    {isEdited && <span className="ml-1 italic">(Edited)</span>}
                             </div>
 
                         </div>
@@ -141,10 +146,13 @@ export function Post({ topic, onDelete }: PostProps) {
                                 {topic.shared_count ?? 0}
                             </span>
                         </button>
-                        {isShareModalOpen && (
-                            <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} />
-                        )}
                     </div>
+                    {isShareModalOpen && (
+                        <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} />
+                    )}
+                    {isEditModalOpen && (
+                        <EditPostModal topic={topic} onClose={() => setIsEditModalOpen(false)} />
+                    )}
                 </div>
 
                 <div className="flex flex-row gap-3 items-start pt-1">
@@ -162,29 +170,33 @@ export function Post({ topic, onDelete }: PostProps) {
                         {isOpen && (
                             <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
                                 {isOwnPost ? (
-                                    confirmDelete ? (
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                                                    onClick={() => deletePost(topic.id)}
-                                                    disabled={isDeleting}
-                                                >
-                                                    {isDeleting ? 'Deleting...' : 'Yes'}
-                                                </button>
-                                                <button
-                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                                                    onClick={() => setConfirmDelete(false)}
-                                                    disabled={isDeleting}
-                                                >
-                                                    No
-                                                </button>
+                                    <>
+                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsEditModalOpen(true); setIsOpen(false); }}>Edit Post</button>
+                                        <div className="border-t border-border" />
+                                        {confirmDelete ? (
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                        onClick={() => deletePost(topic.id)}
+                                                        disabled={isDeleting}
+                                                    >
+                                                        {isDeleting ? 'Deleting...' : 'Yes'}
+                                                    </button>
+                                                    <button
+                                                        className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                        onClick={() => setConfirmDelete(false)}
+                                                        disabled={isDeleting}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
-                                    )
+                                        ) : (
+                                            <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
+                                        )}
+                                    </>
                                 ) : (
                                     <span className="text-[0.7rem] text-muted-foreground p-1">No actions available</span>
                                 )}

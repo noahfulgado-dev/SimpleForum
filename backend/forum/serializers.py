@@ -22,6 +22,7 @@ class TopicSerializer(serializers.ModelSerializer):
             'description',
             'user',
             'created',
+            'updated',
             'replies',
             'reply_count',
             'like_count',
@@ -30,7 +31,7 @@ class TopicSerializer(serializers.ModelSerializer):
             'shared_count',
             'user_has_shared',
         ]
-        read_only_fields = ['id', 'created', 'user']
+        read_only_fields = ['id', 'created', 'updated', 'user']
 
     def get_replies(self, obj):
         replies = obj.replies.filter(parent__isnull=True).select_related('user').prefetch_related('likes').all()
@@ -97,6 +98,7 @@ class TopicListSerializer(TopicSerializer):
             'description',
             'user',
             'created',
+            'updated',
             'reply_count',
             'like_count',
             'user_has_liked',

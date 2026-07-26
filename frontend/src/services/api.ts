@@ -19,6 +19,7 @@ export interface Topic {
   description: string;
   user: User;
   created: string;
+  updated?: string;
   replies?: Reply[];
   reply_count?: number;
   like_count: number;

@@ -1,0 +1,101 @@
+import { useEffect, useRef, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import defaultAvatar from './../../assets/image/default_avatar.jpg';
+import { Button } from './button';
+import { forumAPI, type Topic } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+
+interface EditPostModalProps {
+    topic: Topic;
+    onClose: () => void;
+}
+
+export function EditPostModal({ topic, onClose }: EditPostModalProps) {
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+    const [title, setTitle] = useState(topic.title);
+    const [description, setDescription] = useState(topic.description);
+    const [error, setError] = useState('');
+
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+    useEffect(() => {
+        if (!textareaRef.current) return;
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }, [description]);
+
+    const topicMutation = useMutation({
+        mutationFn: () => forumAPI.updateTopic(topic.id, { title: title.trim(), description: description.trim() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['topics'] });
+            queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+            onClose();
+        },
+        onError: () => setError('Failed to update post. Please try again.'),
+    });
+
+    const handleSubmit = () => {
+        if (!title.trim() || !description.trim()) return;
+        setError('');
+        topicMutation.mutate();
+    };
+
+    return (
+        <>
+            <div
+                className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            >
+                <div className="w-[40rem] border border-border rounded-[10px] p-5 flex flex-row gap-5 bg-card">
+                    <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
+                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-border rounded-full" />
+                        <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
+                    </div>
+                    <div className="flex flex-col bg-transparent w-full">
+                        <div className="flex justify-end">
+                            <button
+                                onClick={onClose}
+                                className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-xl leading-none cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="font-semibold text-2xl text-foreground">
+                            <input
+                                type="text"
+                                placeholder="Title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                className="w-full focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-foreground placeholder:text-muted-foreground"
+                            />
+                        </div>
+                        <div className="font-light text-foreground">
+                            <textarea
+                                ref={textareaRef}
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="What's on your mind?"
+                                className="w-full h-fit resize-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-foreground placeholder:text-muted-foreground"
+                            />
+                        </div>
+                        {error && (
+                            <p className="text-destructive text-sm mt-1">{error}</p>
+                        )}
+                        <div className="border-t border-border mt-2 pt-2 flex justify-end">
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={topicMutation.isPending || !title.trim() || !description.trim()}
+                                className="rounded-[5px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary! hover:brightness-75"
+                            >
+                                {topicMutation.isPending ? 'Saving...' : 'Save'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    )
+}
+
+export default EditPostModal
