@@ -1,12 +1,18 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBell } from '@fortawesome/free-regular-svg-icons'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom';
 import bellIcon from './../../assets/svg/bell.svg';
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 
 export function Navbar() {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        const q = searchQuery.trim();
+        navigate(q ? `/feed?search=${encodeURIComponent(q)}` : '/feed');
+    };
 
     return (
         <>
@@ -19,9 +25,15 @@ export function Navbar() {
                     </Link>
                 </div>
                 <div className="search-holder w-[33.3%] flex items-center justify-center">
-                    <div className="border w-full border-gray-300 rounded-[10px] p-2 flex items-center justify-between gap-2">
-                        <input type="text" placeholder="Search..." className="bg-[#fafdf6] focus:outline-none w-full" />
-                    </div>
+                    <form onSubmit={handleSearch} className="border w-full border-gray-300 rounded-[10px] p-2 flex items-center justify-between gap-2">
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="bg-[#fafdf6] focus:outline-none w-full"
+                        />
+                    </form>
                 </div>
                 <div className="flex items-center justify-end gap-4 w-[33.3%]">
                     <div className="w-7 h-7 rounded-[5px] flex items-center justify-center hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer">
