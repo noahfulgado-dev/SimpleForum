@@ -84,7 +84,7 @@ export function Post({ topic, onDelete }: PostProps) {
                 <div className="w-[100%] flex flex-col gap-2">
                     <div className="flex flex-row gap-2">
                         <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
-                            <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full" />
+                            <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
                             <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                         </div>
                         <div className="flex flex-col justify-center gap-0.5">

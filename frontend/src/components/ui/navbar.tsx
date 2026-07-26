@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
+import { Huni } from './huni';
 import BellIcon from './bell_icon';
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { useAuth } from '@/context/AuthContext';
@@ -23,8 +24,9 @@ export function Navbar() {
             <nav className="[grid-area:navbar] border border-border rounded-[10px] p-2 pl-5 pr-5 flex items-center justify-between bg-background w-full">
                 <div className="w-[33.3%] flex items-center justify-start">
                     <Link to="/feed">
-                        <div className="text-[1.2rem] text-foreground font-medium font-cousine rounded-[10px]">
-                            SimpleForum
+                        <div className="text-[1.2rem] text-foreground font-medium font-cousine rounded-[10px] flex items-center gap-2">
+                            <Huni className="h-8 w-auto hover:-rotate-4 transition-all duration-150 ease-in-out" />
+                            <span>huni</span>
                         </div>
                     </Link>
                 </div>
@@ -44,7 +46,7 @@ export function Navbar() {
                         <BellIcon />
                     </div>
                     <div className="relative group w-8 h-8 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
+                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full object-cover" />
                         <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                     </div>
                     {isOpen && (
