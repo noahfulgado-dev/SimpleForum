@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Topic(models.Model):
@@ -12,11 +13,15 @@ class Topic(models.Model):
         blank=True,
         related_name='topics'
     )
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
 
-    def __str__(self):
-        return self.title
+    def save(self, *args, **kwargs):
+        now = timezone.now()
+        if self.pk is None:
+            self.created = now
+        self.updated = now
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-created']
