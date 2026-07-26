@@ -1,53 +1,58 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Navbar } from '@/components/ui/navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
-import { usersAPI, type User } from '@/services/api';
+import { usersAPI } from '@/services/api';
 import defaultAvatar from './../assets/image/default_avatar.jpg';
 
 export function Profile() {
   document.title = "Profile | SimpleForum";
 
   const { user: authUser } = useAuth();
-  const [profile, setProfile] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['profile'],
+    queryFn: () => usersAPI.getProfile().then(r => r.data),
+  });
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState('');
-  const [saving, setSaving] = useState(false);
-
   const [bioDraft, setBioDraft] = useState('');
   const [editingBio, setEditingBio] = useState(false);
 
   useEffect(() => {
-    usersAPI.getProfile()
-      .then((res) => {
-        setProfile(res.data);
-        setUsernameDraft(res.data.username);
-        setBioDraft(res.data.bio ?? '');
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    if (profile) {
+      setUsernameDraft(profile.username);
+      setBioDraft(profile.bio ?? '');
+    }
+  }, [profile]);
 
-  const handleSaveUsername = async () => {
+  const profileMutation = useMutation({
+    mutationFn: (data: { username?: string; bio?: string }) => usersAPI.updateProfile(data).then(r => r.data),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['profile'], data);
+      setUsernameDraft(data.username);
+      setBioDraft(data.bio ?? '');
+    },
+    onError: () => {
+      setUsernameDraft(profile?.username ?? '');
+      setBioDraft(profile?.bio ?? '');
+    },
+  });
+
+  const saving = profileMutation.isPending;
+
+  const handleSaveUsername = () => {
     if (!usernameDraft.trim() || usernameDraft === profile?.username) {
       setEditingUsername(false);
       return;
     }
-    setSaving(true);
-    try {
-      const res = await usersAPI.updateProfile({ username: usernameDraft.trim() });
-      setProfile(res.data);
-      setUsernameDraft(res.data.username);
-    } catch {
-      setUsernameDraft(profile!.username);
-    } finally {
-      setSaving(false);
-      setEditingUsername(false);
-    }
+    profileMutation.mutate({ username: usernameDraft.trim() });
+    setEditingUsername(false);
   };
 
   const handleCancelUsername = () => {
@@ -55,20 +60,12 @@ export function Profile() {
     setEditingUsername(false);
   };
 
-  const handleSaveBio = async () => {
-    setSaving(true);
-    try {
-      const res = await usersAPI.updateProfile({ bio: bioDraft });
-      setProfile(res.data);
-    } catch {
-      setBioDraft(profile?.bio ?? '');
-    } finally {
-      setSaving(false);
-      setEditingBio(false);
-    }
+  const handleSaveBio = () => {
+    profileMutation.mutate({ bio: bioDraft });
+    setEditingBio(false);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="absolute inset-0 -z-10 h-fit w-full bg-[#fafdf6] bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-size-[40px_40px]">
         <div className="p-5 main-container w-full min-h-screen">

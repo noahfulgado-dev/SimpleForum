@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { forumAPI, type Topic } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
@@ -13,17 +14,13 @@ interface RepliesProps {
 
 export function Replies({ topic, onClose }: RepliesProps) {
     const { user } = useAuth();
+    const queryClient = useQueryClient();
     const isOwnPost = topic.user.id === user?.id;
-    const [currentTopic, setCurrentTopic] = useState<Topic | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [replyContent, setReplyContent] = useState('');
-    const [submitting, setSubmitting] = useState(false);
     const [postIsLiked, setPostIsLiked] = useState(topic.user_has_liked);
     const [postLikeCount, setPostLikeCount] = useState(topic.like_count);
     const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     const postDate = new Date(topic.created).toLocaleString('en-US', {
@@ -34,92 +31,88 @@ export function Replies({ topic, onClose }: RepliesProps) {
         minute: '2-digit',
     });
 
-    useEffect(() => {
-        const fetchTopic = async () => {
-            try {
-                const res = await forumAPI.getTopic(topic.id);
-                setCurrentTopic(res.data);
-            } catch {
-                setError('Failed to load replies.');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchTopic();
-    }, [topic.id]);
-
-    useEffect(() => {
-        if (!textareaRef.current) return;
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }, [replyContent]);
+    const { data: currentTopic, isLoading, error } = useQuery({
+        queryKey: ['topic', topic.id],
+        queryFn: () => forumAPI.getTopic(topic.id).then(r => r.data),
+    });
 
     const replies = currentTopic?.replies ?? [];
     const replyCount = replies.length;
 
+    const likeMutation = useMutation({
+        mutationFn: () => forumAPI.likeTopic(topic.id),
+        onError: () => {
+            setPostIsLiked(topic.user_has_liked);
+            setPostLikeCount(topic.like_count);
+        },
+    });
 
-    useEffect(() => {
-        if (!currentTopic) return;
-        setPostIsLiked(currentTopic.user_has_liked);
-        setPostLikeCount(currentTopic.like_count);
-    }, [currentTopic]);
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => forumAPI.deleteTopic(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['topics'] });
+            onClose();
+        },
+        onError: () => {
+            alert('Failed to delete post.');
+            setConfirmDelete(false);
+        },
+    });
+
+    const replyMutation = useMutation({
+        mutationFn: (content: string) => forumAPI.createReply(topic.id, { content }),
+        onSuccess: (res) => {
+            queryClient.setQueryData(['topic', topic.id], (prev: Topic) => prev ? {
+                ...prev,
+                replies: [...(prev.replies || []), res.data],
+            } : prev);
+            setReplyContent('');
+        },
+        onError: () => alert('Failed to post reply.'),
+    });
+
+    const [replyLikes, setReplyLikes] = useState<Record<number, { isLiked: boolean; likeCount: number }>>({});
+
+    const replyLikeMutation = useMutation({
+        mutationFn: (replyId: number) => forumAPI.likeReply(replyId),
+        onError: (_err, replyId) => {
+            const prev = replyLikes[replyId];
+            if (prev) {
+                setReplyLikes(prevState => ({
+                    ...prevState,
+                    [replyId]: { isLiked: !prev.isLiked, likeCount: prev.isLiked ? prev.likeCount - 1 : prev.likeCount + 1 },
+                }));
+            }
+        },
+    });
 
     const handlePostLike = () => {
         const newIsLiked = !postIsLiked;
         const newCount = postIsLiked ? postLikeCount - 1 : postLikeCount + 1;
         setPostIsLiked(newIsLiked);
         setPostLikeCount(newCount);
-        forumAPI.likeTopic(topic.id).catch(() => {
-            setPostIsLiked(postIsLiked);
-            setPostLikeCount(postLikeCount);
-        });
+        likeMutation.mutate();
     };
 
-    const deletePost = async (id: number) => {
+    const deletePost = (id: number) => {
         if (!confirmDelete) {
             setConfirmDelete(true);
             return;
         }
-        setIsDeleting(true);
-        try {
-            await forumAPI.deleteTopic(id);
-            onClose();
-        } catch {
-            alert('Failed to delete post.');
-            setConfirmDelete(false);
-        } finally {
-            setIsDeleting(false);
-            setIsPostMenuOpen(false);
-        }
+        deleteMutation.mutate(id);
     };
-
-    const [replyLikes, setReplyLikes] = useState<Record<number, { isLiked: boolean; likeCount: number }>>({});
 
     const handleReplyLike = (reply: { id: number; user_has_liked: boolean; like_count: number }) => {
         const current = replyLikes[reply.id] ?? { isLiked: reply.user_has_liked, likeCount: reply.like_count };
         const newIsLiked = !current.isLiked;
         const newCount = current.isLiked ? current.likeCount - 1 : current.likeCount + 1;
         setReplyLikes(prev => ({ ...prev, [reply.id]: { isLiked: newIsLiked, likeCount: newCount } }));
-        forumAPI.likeReply(reply.id).catch(() => {
-            setReplyLikes(prev => ({ ...prev, [reply.id]: current }));
-        });
+        replyLikeMutation.mutate(reply.id);
     };
 
-    const handleSubmit = async () => {
-        if (!replyContent.trim() || submitting) return;
-        setSubmitting(true);
-        try {
-            const res = await forumAPI.createReply(topic.id, { content: replyContent.trim() });
-            setCurrentTopic(prev => prev ? {
-                ...prev,
-                replies: [...(prev.replies || []), res.data]
-            } : prev);
-            setReplyContent('');
-        } catch {
-            alert('Failed to post reply.');
-        } finally {
-            setSubmitting(false);
-        }
+    const handleSubmit = () => {
+        if (!replyContent.trim() || replyMutation.isPending) return;
+        replyMutation.mutate(replyContent.trim());
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -177,14 +170,14 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                                                 <button
                                                                     className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-red-500 text-white hover:bg-red-600 transition-all duration-300 disabled:opacity-50 cursor-pointer"
                                                                     onClick={() => deletePost(topic.id)}
-                                                                    disabled={isDeleting}
-                                                                >
-                                                                    {isDeleting ? 'Deleting...' : 'Yes'}
+                                                                    disabled={deleteMutation.isPending}
+                                                                    >
+                                                                    {deleteMutation.isPending ? 'Deleting...' : 'Yes'}
                                                                 </button>
                                                                 <button
                                                                     className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-[#e5e5e5] transition-all duration-300 disabled:opacity-50 cursor-pointer"
                                                                     onClick={() => setConfirmDelete(false)}
-                                                                    disabled={isDeleting}
+                                                                    disabled={deleteMutation.isPending}
                                                                 >
                                                                     No
                                                                 </button>
@@ -233,7 +226,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
 
                         <div className="border-t border-gray-300"></div>
 
-                        {loading && (
+                        {isLoading && (
                             <div className="flex justify-center py-8">
                                 <span className="text-gray-400">Loading...</span>
                             </div>
@@ -241,17 +234,17 @@ export function Replies({ topic, onClose }: RepliesProps) {
 
                         {error && (
                             <div className="flex justify-center py-8">
-                                <span className="text-red-500">{error}</span>
+                                <span className="text-red-500">Failed to load replies.</span>
                             </div>
                         )}
 
-                        {!loading && !error && replies.length === 0 && (
+                        {!isLoading && !error && replies.length === 0 && (
                             <div className="flex justify-center py-8">
                                 <span className="text-gray-400">No replies yet. Be the first to share your thoughts!</span>
                             </div>
                         )}
 
-                        {!loading && !error && replies.map((reply) => {
+                        {!isLoading && !error && replies.map((reply) => {
                             const replyDate = new Date(reply.created).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
@@ -318,10 +311,10 @@ export function Replies({ topic, onClose }: RepliesProps) {
                         <div className="flex justify-end">
                             <button
                                 onClick={handleSubmit}
-                                disabled={submitting || !replyContent.trim()}
+                                disabled={replyMutation.isPending || !replyContent.trim()}
                                 className="px-4 py-1.5 text-[0.85rem] rounded-[5px] bg-[#2d2a32] text-[#fafdf6] hover:opacity-90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                             >
-                                {submitting ? 'Replying...' : 'Reply'}
+                                {replyMutation.isPending ? 'Replying...' : 'Reply'}
                             </button>
                         </div>
                     </div>

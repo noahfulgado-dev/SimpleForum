@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { Button } from './button';
-import { forumAPI, type Topic } from '@/services/api';
+import { forumAPI } from '@/services/api';
 
 interface CreatePostProps {
     onClose: () => void;
-    onPostCreated: (topic: Topic) => void;
+    onPostCreated: () => void;
 }
 
 export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
+    const queryClient = useQueryClient();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -22,21 +23,20 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
         textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }, [description]);
 
-    const handleSubmit = async () => {
-        if (!title.trim() || !description.trim()) return;
-
-        setSubmitting(true);
-        setError('');
-
-        try {
-            const res = await forumAPI.createTopic({ title: title.trim(), description: description.trim() });
-            onPostCreated(res.data);
+    const topicMutation = useMutation({
+        mutationFn: () => forumAPI.createTopic({ title: title.trim(), description: description.trim() }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['topics'] });
+            onPostCreated();
             onClose();
-        } catch {
-            setError('Failed to create post. Please try again.');
-        } finally {
-            setSubmitting(false);
-        }
+        },
+        onError: () => setError('Failed to create post. Please try again.'),
+    });
+
+    const handleSubmit = () => {
+        if (!title.trim() || !description.trim()) return;
+        setError('');
+        topicMutation.mutate();
     };
 
     return (
@@ -83,10 +83,10 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
                         <div className="border-t border-gray-300 mt-2 pt-2 flex justify-end">
                             <Button
                                 onClick={handleSubmit}
-                                disabled={submitting || !title.trim() || !description.trim()}
+                                disabled={topicMutation.isPending || !title.trim() || !description.trim()}
                                 className="rounded-[5px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {submitting ? 'Posting...' : 'Post'}
+                                {topicMutation.isPending ? 'Posting...' : 'Post'}
                             </Button>
                         </div>
                     </div>
