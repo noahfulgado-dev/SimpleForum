@@ -302,6 +302,10 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = os.environ['CORS_ALLOWED_ORIGINS'].split(',')
 
+IMGBB_API_KEY = os.getenv('IMGBB_API_KEY', '')
+IMGBB_UPLOAD_URL = 'https://api.imgbb.com/1/upload'
+USE_IMGBB = bool(IMGBB_API_KEY)
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SWAGGER_SETTINGS = {

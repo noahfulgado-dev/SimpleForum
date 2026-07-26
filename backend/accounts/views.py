@@ -88,6 +88,29 @@ class CurrentUserView(CachedProfileMixin, generics.RetrieveAPIView):
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
+def upload_avatar(request):
+    file = request.FILES.get('avatar')
+    if not file:
+        return Response({'error': 'No image file provided.'}, status=400)
+
+    if file.size > 5 * 1024 * 1024:
+        return Response({'error': 'Image must be under 5MB.'}, status=400)
+
+    from accounts.utils import upload_to_imgbb, ImgBBUploadError
+
+    try:
+        url = upload_to_imgbb(file)
+    except ImgBBUploadError as e:
+        return Response({'error': str(e)}, status=e.status_code)
+
+    user = request.user
+    user.avatar = url
+    user.save(update_fields=['avatar'])
+    return Response({'avatar': url})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
 def toggle_follow(request, user_id):
     target = get_object_or_404(User, id=user_id)
     if target == request.user:
