@@ -57,6 +57,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
     const replies = currentTopic?.replies ?? [];
     const replyCount = replies.length;
 
+
     useEffect(() => {
         if (!currentTopic) return;
         setPostIsLiked(currentTopic.user_has_liked);
@@ -255,6 +256,8 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
                             });
                             const likeState = replyLikes[reply.id];
                             const isLiked = likeState?.isLiked ?? reply.user_has_liked;
