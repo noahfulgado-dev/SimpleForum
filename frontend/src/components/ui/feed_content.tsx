@@ -30,6 +30,7 @@ export function FeedContent({ search = '' }: FeedContentProps) {
             return Number(new URL(lastPage.next).searchParams.get('page'));
         },
         initialPageParam: 1,
+        staleTime: 30000,
     });
 
     const topics = data?.pages.flatMap(p => p.results) ?? [];
@@ -55,11 +56,11 @@ export function FeedContent({ search = '' }: FeedContentProps) {
 
     const deleteMutation = useMutation({
         mutationFn: (id: number) => forumAPI.deleteTopic(id),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics'] }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics', search] }),
     });
 
     const handlePostCreated = () => {
-        queryClient.resetQueries({ queryKey: ['topics', search] });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDeleteTopic = (id: number) => {
