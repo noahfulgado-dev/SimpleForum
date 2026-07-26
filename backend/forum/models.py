@@ -16,15 +16,15 @@ class Topic(models.Model):
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
+    def __str__(self):
+        return self.title
+
     def save(self, *args, **kwargs):
         now = timezone.now()
         if self.pk is None:
             self.created = now
         self.updated = now
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.title
 
     class Meta:
         ordering = ['-created']
