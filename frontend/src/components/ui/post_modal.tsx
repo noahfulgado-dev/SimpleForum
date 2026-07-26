@@ -56,42 +56,42 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
                 className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
                 onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             >
-                <div className="w-[40rem] border border-gray-300 rounded-[10px] p-5 flex flex-row gap-5 bg-[#fafdf6]">
+                <div className="w-[40rem] border border-border rounded-[10px] p-5 flex flex-row gap-5 bg-card">
                     <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
-                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-gray-800 rounded-full" />
-                        <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-[#e5e5e5]/30"></div>
+                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-border rounded-full" />
+                        <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                     </div>
-                    <div className="flex flex-col bg-[#fafdf6] w-full">
+                    <div className="flex flex-col bg-transparent w-full">
                         <div className="flex justify-end">
                             <button
                                 onClick={onClose}
-                                className="text-gray-400 hover:text-[#2d2a32] transition-colors duration-200 text-xl leading-none cursor-pointer"
+                                className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-xl leading-none cursor-pointer"
                             >
                                 ✕
                             </button>
                         </div>
-                        <div className="font-semibold text-2xl">
+                        <div className="font-semibold text-2xl text-foreground">
                             <input
                                 type="text"
                                 placeholder="Title"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="w-full focus:outline-none focus:ring-0 focus:border-transparent"
+                                className="w-full focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-foreground placeholder:text-muted-foreground"
                             />
                         </div>
-                        <div className="font-light">
+                        <div className="font-light text-foreground">
                             <textarea
                                 ref={textareaRef}
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="What's on your mind?"
-                                className="w-full h-fit resize-none focus:outline-none focus:ring-0 focus:border-transparent"
+                                className="w-full h-fit resize-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-foreground placeholder:text-muted-foreground"
                             />
                         </div>
                         {error && (
-                            <p className="text-red-500 text-sm mt-1">{error}</p>
+                            <p className="text-destructive text-sm mt-1">{error}</p>
                         )}
-                        <div className="border-t border-gray-300 mt-2 pt-2 flex justify-end">
+                        <div className="border-t border-border mt-2 pt-2 flex justify-end">
                             <Button
                                 onClick={handleSubmit}
                                 disabled={topicMutation.isPending || !title.trim() || !description.trim()}
