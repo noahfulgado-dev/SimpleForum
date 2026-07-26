@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 506.25 506.25">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <circle class="cls-1" cx="253.12" cy="253.12" r="253.12"/>
+    </clipPath>
+  </defs>
+  <g class="cls-2">
+    <image width="1254" height="1254" transform="scale(.4)" xlink:href="../../../../Downloads/e87ec4f7-e263-4528-90ab-44b23aa0234e.png"/>
+  </g>
+</svg>

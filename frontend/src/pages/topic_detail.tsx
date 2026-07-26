@@ -282,7 +282,7 @@ export function TopicDetail() {
                                 const shareState = replyShares[reply.id];
                                 const shareCount = shareState?.shareCount ?? reply.shared_count;
                                 return (
-                                    <div key={reply.id} className="flex flex-row gap-3 px-1">
+                                    <div key={reply.id} className="flex flex-row gap-3 p-4 border border-border rounded-[10px] bg-card">
                                         <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
                                             <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
                                         </div>
