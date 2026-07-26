@@ -39,7 +39,7 @@ class CachedProfileMixin:
     def _build_cached_profile(self, user, request):
         topics = list(
             user.topics.select_related('user').annotate(
-                like_count=Count('likes'), reply_count=Count('replies')
+                like_count=Count('likes', distinct=True), reply_count=Count('replies', distinct=True)
             )[:10]
         )
         topic_data = TopicListSerializer(topics, many=True, context={'request': request}).data
