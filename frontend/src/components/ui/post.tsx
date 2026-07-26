@@ -89,7 +89,8 @@ export function Post({ topic, onDelete }: PostProps) {
                             <span className="text-sm font-medium text-foreground font-geist">
                                 {topic.user.username}
                             </span>
-                            <span className="text-xs font-light text-muted-foreground font-geist">
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-sm font-light text-muted-foreground font-geist">
                                 {timeAgo(topic.created)}
                                 {isEdited && <span className="ml-1 italic">(Edited)</span>}
                             </span>
