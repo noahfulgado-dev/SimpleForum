@@ -29,8 +29,9 @@ export function ShareModal({ topic, onClose, onShare }: ShareModalProps) {
         mutationFn: async () => {
             const lines = content.trim().split('\n');
             const title = lines[0]?.trim() || `Shared @${topic.user.username}'s post`;
+            const restContent = lines.slice(1).join('\n').trim();
             const attribution = `\n\n---\nOriginally shared from @${topic.user.username}: "${topic.title}"`;
-            const description = content.trim() ? content.trim() + attribution : attribution;
+            const description = restContent ? restContent + attribution : attribution;
             await forumAPI.createTopic({ title, description });
             await forumAPI.shareTopic(topic.id).catch(() => {});
         },
