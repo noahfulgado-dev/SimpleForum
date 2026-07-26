@@ -11,7 +11,9 @@ import { forumAPI } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import Replies from './replies';
 import ShareModal from './share_modal';
+import EditPostModal from './edit_post_modal';
 import { parseSharedDescription, SharedQuoteCard } from './shared_quote_card';
+import { timeAgo } from '@/lib/time';
 
 interface PostProps {
     topic: Topic;
@@ -44,18 +46,14 @@ export function Post({ topic, onDelete }: PostProps) {
         });
     };
 
-    const formattedDate = new Date(topic.created).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-    });
+    const isEdited = topic.updated && new Date(topic.updated).getTime() !== new Date(topic.created).getTime();
 
     const [isBookmarked, setIsBookmarked] = useState(topic.user_has_bookmarked);
+    const [shareCount, setShareCount] = useState(topic.shared_count ?? 0);
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [isRepliesOpen, setIsRepliesOpen] = useState<boolean>(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
     const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -82,19 +80,20 @@ export function Post({ topic, onDelete }: PostProps) {
         <>
             <div className="border border-border rounded-[10px] p-7 flex flex-row gap-5 bg-card">
                 <div className="w-[100%] flex flex-col gap-2">
-                    <div className="flex flex-row gap-2">
+                    <div className="flex flex-row gap-2 items-center">
                         <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
                             <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
                             <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                         </div>
-                        <div className="flex flex-col justify-center gap-0.5">
-                                <div className="text-[clamp(0.5rem,5vw,1.2rem)] font-medium leading-none text-foreground font-geist">
-                                    {topic.user.username}
-                                </div>
-                                <div className="text-xs font-light leading-none text-muted-foreground font-geist">
-                                    {formattedDate}
-                            </div>
-
+                        <div className="flex flex-row items-center gap-1.5">
+                            <span className="text-sm font-medium text-foreground font-geist">
+                                {topic.user.username}
+                            </span>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-sm font-light text-muted-foreground font-geist">
+                                {timeAgo(topic.created)}
+                                {isEdited && <span className="ml-1 italic">(Edited)</span>}
+                            </span>
                         </div>
                     </div>
 
@@ -138,13 +137,16 @@ export function Post({ topic, onDelete }: PostProps) {
                         <button onClick={(e) => { e.stopPropagation(); setIsShareModalOpen(true); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                             <Share />
                             <span className={`text-sm m-1 text-muted-foreground`}>
-                                {topic.shared_count ?? 0}
+                                {shareCount}
                             </span>
                         </button>
-                        {isShareModalOpen && (
-                            <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} />
-                        )}
                     </div>
+                    {isShareModalOpen && (
+                        <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} onShare={() => setShareCount(c => c + 1)} />
+                    )}
+                    {isEditModalOpen && (
+                        <EditPostModal topic={topic} onClose={() => setIsEditModalOpen(false)} />
+                    )}
                 </div>
 
                 <div className="flex flex-row gap-3 items-start pt-1">
@@ -162,29 +164,33 @@ export function Post({ topic, onDelete }: PostProps) {
                         {isOpen && (
                             <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
                                 {isOwnPost ? (
-                                    confirmDelete ? (
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                                                    onClick={() => deletePost(topic.id)}
-                                                    disabled={isDeleting}
-                                                >
-                                                    {isDeleting ? 'Deleting...' : 'Yes'}
-                                                </button>
-                                                <button
-                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                                                    onClick={() => setConfirmDelete(false)}
-                                                    disabled={isDeleting}
-                                                >
-                                                    No
-                                                </button>
+                                    <>
+                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsEditModalOpen(true); setIsOpen(false); }}>Edit Post</button>
+                                        <div className="border-t border-border" />
+                                        {confirmDelete ? (
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                        onClick={() => deletePost(topic.id)}
+                                                        disabled={isDeleting}
+                                                    >
+                                                        {isDeleting ? 'Deleting...' : 'Yes'}
+                                                    </button>
+                                                    <button
+                                                        className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                        onClick={() => setConfirmDelete(false)}
+                                                        disabled={isDeleting}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
-                                    )
+                                        ) : (
+                                            <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
+                                        )}
+                                    </>
                                 ) : (
                                     <span className="text-[0.7rem] text-muted-foreground p-1">No actions available</span>
                                 )}

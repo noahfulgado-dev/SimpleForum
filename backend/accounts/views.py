@@ -78,12 +78,16 @@ class UserDetailView(CachedProfileMixin, generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class CurrentUserView(CachedProfileMixin, generics.RetrieveAPIView):
+class CurrentUserView(CachedProfileMixin, generics.RetrieveUpdateAPIView):
     serializer_class = UserDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+    def perform_update(self, serializer):
+        serializer.save()
+        cache.delete(f"profile:{self.request.user.id}")
 
 
 @api_view(['POST'])

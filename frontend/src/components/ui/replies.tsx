@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { forumAPI, type Topic } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { timeAgo } from '@/lib/time';
 import Reply from './reply';
 import { Like, Liked } from './like';
 import { Bookmark, Bookmarked } from './bookmark';
@@ -29,14 +30,6 @@ export function Replies({ topic, onClose }: RepliesProps) {
     const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-    const postDate = new Date(topic.created).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-    });
 
     const { data: currentTopic, isLoading, error } = useQuery({
         queryKey: ['topic', topic.id],
@@ -218,11 +211,11 @@ export function Replies({ topic, onClose }: RepliesProps) {
                             <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center justify-between">
                                     <div className="flex flex-col">
-                                        <span className="text-[clamp(0.5rem,5vw,1.2rem)] font-medium leading-none text-foreground font-geist">
+                                        <span className="text-sm font-medium leading-none text-foreground font-geist">
                                             {topic.user.username}
                                         </span>
                                         <span className="text-xs font-light leading-none text-muted-foreground font-geist mt-0.5">
-                                            {postDate}
+                                            {timeAgo(topic.created)}
                                         </span>
                                     </div>
                                     <div className="relative">
@@ -345,13 +338,6 @@ export function Replies({ topic, onClose }: RepliesProps) {
                         )}
 
                         {!isLoading && !error && replies.map((reply) => {
-                            const replyDate = new Date(reply.created).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                            });
                             const likeState = replyLikes[reply.id];
                             const isLiked = likeState?.isLiked ?? reply.user_has_liked;
                             const likeCount = likeState?.likeCount ?? reply.like_count;
@@ -369,7 +355,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                                 {reply.user.username}
                                             </span>
                                             <span className="text-[0.7rem] text-muted-foreground">
-                                                {replyDate}
+                                                {timeAgo(reply.created)}
                                             </span>
                                         </div>
                                         <div className="text-[0.9rem] font-extralight tertiary-text text-foreground break-words">
