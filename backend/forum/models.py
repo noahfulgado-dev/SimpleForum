@@ -23,6 +23,9 @@ class Topic(models.Model):
         self.updated = now
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         ordering = ['-created']
         db_table = 'core_topic'
