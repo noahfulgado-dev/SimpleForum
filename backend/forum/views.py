@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from rest_framework import generics, permissions
+from rest_framework import filters, generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -17,6 +17,8 @@ from interactions.models import Likes, Bookmark, Share
 class TopicListView(generics.ListCreateAPIView):
     serializer_class = TopicListSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'description']
 
     def _build_annotated_qs(self, qs):
         user = self.request.user
@@ -54,6 +56,15 @@ class TopicListView(generics.ListCreateAPIView):
         )
 
     def list(self, request, *args, **kwargs):
+        search = request.query_params.get('search')
+
+        if search:
+            qs = self._build_annotated_qs(Topic.objects.all())
+            qs = self.filter_queryset(qs)
+            page_obj = self.paginate_queryset(qs)
+            serializer = self.get_serializer(page_obj, many=True)
+            return self.get_paginated_response(serializer.data)
+
         page = request.query_params.get(self.paginator.page_query_param, 1)
         cached_ids, cached_total = get_cached_topic_ids(page)
 

@@ -1,11 +1,13 @@
+import { useSearchParams } from 'react-router-dom';
 import { FeedContent } from '@/components/ui/feed_content';
 import { Navbar } from '@/components/ui/navbar';
 import SidebarLeft from '@/components/ui/sidebar_left';
 import SidebarRight from '@/components/ui/sidebar_right';
-import React from 'react'
 
 export function Feed() {
     document.title = "Feed | SimpleForum";
+    const [searchParams] = useSearchParams();
+    const search = searchParams.get('search') || '';
 
     return (
         <>
@@ -13,7 +15,7 @@ export function Feed() {
                 <div className="p-5 main-container w-full min-h-screen">
                     <Navbar />
                     <SidebarLeft />
-                    <FeedContent />
+                    <FeedContent search={search} />
                     <SidebarRight />
                 </div>
             </div>
