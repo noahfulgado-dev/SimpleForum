@@ -95,7 +95,7 @@ export function Post({ topic, onDelete }: PostProps) {
                             {isLiked ? (
                                 <Liked fillColor="#ef4444" />
                             ) : (
-                                <Like fillColor="#1C274C" />
+                                <Like />
                             )}
                             <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>
                                 {likeCount}
