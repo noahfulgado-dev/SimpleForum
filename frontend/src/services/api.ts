@@ -23,6 +23,9 @@ export interface Topic {
   reply_count?: number;
   like_count: number;
   user_has_liked: boolean;
+  user_has_bookmarked: boolean;
+  shared_count: number;
+  user_has_shared: boolean;
 }
 
 export interface Reply {
@@ -33,6 +36,9 @@ export interface Reply {
   created: string;
   like_count: number;
   user_has_liked: boolean;
+  user_has_bookmarked: boolean;
+  shared_count: number;
+  user_has_shared: boolean;
   children?: Reply[];
 }
 
@@ -46,6 +52,13 @@ export interface RegisterData {
   password1: string;
   password2: string;
   username?: string;
+}
+
+export interface BookmarkEntry {
+  id: number;
+  content_type: 'topic' | 'reply';
+  content: Topic;
+  created: string;
 }
 
 export interface AuthTokens {
@@ -111,6 +124,21 @@ export const forumAPI = {
 
   likeReply: (replyId: number) =>
     axiosInstance.post(`/api/replies/${replyId}/like/`),
+
+  bookmarkTopic: (topicId: number) =>
+    axiosInstance.post(`/api/topics/${topicId}/bookmark/`),
+
+  bookmarkReply: (replyId: number) =>
+    axiosInstance.post(`/api/replies/${replyId}/bookmark/`),
+
+  shareTopic: (topicId: number) =>
+    axiosInstance.post(`/api/topics/${topicId}/shares/`),
+
+  shareReply: (replyId: number) =>
+    axiosInstance.post(`/api/replies/${replyId}/shares/`),
+
+  getBookmarks: (params?: { page?: number }) =>
+    axiosInstance.get<{ results: BookmarkEntry[]; count: number; next: string | null }>('/api/bookmarks/', { params }),
 };
 
 export default {

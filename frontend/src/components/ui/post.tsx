@@ -1,12 +1,17 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom';
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { Like, Liked } from './like';
+import { Bookmark, Bookmarked } from './bookmark';
+import { Share } from './share';
 import Reply from './reply';
 import type { Topic } from '@/services/api';
 import PostMenu from './post_menu';
 import { forumAPI } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import Replies from './replies';
+import ShareModal from './share_modal';
+import { parseSharedDescription, SharedQuoteCard } from './shared_quote_card';
 
 interface PostProps {
     topic: Topic;
@@ -15,6 +20,7 @@ interface PostProps {
 
 export function Post({ topic, onDelete }: PostProps) {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const isOwnPost = topic.user.id === user?.id;
     const [isLiked, setIsLiked] = useState(topic.user_has_liked);
     const [likeCount, setLikeCount] = useState(topic.like_count);
@@ -30,6 +36,14 @@ export function Post({ topic, onDelete }: PostProps) {
         });
     };
 
+    const handleBookmark = () => {
+        const newIsBookmarked = !isBookmarked;
+        setIsBookmarked(newIsBookmarked);
+        forumAPI.bookmarkTopic(topic.id).catch(() => {
+            setIsBookmarked(isBookmarked);
+        });
+    };
+
     const formattedDate = new Date(topic.created).toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -38,8 +52,10 @@ export function Post({ topic, onDelete }: PostProps) {
         minute: '2-digit',
     });
 
+    const [isBookmarked, setIsBookmarked] = useState(topic.user_has_bookmarked);
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [isRepliesOpen, setIsRepliesOpen] = useState<boolean>(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
     const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -82,14 +98,25 @@ export function Post({ topic, onDelete }: PostProps) {
                         </div>
                     </div>
 
-                    <div className="font-extralight tertiary-font line-clamp-3">
+                    <div className="font-extralight tertiary-font cursor-pointer" onClick={() => navigate(`/topic/${topic.id}`)}>
                         <div className="font-semibold text-[1.2rem]">
                             {topic.title}
                         </div>
-                        {topic.description}
+                        {(() => {
+                            const parsed = parseSharedDescription(topic.description);
+                            if (parsed) {
+                                return (
+                                    <>
+                                        {parsed.text && <div className="line-clamp-3">{parsed.text}</div>}
+                                        <SharedQuoteCard sharedFrom={parsed.sharedFrom} />
+                                    </>
+                                );
+                            }
+                            return <div className="line-clamp-3">{topic.description}</div>;
+                        })()}
                     </div>
                     <div className="flex flex-row gap-4 mt-2">
-                        <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                        <button onClick={(e) => { e.stopPropagation(); handleLike(); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                             {isLiked ? (
                                 <Liked fillColor="#ef4444" />
                             ) : (
@@ -99,7 +126,7 @@ export function Post({ topic, onDelete }: PostProps) {
                                 {likeCount}
                             </span>
                         </button>
-                        <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsRepliesOpen(true); document.body.style.overflow = 'hidden'; }}>
+                        <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={(e) => { e.stopPropagation(); setIsRepliesOpen(true); document.body.style.overflow = 'hidden'; }}>
                             <Reply />
                             <span className={`text-sm m-1 text-muted-foreground`}>
                                 {topic.reply_count ?? topic.replies?.length ?? 0}
@@ -108,11 +135,26 @@ export function Post({ topic, onDelete }: PostProps) {
                         {isRepliesOpen && (
                             <Replies topic={topic} onClose={() => { setIsRepliesOpen(false); document.body.style.overflow = 'visible'; }} />
                         )}
+                        <button onClick={(e) => { e.stopPropagation(); setIsShareModalOpen(true); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                            <Share />
+                            <span className={`text-sm m-1 text-muted-foreground`}>
+                                {topic.shared_count ?? 0}
+                            </span>
+                        </button>
+                        {isShareModalOpen && (
+                            <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} />
+                        )}
                     </div>
                 </div>
 
-                <div className="flex flex-row gap-3">
-
+                <div className="flex flex-row gap-3 items-start pt-1">
+                    <button onClick={(e) => { e.stopPropagation(); handleBookmark(); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                        {isBookmarked ? (
+                            <Bookmarked fillColor="#eab308" />
+                        ) : (
+                            <Bookmark />
+                        )}
+                    </button>
                     <div className="relative">
                         <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsOpen(!isOpen); setConfirmDelete(false); }}>
                             <PostMenu />
