@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import Reply from './reply';
 import { Like, Liked } from './like';
 import PostMenu from './post_menu';
+import { TopicDetailSkeleton, ReplySkeleton } from './skeleton';
 
 interface RepliesProps {
     topic: Topic;
@@ -227,8 +228,12 @@ export function Replies({ topic, onClose }: RepliesProps) {
                         <div className="border-t border-border"></div>
 
                         {isLoading && (
-                            <div className="flex justify-center py-8">
-                                <span className="text-muted-foreground">Loading...</span>
+                            <div className="flex flex-col gap-4 py-4">
+                                <TopicDetailSkeleton />
+                                <div className="border-t border-border" />
+                                <ReplySkeleton />
+                                <ReplySkeleton />
+                                <ReplySkeleton />
                             </div>
                         )}
 

@@ -64,7 +64,7 @@ export function Post({ topic, onDelete }: PostProps) {
 
     return (
         <>
-            <div className="[grid-area:main] border border-border rounded-[10px] p-7 flex flex-row gap-5 bg-card">
+            <div className="border border-border rounded-[10px] p-7 flex flex-row gap-5 bg-card">
                 <div className="w-[100%] flex flex-col gap-2">
                     <div className="flex flex-row gap-2">
                         <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">

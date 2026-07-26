@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { usersAPI } from '@/services/api';
 import defaultAvatar from './../assets/image/default_avatar.jpg';
+import { ProfileSkeleton } from '@/components/ui/skeleton';
 
 export function Profile() {
   document.title = "Profile | SimpleForum";
@@ -100,9 +101,7 @@ export function Profile() {
       <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
         <div className="p-5 main-container w-full min-h-screen">
           <Navbar />
-          <div className="flex justify-center items-center mt-20">
-            <p className="text-muted-foreground">Loading profile...</p>
-          </div>
+          <ProfileSkeleton />
         </div>
       </div>
     );
