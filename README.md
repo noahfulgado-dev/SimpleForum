@@ -14,21 +14,22 @@ A fullstack discussion forum — create topics, reply nested threads, like, book
 - **Google OAuth** — Sign in with Google via allauth
 - **Rate limiting** — Anonymous (5/min), authenticated (200/day), with stricter limits on login (3/min) and registration (2/min)
 - **Notifications** — Real-time alerts for replies and likes with rate-limited batching
+- **Client-side caching** — TanStack Query caches feed data for instant back navigation
 - **API documentation** — Auto-generated Swagger UI and ReDoc
 - **RESTful API** — Clean, well-structured endpoints
 
 ## Tech Stack
 
 | Backend | Frontend |
-|---|---|
+|---|---|---|
 | Django 5.2 | React 18 |
 | Django REST Framework 3.15 | TypeScript |
 | dj-rest-auth + SimpleJWT | Vite 6 |
 | django-allauth (Google OAuth) | Tailwind CSS v4 |
 | PostgreSQL / SQLite | ShadCN UI + Radix |
 | Redis (Upstash) | Lucide Icons |
-| Gunicorn + Whitenoise | — |
-| GitHub Actions (CI/CD) | — |
+| Gunicorn + Whitenoise | TanStack Query |
+| GitHub Actions (CI/CD) | Axios |
 
 ## Architecture
 
@@ -135,6 +136,8 @@ bun run dev
 ```
 
 The app is now at `http://localhost:5173`.
+
+The frontend uses **TanStack Query** for server-state caching. Feed data is cached in memory — navigating back from a topic loads instantly without a re-fetch. Pages also use `placeholderData` for smooth pagination.
 
 ## Environment Variables
 

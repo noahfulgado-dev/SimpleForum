@@ -31,10 +31,16 @@ python manage.py runserver
 
 API at `http://localhost:8000`. Swagger at `/swagger/`.
 
+## Caching
+
+- **Topic list** — Cached in Redis via a version-keyed invalidation strategy. Clearing the cache increments a version counter, instantly invalidating all cached pages.
+- **Profile data** — User profiles (topics, replies, shares, counts) are cached in Redis for 5 minutes (TTL).
+- **Client-side** — The React frontend uses TanStack Query with a 5-minute stale time. Navigate back to the feed without re-fetching.
+
 ## Apps
 
 | App | Role |
-|---|---|---|
+|---|---|
 | `core/` | Project settings, URLs, WSGI/ASGI |
 | `accounts/` | User management, follow system, follower/following counts |
 | `forum/` | Topics and nested (threaded) replies |
