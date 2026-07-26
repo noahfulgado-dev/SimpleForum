@@ -4,8 +4,8 @@ from rest_framework import filters, generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import BooleanField, Case, Count, Exists, IntegerField, OuterRef, Subquery, Value, When
-from django.db.models.functions import Coalesce
+from django.db.models import BooleanField, Case, Count, Exists, ExpressionWrapper, F, FloatField, IntegerField, OuterRef, Subquery, Value, When
+from django.db.models.functions import Coalesce, Extract, Now
 from django.contrib.contenttypes.models import ContentType
 
 from forum.cache import clear_topic_cache, get_cached_topic_ids, set_cached_topic_ids
@@ -27,6 +27,12 @@ class TopicListView(generics.ListCreateAPIView):
         base = qs.select_related('user').annotate(
             like_count=Count('likes', distinct=True),
             reply_count=Count('replies', distinct=True),
+        ).annotate(
+            hot_score=ExpressionWrapper(
+                F('like_count') * 3.0 + F('reply_count') * 2.0
+                - Extract(Now() - F('created'), 'epoch') / 86400.0 * 2.0,
+                output_field=FloatField()
+            ),
         )
 
         if user.is_authenticated:
@@ -79,7 +85,7 @@ class TopicListView(generics.ListCreateAPIView):
             topics = list(qs)
             total = cached_total
         else:
-            qs = self._build_annotated_qs(Topic.objects.all())
+            qs = self._build_annotated_qs(Topic.objects.all()).order_by('-hot_score', '-created')
             page_obj = self.paginate_queryset(qs)
             topics = list(page_obj)
             total = self.paginator.page.paginator.count
