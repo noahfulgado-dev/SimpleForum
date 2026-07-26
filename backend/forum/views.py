@@ -23,8 +23,8 @@ class TopicListView(generics.ListCreateAPIView):
         topic_type = ContentType.objects.get_for_model(Topic)
 
         base = qs.select_related('user').annotate(
-            like_count=Count('likes'),
-            reply_count=Count('replies'),
+            like_count=Count('likes', distinct=True),
+            reply_count=Count('replies', distinct=True),
         )
 
         if user.is_authenticated:
@@ -103,7 +103,7 @@ class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Topic.objects.select_related('user').prefetch_related(
         'replies__user',
     ).annotate(
-        like_count=Count('likes'), reply_count=Count('replies')
+        like_count=Count('likes', distinct=True), reply_count=Count('replies', distinct=True)
     )
     serializer_class = TopicSerializer
     permission_classes = [permissions.IsAuthenticated]
