@@ -95,7 +95,7 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
                             <Button
                                 onClick={handleSubmit}
                                 disabled={topicMutation.isPending || !title.trim() || !description.trim()}
-                                className="rounded-[5px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="rounded-[5px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary! hover:brightness-75"
                             >
                                 {topicMutation.isPending ? 'Posting...' : 'Post'}
                             </Button>

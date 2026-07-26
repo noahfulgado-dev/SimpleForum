@@ -150,7 +150,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                         <span className="text-[clamp(0.5rem,5vw,1.2rem)] font-medium leading-none text-foreground font-geist">
                                             {topic.user.username}
                                         </span>
-                                        <span className="text-[clamp(0.5rem,5vw,1rem)] font-light leading-none text-foreground font-geist mt-0.5">
+                                        <span className="text-xs font-light leading-none text-muted-foreground font-geist mt-0.5">
                                             {postDate}
                                         </span>
                                     </div>

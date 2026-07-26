@@ -5,20 +5,20 @@ export function Skeleton({ className }: { className?: string }) {
 export function TopicCardSkeleton() {
   return (
     <div className="border border-border rounded-[10px] p-7 flex flex-row gap-5 bg-card w-full">
-      <div className="w-full flex flex-col gap-3">
-        <div className="flex flex-row gap-2 items-center">
+      <div className="w-full flex flex-col gap-2">
+        <div className="flex flex-row gap-2">
           <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-          <div className="flex flex-col gap-1.5">
-            <Skeleton className="h-3 w-20 rounded-md" />
-            <Skeleton className="h-3 w-32 rounded-md" />
+          <div className="flex flex-col">
+            <Skeleton className="h-4 w-20 rounded-md" />
+            <Skeleton className="h-3 w-32 rounded-md mt-0.5" />
           </div>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div>
           <Skeleton className="h-5 w-3/5 rounded-md" />
-          <Skeleton className="h-3 w-full rounded-md" />
-          <Skeleton className="h-3 w-4/5 rounded-md" />
+          <Skeleton className="h-4 w-full rounded-md mt-1" />
+          <Skeleton className="h-4 w-4/5 rounded-md mt-0.5" />
         </div>
-        <div className="flex flex-row gap-4 mt-1">
+        <div className="flex flex-row gap-4 mt-2">
           <Skeleton className="h-7 w-16 rounded-[5px]" />
           <Skeleton className="h-7 w-16 rounded-[5px]" />
         </div>
@@ -30,29 +30,29 @@ export function TopicCardSkeleton() {
 
 export function TopicDetailSkeleton() {
   return (
-    <div className="flex flex-col gap-3">
+    <>
       <div className="flex flex-row gap-3 items-start">
         <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-        <div className="flex flex-col min-w-0 flex-1 gap-1.5">
+        <div className="flex flex-col min-w-0 flex-1">
           <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1.5">
-              <Skeleton className="h-4 w-24 rounded-md" />
-              <Skeleton className="h-3 w-36 rounded-md" />
+            <div className="flex flex-col">
+              <Skeleton className="h-5 w-24 rounded-md" />
+              <Skeleton className="h-3 w-36 rounded-md mt-0.5" />
             </div>
-            <Skeleton className="w-8 h-8 rounded-full" />
+            <Skeleton className="w-8 h-8 rounded-full shrink-0" />
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div>
         <Skeleton className="h-5 w-3/5 rounded-md" />
-        <Skeleton className="h-3 w-full rounded-md" />
-        <Skeleton className="h-3 w-4/5 rounded-md" />
+        <Skeleton className="h-4 w-full rounded-md mt-1" />
+        <Skeleton className="h-4 w-4/5 rounded-md mt-0.5" />
       </div>
       <div className="flex flex-row gap-4">
         <Skeleton className="h-7 w-16 rounded-[5px]" />
         <Skeleton className="h-7 w-16 rounded-[5px]" />
       </div>
-    </div>
+    </>
   )
 }
 
@@ -60,14 +60,16 @@ export function ReplySkeleton() {
   return (
     <div className="flex flex-row gap-3 px-1">
       <Skeleton className="w-8 h-8 rounded-full shrink-0 mt-0.5" />
-      <div className="flex flex-col gap-1.5 min-w-0">
+      <div className="flex flex-col gap-0.5 min-w-0">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-3 w-20 rounded-md" />
+          <Skeleton className="h-3.5 w-20 rounded-md" />
           <Skeleton className="h-3 w-28 rounded-md" />
         </div>
-        <Skeleton className="h-3 w-full rounded-md" />
-        <Skeleton className="h-3 w-2/5 rounded-md" />
-        <Skeleton className="h-6 w-12 rounded-[5px]" />
+        <Skeleton className="h-4 w-full rounded-md" />
+        <Skeleton className="h-4 w-2/5 rounded-md" />
+        <div className="flex items-center gap-1 mt-0.5">
+          <Skeleton className="h-6 w-12 rounded-[5px]" />
+        </div>
       </div>
     </div>
   )
