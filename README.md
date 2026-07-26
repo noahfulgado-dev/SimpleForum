@@ -21,7 +21,7 @@ A fullstack discussion forum — create topics, reply nested threads, like, book
 ## Tech Stack
 
 | Backend | Frontend |
-|---|---|---|
+|---|---|
 | Django 5.2 | React 18 |
 | Django REST Framework 3.15 | TypeScript |
 | dj-rest-auth + SimpleJWT | Vite 6 |
