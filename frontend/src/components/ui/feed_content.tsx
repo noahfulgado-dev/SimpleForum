@@ -34,9 +34,13 @@ export function FeedContent({ search = '' }: FeedContentProps) {
     });
 
     const topics = data?.pages.flatMap(p => p.results) ?? [];
+    const prevSearchRef = useRef(search);
 
     useEffect(() => {
-        queryClient.resetQueries({ queryKey: ['topics', search] });
+        if (prevSearchRef.current !== search) {
+            prevSearchRef.current = search;
+            queryClient.resetQueries({ queryKey: ['topics', search] });
+        }
     }, [search]);
 
     useEffect(() => {
