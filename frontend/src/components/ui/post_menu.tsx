@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function PostMenu() {
     return (
         <svg fill="#1C274C" height="20px" width="20px" id="Layer_1" data-name="Layer 1"

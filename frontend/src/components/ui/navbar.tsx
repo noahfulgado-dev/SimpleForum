@@ -16,7 +16,7 @@ export function Navbar() {
 
     return (
         <>
-            <nav className="[grid-area:navbar] border border-gray-300 rounded-[10px] p-2 pl-5 pr-5 flex items-center justify-between bg-[#fafdf6] z-50">
+            <nav className="[grid-area:navbar] border border-gray-300 rounded-[10px] p-2 pl-5 pr-5 flex items-center justify-between bg-[#fafdf6] w-full">
                 <div className="w-[33.3%] flex items-center justify-start">
                     <Link to="/feed">
                         <div className="text-[1.2rem] text-[#2d2a32] font-medium font-cousine rounded-[10px]">

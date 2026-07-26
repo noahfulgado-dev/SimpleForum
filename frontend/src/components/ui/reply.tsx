@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function Reply() {
     return (
         <svg className="shrink-0 w-7 h-7" width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
