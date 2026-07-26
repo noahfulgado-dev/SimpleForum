@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import bellIcon from './../../assets/svg/bell.svg';
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
+import { useAuth } from '@/context/AuthContext';
 
 export function Navbar() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -40,7 +42,7 @@ export function Navbar() {
                         <img src={bellIcon} alt="Bell" className="w-7 h-7" />
                     </div>
                     <div className="relative group w-8 h-8 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-                        <img src={defaultAvatar} alt="Default Avatar" className="w-8 h-8 border border-gray-800 rounded-full" />
+                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-gray-800 rounded-full" />
                         <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-[#e5e5e5]/30"></div>
                     </div>
                     {isOpen && (

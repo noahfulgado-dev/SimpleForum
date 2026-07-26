@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { Button } from './button';
 import { forumAPI, type Topic } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface CreatePostProps {
     onClose: () => void;
@@ -10,6 +11,7 @@ interface CreatePostProps {
 }
 
 export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
+    const { user } = useAuth();
     const queryClient = useQueryClient();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -51,7 +53,7 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
             >
                 <div className="w-[40rem] border border-gray-300 rounded-[10px] p-5 flex flex-row gap-5 bg-[#fafdf6]">
                     <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
-                        <img src={defaultAvatar} alt="Default Avatar" className="w-10 h-10 border border-gray-800 rounded-full" />
+                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-gray-800 rounded-full" />
                         <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-[#e5e5e5]/30"></div>
                     </div>
                     <div className="flex flex-col bg-[#fafdf6] w-full">
