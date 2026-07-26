@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Post } from './post'
 import PostButton from './post_button'
 import { forumAPI } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
-
-const PAGE_SIZE = 10;
 
 interface FeedContentProps {
     search?: string;
@@ -14,74 +12,63 @@ interface FeedContentProps {
 export function FeedContent({ search = '' }: FeedContentProps) {
     const { user, loading: authLoading } = useAuth();
     const queryClient = useQueryClient();
-    const [currentPage, setCurrentPage] = useState(1);
+    const sentinelRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [search]);
-
-    const { data, isLoading: topicsLoading, error } = useQuery({
-        queryKey: ['topics', currentPage, search],
-        queryFn: () => forumAPI.getTopics({ page: currentPage, search: search || undefined }).then(r => r.data),
-        placeholderData: (prev) => prev,
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading: topicsLoading,
+        error,
+    } = useInfiniteQuery({
+        queryKey: ['topics', search],
+        queryFn: ({ pageParam = 1 }) =>
+            forumAPI.getTopics({ page: pageParam, search: search || undefined }).then(r => r.data),
+        getNextPageParam: (lastPage) => {
+            if (!lastPage.next) return undefined;
+            return Number(new URL(lastPage.next).searchParams.get('page'));
+        },
+        initialPageParam: 1,
+        staleTime: 30000,
     });
 
-    const topics = data?.results ?? [];
-    const totalPages = Math.ceil((data?.count ?? 0) / PAGE_SIZE);
+    const topics = data?.pages.flatMap(p => p.results) ?? [];
+    const prevSearchRef = useRef(search);
+
+    useEffect(() => {
+        if (prevSearchRef.current !== search) {
+            prevSearchRef.current = search;
+            queryClient.resetQueries({ queryKey: ['topics', search] });
+        }
+    }, [search]);
+
+    useEffect(() => {
+        const el = sentinelRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                }
+            },
+            { rootMargin: '300px' },
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     const deleteMutation = useMutation({
         mutationFn: (id: number) => forumAPI.deleteTopic(id),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics'] }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics', search] }),
     });
 
     const handlePostCreated = () => {
-        setCurrentPage(1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDeleteTopic = (id: number) => {
         deleteMutation.mutate(id);
-    };
-
-    const renderPagination = () => {
-        if (totalPages <= 1) return null;
-
-        const pages: number[] = [];
-        for (let i = 1; i <= totalPages; i++) {
-            pages.push(i);
-        }
-
-        return (
-            <div className="flex items-center justify-center gap-2 mt-6">
-                <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 rounded-[5px] text-sm font-medium border border-gray-300 bg-[#fafdf6] text-[#2d2a32] hover:bg-[#e5e5e5] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                    Previous
-                </button>
-
-                {pages.map((page) => (
-                    <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded-[5px] text-sm font-medium transition-all duration-200 cursor-pointer ${page === currentPage
-                            ? 'bg-[#2d2a32] text-[#fafdf6]'
-                            : 'border border-gray-300 bg-[#fafdf6] text-[#2d2a32] hover:bg-[#e5e5e5]'
-                            }`}
-                    >
-                        {page}
-                    </button>
-                ))}
-
-                <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1.5 rounded-[5px] text-sm font-medium border border-gray-300 bg-[#fafdf6] text-[#2d2a32] hover:bg-[#e5e5e5] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                    Next
-                </button>
-            </div>
-        );
     };
 
     return (
@@ -96,7 +83,7 @@ export function FeedContent({ search = '' }: FeedContentProps) {
                     </div>
 
                     <div className="flex flex-col gap-5 w-full">
-                        
+
                         {authLoading && (
                             <div className="text-center text-gray-500 py-8">Loading...</div>
                         )}
@@ -112,7 +99,13 @@ export function FeedContent({ search = '' }: FeedContentProps) {
                         {!authLoading && !topicsLoading && !error && topics.map((topic) => (
                             <Post key={topic.id} topic={topic} onDelete={handleDeleteTopic} />
                         ))}
-                        {renderPagination()}
+                        {isFetchingNextPage && (
+                            <div className="text-center text-gray-400 py-4">Loading more...</div>
+                        )}
+                        {!hasNextPage && !topicsLoading && topics.length > 0 && (
+                            <div className="text-center text-gray-400 py-4 text-sm">You've reached the end</div>
+                        )}
+                        <div ref={sentinelRef} className="h-px" />
                     </div>
                 </div>
 
