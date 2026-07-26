@@ -210,7 +210,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 {postIsLiked ? (
                                     <Liked fillColor="#ef4444" />
                                 ) : (
-                                    <Like fillColor="#1C274C" />
+                                    <Like />
                                 )}
                                 <span className={`text-sm ${postIsLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>
                                     {postLikeCount}
@@ -280,7 +280,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                                 {isLiked ? (
                                                     <Liked fillColor="#ef4444" />
                                                 ) : (
-                                                    <Like fillColor="#1C274C" />
+                                                    <Like />
                                                 )}
                                             </button>
                                             <span className={`text-[0.7rem] ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}>
