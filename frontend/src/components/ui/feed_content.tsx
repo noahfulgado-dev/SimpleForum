@@ -1,46 +1,38 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Post } from './post'
 import PostButton from './post_button'
-import { forumAPI, type Topic } from '@/services/api'
+import { forumAPI } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
 
 const PAGE_SIZE = 10;
 
 export function FeedContent() {
     const { user, loading: authLoading } = useAuth();
-    const [topics, setTopics] = useState<Topic[]>([]);
+    const queryClient = useQueryClient();
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(0);
-    const [topicsLoading, setTopicsLoading] = useState(true);
-    const [error, setError] = useState('');
 
-    const fetchTopics = async (page: number) => {
-        setTopicsLoading(true);
-        setError('');
+    const { data, isLoading: topicsLoading, error } = useQuery({
+        queryKey: ['topics', currentPage],
+        queryFn: () => forumAPI.getTopics({ page: currentPage }).then(r => r.data),
+        placeholderData: (prev) => prev,
+    });
 
-        try {
-            const response = await forumAPI.getTopics({ page });
+    const topics = data?.results ?? [];
+    const totalPages = Math.ceil((data?.count ?? 0) / PAGE_SIZE);
 
-            setTopics(response.data.results.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()));
-            setTotalPages(Math.ceil(response.data.count / PAGE_SIZE));
-        } catch {
-            setError('Failed to load topics. Please try again.');
-        } finally {
-            setTopicsLoading(false);
-        }
-    };
+    const deleteMutation = useMutation({
+        mutationFn: (id: number) => forumAPI.deleteTopic(id),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics'] }),
+    });
 
-    useEffect(() => {
-        fetchTopics(currentPage);
-    }, [currentPage]);
-
-    const handlePostCreated = (newTopic: Topic) => {
+    const handlePostCreated = () => {
         setCurrentPage(1);
-        setTopics(prev => [newTopic, ...prev]);
+        queryClient.invalidateQueries({ queryKey: ['topics'] });
     };
 
     const handleDeleteTopic = (id: number) => {
-        setTopics((prev) => prev.filter((t) => t.id !== id));
+        deleteMutation.mutate(id);
     };
 
     const renderPagination = () => {
@@ -105,7 +97,7 @@ export function FeedContent() {
                             <div className="text-center text-gray-500 py-8">Loading topics...</div>
                         )}
                         {!authLoading && error && (
-                            <div className="text-center text-red-500 py-8">{error}</div>
+                            <div className="text-center text-red-500 py-8">Failed to load topics. Please try again.</div>
                         )}
                         {!authLoading && !topicsLoading && !error && topics.length === 0 && (
                             <div className="text-center text-gray-500 py-8">No topics yet. Be the first to post!</div>
