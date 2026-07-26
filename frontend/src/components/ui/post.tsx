@@ -64,19 +64,19 @@ export function Post({ topic, onDelete }: PostProps) {
 
     return (
         <>
-            <div className="[grid-area:main] border border-gray-300 rounded-[10px] p-7 flex flex-row gap-5 bg-[#fafdf6]">
+            <div className="border border-border rounded-[10px] p-7 flex flex-row gap-5 bg-card">
                 <div className="w-[100%] flex flex-col gap-2">
                     <div className="flex flex-row gap-2">
                         <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
                             <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full" />
-                            <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-[#e5e5e5]/30"></div>
+                            <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                         </div>
                         <div className="flex flex-col">
                             <div className="flex flex-col justify-between">
-                                <div className="text-[clamp(0.5rem,5vw,1.2rem)] font-medium leading-none text-[#2d2a32] font-geist">
+                                <div className="text-[clamp(0.5rem,5vw,1.2rem)] font-medium leading-none text-foreground font-geist">
                                     {topic.user.username}
                                 </div>
-                                <div className="text-[clamp(0.5rem,5vw,1rem)] font-light leading-none text-[#2d2a32] font-geist">
+                                <div className="text-[clamp(0.5rem,5vw,1rem)] font-light leading-none text-foreground font-geist">
                                     {formattedDate}
                                 </div>
                             </div>
@@ -91,19 +91,19 @@ export function Post({ topic, onDelete }: PostProps) {
                         {topic.description}
                     </div>
                     <div className="flex flex-row gap-4 mt-2">
-                        <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer">
+                        <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                             {isLiked ? (
                                 <Liked fillColor="#ef4444" />
                             ) : (
-                                <Like fillColor="#1C274C" />
+                                <Like />
                             )}
-                            <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-gray-500'} m-1`}>
+                            <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>
                                 {likeCount}
                             </span>
                         </button>
-                        <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsRepliesOpen(true); document.body.style.overflow = 'hidden'; }}>
+                        <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsRepliesOpen(true); document.body.style.overflow = 'hidden'; }}>
                             <Reply />
-                            <span className={`text-sm m-1 text-gray-500`}>
+                            <span className={`text-sm m-1 text-muted-foreground`}>
                                 {topic.reply_count ?? topic.replies?.length ?? 0}
                             </span>
                         </button>
@@ -116,25 +116,25 @@ export function Post({ topic, onDelete }: PostProps) {
                 <div className="flex flex-row gap-3">
 
                     <div className="relative">
-                        <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsOpen(!isOpen); setConfirmDelete(false); }}>
+                        <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsOpen(!isOpen); setConfirmDelete(false); }}>
                             <PostMenu />
                         </button>
                         {isOpen && (
-                            <div className="absolute top-7 right-0 w-48 bg-[#fafdf6] border border-gray-300 rounded-[10px] p-2 flex flex-col gap-2 z-50">
+                            <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
                                 {isOwnPost ? (
                                     confirmDelete ? (
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-[0.7rem] text-gray-600 p-1">Delete this post?</span>
+                                            <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
                                             <div className="flex gap-1">
                                                 <button
-                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-red-500 text-white hover:bg-red-600 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
                                                     onClick={() => deletePost(topic.id)}
                                                     disabled={isDeleting}
                                                 >
                                                     {isDeleting ? 'Deleting...' : 'Yes'}
                                                 </button>
                                                 <button
-                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-[#e5e5e5] transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
                                                     onClick={() => setConfirmDelete(false)}
                                                     disabled={isDeleting}
                                                 >
@@ -143,10 +143,10 @@ export function Post({ topic, onDelete }: PostProps) {
                                             </div>
                                         </div>
                                     ) : (
-                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-[#e5e5e5] transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
+                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
                                     )
                                 ) : (
-                                    <span className="text-[0.7rem] text-gray-400 p-1">No actions available</span>
+                                    <span className="text-[0.7rem] text-muted-foreground p-1">No actions available</span>
                                 )}
                             </div>
                         )}

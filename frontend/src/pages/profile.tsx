@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { usersAPI } from '@/services/api';
 import defaultAvatar from './../assets/image/default_avatar.jpg';
+import { ProfileSkeleton } from '@/components/ui/skeleton';
 
 export function Profile() {
   document.title = "Profile | SimpleForum";
@@ -97,12 +98,10 @@ export function Profile() {
 
   if (isLoading) {
     return (
-      <div className="absolute inset-0 -z-10 h-fit w-full bg-[#fafdf6] bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-size-[40px_40px]">
+      <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
         <div className="p-5 main-container w-full min-h-screen">
           <Navbar />
-          <div className="flex justify-center items-center mt-20">
-            <p className="text-gray-500">Loading profile...</p>
-          </div>
+          <ProfileSkeleton />
         </div>
       </div>
     );
@@ -110,11 +109,11 @@ export function Profile() {
 
   if (!profile) {
     return (
-      <div className="absolute inset-0 -z-10 h-fit w-full bg-[#fafdf6] bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-size-[40px_40px]">
+      <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
         <div className="p-5 main-container w-full min-h-screen">
           <Navbar />
           <div className="flex justify-center items-center mt-20">
-            <p className="text-gray-500">Could not load profile.</p>
+            <p className="text-muted-foreground">Could not load profile.</p>
           </div>
         </div>
       </div>
@@ -122,19 +121,19 @@ export function Profile() {
   }
 
   return (
-    <div className="absolute inset-0 -z-10 h-fit w-full bg-[#fafdf6] bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-size-[40px_40px]">
+    <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
       <div className="p-5 main-container w-full min-h-screen">
         <Navbar />
 
         <div className="w-fit mx-auto mt-8 space-y-6">
-          <Card className="bg-[#fafdf6]">
+          <Card className="bg-card">
             <CardHeader>
               <div className="flex items-center gap-6">
                 <div className="relative w-24 h-24 shrink-0 group">
                   <img
                     src={avatarPreview || profile.avatar || defaultAvatar}
                     alt="Avatar"
-                    className="w-24 h-24 border border-gray-300 rounded-full object-cover"
+                    className="w-24 h-24 border border-border rounded-full object-cover"
                   />
                   <input
                     ref={fileInputRef}
@@ -199,7 +198,7 @@ export function Profile() {
             </CardHeader>
 
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="20" height="16" x="2" y="4" rx="2"/>
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
@@ -228,12 +227,12 @@ export function Profile() {
                   </div>
                 ) : (
                   <div className="flex items-start gap-2 group">
-                    <p className="text-sm text-gray-700 flex-1">
-                      {profile.bio || <span className="italic text-gray-400">No bio yet</span>}
+                    <p className="text-sm text-foreground flex-1">
+                      {profile.bio || <span className="italic text-muted-foreground">No bio yet</span>}
                     </p>
                     <button
                       onClick={() => setEditingBio(true)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100 shrink-0 mt-0.5"
+                      className="text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 shrink-0 mt-0.5"
                       title="Edit bio"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -247,23 +246,23 @@ export function Profile() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[#fafdf6]">
+          <Card className="bg-card">
             <CardHeader>
-              <CardTitle>Stats</CardTitle>
+              <CardTitle className="text-foreground">Stats</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="flex flex-col items-center p-3 rounded-lg bg-gray-50 border border-gray-200">
-                  <span className="text-2xl font-bold text-gray-900">{profile.follower_count ?? 0}</span>
-                  <span className="text-sm text-gray-500">Followers</span>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-muted border border-border">
+                  <span className="text-2xl font-bold text-foreground">{profile.follower_count ?? 0}</span>
+                  <span className="text-sm text-muted-foreground">Followers</span>
                 </div>
-                <div className="flex flex-col items-center p-3 rounded-lg bg-gray-50 border border-gray-200">
-                  <span className="text-2xl font-bold text-gray-900">{profile.following_count ?? 0}</span>
-                  <span className="text-sm text-gray-500">Following</span>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-muted border border-border">
+                  <span className="text-2xl font-bold text-foreground">{profile.following_count ?? 0}</span>
+                  <span className="text-sm text-muted-foreground">Following</span>
                 </div>
-                <div className="flex flex-col items-center p-3 rounded-lg bg-gray-50 border border-gray-200">
-                  <span className="text-2xl font-bold text-gray-900">{profile.topic_count ?? 0}</span>
-                  <span className="text-sm text-gray-500">Topics</span>
+                <div className="flex flex-col items-center p-3 rounded-lg bg-muted border border-border">
+                  <span className="text-2xl font-bold text-foreground">{profile.topic_count ?? 0}</span>
+                  <span className="text-sm text-muted-foreground">Topics</span>
                 </div>
               </div>
             </CardContent>

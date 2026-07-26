@@ -48,22 +48,22 @@ export function Login() {
 
     return (
         <>
-            <div className="absolute inset-0 -z-10 h-full w-full bg-[#fafdf6] bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
+            <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
                 <div className="w-dvw h-1/2 flex items-center justify-center flex-col gap-5">
-                    <h1 className="text-[clamp(0.5rem,5vw,3rem)] tracking-wider font-semibold leading-none text-[#2d2a32] primary-font neutral-color">
+                    <h1 className="text-[clamp(0.5rem,5vw,3rem)] tracking-wider font-semibold leading-none text-foreground primary-font">
                         SimpleForum
                     </h1>
                     <Card className="w-125 h-[400px]! rounded-none drop-shadow-none primary-font">
                         <CardHeader>
-                            <CardTitle className="text-4xl text-left text-box-trim neutral-color">Login</CardTitle>
-                            <Link to="/signup"><CardAction className="under neutral-color">Sign Up</CardAction></Link>
+                            <CardTitle className="text-4xl text-left text-box-trim text-foreground">Login</CardTitle>
+                            <Link to="/signup"><CardAction className="under text-foreground">Sign Up</CardAction></Link>
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit}>
                                 <div className="flex flex-col gap-6">
                                     <div className="">
                                         <Input
-                                            className="rounded-none"
+                                            className="rounded-none bg-background text-foreground"
                                             id="email"
                                             type="email"
                                             placeholder="Email"
@@ -74,7 +74,7 @@ export function Login() {
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <Input
-                                            className="rounded-none"
+                                            className="rounded-none bg-background text-foreground"
                                             id="password"
                                             type="password"
                                             placeholder="Password"
@@ -82,16 +82,16 @@ export function Login() {
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
                                         />
-                                        <a className="text-[0.7em] cursor-pointer hover:text-[#9ec1a3] transition-all duration-500 ease-in-out underline">Forgot your password?</a>
+                                        <a className="text-[0.7em] cursor-pointer hover:text-primary transition-all duration-500 ease-in-out underline text-muted-foreground">Forgot your password?</a>
                                     </div>
                                     {error && (
-                                        <p className="text-red-500 text-sm">{error}</p>
+                                        <p className="text-destructive text-sm">{error}</p>
                                     )}
                                 </div>
                             </form>
                         </CardContent>
                         <CardFooter>
-                            <Button type="submit" onClick={handleSubmit} disabled={isSubmitting} className="cursor-pointer neutral-bg-color hover:bg-[#9ec1a3]! transition-all duration-300 ease-in-out">{isSubmitting ? 'Logging in...' : 'Login'}</Button>
+                            <Button type="submit" onClick={handleSubmit} disabled={isSubmitting} className="cursor-pointer neutral-bg-color hover:bg-primary! transition-all duration-300 ease-in-out">{isSubmitting ? 'Logging in...' : 'Login'}</Button>
                         </CardFooter>
                     </Card>
                 </div>
