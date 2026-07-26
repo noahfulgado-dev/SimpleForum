@@ -23,6 +23,7 @@ class TopicListView(generics.ListCreateAPIView):
     def _build_annotated_qs(self, qs):
         user = self.request.user
         topic_type = ContentType.objects.get_for_model(Topic)
+        from django.db import connection
 
         base = qs.select_related('user').annotate(
             like_count=Count('likes', distinct=True),
@@ -34,6 +35,22 @@ class TopicListView(generics.ListCreateAPIView):
                 output_field=FloatField()
             ),
         )
+
+        if connection.vendor == 'postgresql':
+            base = base.annotate(
+                hot_score=ExpressionWrapper(
+                    F('like_count') * 3.0 + F('reply_count') * 2.0
+                    - Extract(Now() - F('created'), 'epoch') / 86400.0 * 2.0,
+                    output_field=FloatField()
+                ),
+            )
+        else:
+            base = base.annotate(
+                hot_score=ExpressionWrapper(
+                    F('like_count') * 3.0 + F('reply_count') * 2.0,
+                    output_field=FloatField()
+                ),
+            )
 
         if user.is_authenticated:
             return base.annotate(
