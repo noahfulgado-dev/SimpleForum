@@ -8,9 +8,10 @@ import { useAuth } from '@/context/AuthContext';
 interface ShareModalProps {
     topic: Topic;
     onClose: () => void;
+    onShare?: () => void;
 }
 
-export function ShareModal({ topic, onClose }: ShareModalProps) {
+export function ShareModal({ topic, onClose, onShare }: ShareModalProps) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [content, setContent] = useState('');
@@ -35,6 +36,7 @@ export function ShareModal({ topic, onClose }: ShareModalProps) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['topics'] });
+            onShare?.();
             onClose();
         },
         onError: () => setError('Failed to share. Please try again.'),
