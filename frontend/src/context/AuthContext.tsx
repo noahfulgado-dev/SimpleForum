@@ -1,33 +1,44 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { authAPI, type User } from '../services/api';
 
+const USER_STORAGE_KEY = 'simpleforum_user';
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (username: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const stored = localStorage.getItem(USER_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   const isAuthenticated = !!user;
 
   useEffect(() => {
     authAPI.getCurrentUser()
-      .then((res) => setUser(res.data))
-      .catch(() => {})
+      .then((res) => {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.data));
+        setUser(res.data);
+      })
+      .catch(() => {
+        localStorage.removeItem(USER_STORAGE_KEY);
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (username: string, email: string, password: string) => {
-    await authAPI.login({ username, email, password });
-    const userRes = await authAPI.getCurrentUser();
-    setUser(userRes.data);
+  const login = useCallback(async (email: string, password: string) => {
+    const res = await authAPI.login({ email, password });
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.data.user));
+    setUser(res.data.user);
   }, []);
 
   const logout = useCallback(async () => {
@@ -36,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore server errors
     }
+    localStorage.removeItem(USER_STORAGE_KEY);
     setUser(null);
   }, []);
 
