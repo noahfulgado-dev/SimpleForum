@@ -77,7 +77,7 @@ export const usersAPI = {
 };
 
 export const forumAPI = {
-  getTopics: (params?: { page?: number }) =>
+  getTopics: (params?: { page?: number; search?: string }) =>
     axiosInstance.get<{ results: Topic[]; count: number }>('/api/topics/', { params }),
 
   getTopic: (id: number) =>

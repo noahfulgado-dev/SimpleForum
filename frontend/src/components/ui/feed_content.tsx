@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Post } from './post'
 import PostButton from './post_button'
@@ -7,14 +7,22 @@ import { useAuth } from '@/context/AuthContext'
 
 const PAGE_SIZE = 10;
 
-export function FeedContent() {
+interface FeedContentProps {
+    search?: string;
+}
+
+export function FeedContent({ search = '' }: FeedContentProps) {
     const { user, loading: authLoading } = useAuth();
     const queryClient = useQueryClient();
     const [currentPage, setCurrentPage] = useState(1);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search]);
+
     const { data, isLoading: topicsLoading, error } = useQuery({
-        queryKey: ['topics', currentPage],
-        queryFn: () => forumAPI.getTopics({ page: currentPage }).then(r => r.data),
+        queryKey: ['topics', currentPage, search],
+        queryFn: () => forumAPI.getTopics({ page: currentPage, search: search || undefined }).then(r => r.data),
         placeholderData: (prev) => prev,
     });
 
@@ -100,7 +108,7 @@ export function FeedContent() {
                             <div className="text-center text-red-500 py-8">Failed to load topics. Please try again.</div>
                         )}
                         {!authLoading && !topicsLoading && !error && topics.length === 0 && (
-                            <div className="text-center text-gray-500 py-8">No topics yet. Be the first to post!</div>
+                            <div className="text-center text-gray-500 py-8">{search ? `No results for "${search}".` : 'No topics yet. Be the first to post!'}</div>
                         )}
                         {!authLoading && !topicsLoading && !error && topics.map((topic) => (
                             <Post key={topic.id} topic={topic} onDelete={handleDeleteTopic} />
