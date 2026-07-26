@@ -4,6 +4,7 @@ import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { Button } from './button';
 import { forumAPI, type Topic } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { parseSharedDescription } from './shared_quote_card';
 
 interface ShareModalProps {
     topic: Topic;
@@ -30,7 +31,16 @@ export function ShareModal({ topic, onClose, onShare }: ShareModalProps) {
             const lines = content.trim().split('\n');
             const title = lines[0]?.trim() || `Shared @${topic.user.username}'s post`;
             const restContent = lines.slice(1).join('\n').trim();
-            const attribution = `\n\n---\nOriginally shared from @${topic.user.username}: "${topic.title}"`;
+
+            const parsed = parseSharedDescription(topic.description);
+            let attribution: string;
+            if (parsed) {
+                const markerStart = topic.description.indexOf('\n\n---\nOriginally shared from @');
+                attribution = topic.description.slice(markerStart);
+            } else {
+                attribution = `\n\n---\nOriginally shared from @${topic.user.username}: "${topic.title}"`;
+            }
+
             const description = restContent ? restContent + attribution : attribution;
             await forumAPI.createTopic({ title, description });
             await forumAPI.shareTopic(topic.id).catch(() => {});
