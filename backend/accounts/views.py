@@ -31,8 +31,12 @@ class PasswordResetView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
-        print(f'[PW_RESET] Starting thread for {email}'); sys.stdout.flush()
-        thread = threading.Thread(target=send_password_reset_email, args=(email,))
+        frontend_url = request.META.get(
+            'HTTP_ORIGIN',
+            getattr(settings, 'LOGIN_REDIRECT_URL', 'http://localhost:5173'),
+        )
+        print(f'[PW_RESET] Starting thread for {email}, frontend_url={frontend_url}'); sys.stdout.flush()
+        thread = threading.Thread(target=send_password_reset_email, args=(email, frontend_url))
         thread.start()
         print(f'[PW_RESET] Thread started, returning response'); sys.stdout.flush()
         return Response(
@@ -41,7 +45,7 @@ class PasswordResetView(GenericAPIView):
         )
 
 
-def send_password_reset_email(email):
+def send_password_reset_email(email, frontend_url):
     try:
         close_old_connections()
         print(f'[PW_RESET] Thread running for {email}'); sys.stdout.flush()
@@ -50,7 +54,7 @@ def send_password_reset_email(email):
         print(f'[PW_RESET] Found {len(users)} users for {email}'); sys.stdout.flush()
         for user in users:
             temp_key = default_token_generator.make_token(user)
-            url = frontend_password_reset_url(None, user, temp_key)
+            url = frontend_password_reset_url(frontend_url, user, temp_key)
             print(f'[PW_RESET] URL generated: {url}'); sys.stdout.flush()
             context = {
                 'user': user,
