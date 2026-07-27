@@ -37,7 +37,7 @@ axiosInstance.interceptors.response.use(
 
         return axiosInstance(originalRequest);
       } catch {
-        if (!['/auth/login/', '/auth/registration/', '/auth/user/', '/auth/logout/'].some(path => originalRequest.url?.includes(path))) {
+        if (!['/auth/login/', '/auth/registration/', '/auth/user/', '/auth/logout/', '/auth/password/reset/'].some(path => originalRequest.url?.includes(path))) {
           window.location.href = '/login';
         }
         return Promise.reject(error);
