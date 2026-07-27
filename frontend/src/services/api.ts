@@ -1,13 +1,4 @@
-import axios from 'axios';
 import axiosInstance from './axios';
-
-const publicAxios = axios.create({
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-});
 
 export interface User {
   id: number;
@@ -98,10 +89,10 @@ export const authAPI = {
     axiosInstance.post<AuthTokens>('/auth/google/', { access_token: accessToken }),
 
   passwordReset: (email: string) =>
-    publicAxios.post('/auth/password/reset/', { email }),
+    axiosInstance.post('/auth/password/reset/', { email }, { withCredentials: false }),
 
   passwordResetConfirm: (data: { uid: string; token: string; new_password1: string; new_password2: string }) =>
-    publicAxios.post('/auth/password/reset/confirm/', data),
+    axiosInstance.post('/auth/password/reset/confirm/', data, { withCredentials: false }),
 };
 
 export const usersAPI = {
