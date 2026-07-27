@@ -7,6 +7,6 @@ interface BellIconProps {
 export default function BellIcon({ hasUnread = false }: BellIconProps) {
     const Icon = hasUnread ? BellDot : Bell
     return (
-        <Icon className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
+        <Icon className="w-6 h-6 text-muted-foreground" strokeWidth={1.5} />
     )
 }
