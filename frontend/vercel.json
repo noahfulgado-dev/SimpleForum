@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/auth/password/:path*", "destination": "https://simpleforum-1m94.onrender.com/auth/password/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
