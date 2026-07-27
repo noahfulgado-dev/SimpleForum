@@ -28,6 +28,10 @@ export function Profile() {
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState('');
+  const [firstNameDraft, setFirstNameDraft] = useState('');
+  const [lastNameDraft, setLastNameDraft] = useState('');
+  const [editingFirstName, setEditingFirstName] = useState(false);
+  const [editingLastName, setEditingLastName] = useState(false);
   const [bioDraft, setBioDraft] = useState('');
   const [editingBio, setEditingBio] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'replies'>('posts');
@@ -35,19 +39,25 @@ export function Profile() {
   useEffect(() => {
     if (profile) {
       setUsernameDraft(profile.username);
+      setFirstNameDraft(profile.first_name ?? '');
+      setLastNameDraft(profile.last_name ?? '');
       setBioDraft(profile.bio ?? '');
     }
   }, [profile]);
 
   const profileMutation = useMutation({
-    mutationFn: (data: { username?: string; bio?: string }) => usersAPI.updateProfile(data).then(r => r.data),
+    mutationFn: (data: { username?: string; first_name?: string; last_name?: string; bio?: string }) => usersAPI.updateProfile(data).then(r => r.data),
     onSuccess: (data) => {
       queryClient.setQueryData(['profile'], data);
       setUsernameDraft(data.username);
+      setFirstNameDraft(data.first_name ?? '');
+      setLastNameDraft(data.last_name ?? '');
       setBioDraft(data.bio ?? '');
     },
     onError: () => {
       setUsernameDraft(profile?.username ?? '');
+      setFirstNameDraft(profile?.first_name ?? '');
+      setLastNameDraft(profile?.last_name ?? '');
       setBioDraft(profile?.bio ?? '');
     },
   });
@@ -92,6 +102,26 @@ export function Profile() {
   const handleCancelUsername = () => {
     setUsernameDraft(profile?.username ?? '');
     setEditingUsername(false);
+  };
+
+  const handleSaveFirstName = () => {
+    profileMutation.mutate({ first_name: firstNameDraft.trim() });
+    setEditingFirstName(false);
+  };
+
+  const handleCancelFirstName = () => {
+    setFirstNameDraft(profile?.first_name ?? '');
+    setEditingFirstName(false);
+  };
+
+  const handleSaveLastName = () => {
+    profileMutation.mutate({ last_name: lastNameDraft.trim() });
+    setEditingLastName(false);
+  };
+
+  const handleCancelLastName = () => {
+    setLastNameDraft(profile?.last_name ?? '');
+    setEditingLastName(false);
   };
 
   const handleSaveBio = () => {
@@ -179,6 +209,72 @@ export function Profile() {
                 </svg>
                 <span>{profile.email || authUser?.email || 'No email'}</span>
               </div>
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">First Name</div>
+                {editingFirstName ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={firstNameDraft}
+                      onChange={(e) => setFirstNameDraft(e.target.value)}
+                      placeholder="First name"
+                      className="flex-1 max-w-xs"
+                      disabled={saving}
+                    />
+                    <Button size="sm" onClick={handleSaveFirstName} disabled={saving}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={handleCancelFirstName} disabled={saving}>Cancel</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 group">
+                    <p className="text-sm text-foreground">
+                      {profile.first_name || <span className="italic text-muted-foreground">Not set</span>}
+                    </p>
+                    <button
+                      onClick={() => setEditingFirstName(true)}
+                      className="text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+                      title="Edit first name"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        <path d="m15 5 4 4" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">Last Name</div>
+                {editingLastName ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={lastNameDraft}
+                      onChange={(e) => setLastNameDraft(e.target.value)}
+                      placeholder="Last name"
+                      className="flex-1 max-w-xs"
+                      disabled={saving}
+                    />
+                    <Button size="sm" onClick={handleSaveLastName} disabled={saving}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={handleCancelLastName} disabled={saving}>Cancel</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 group">
+                    <p className="text-sm text-foreground">
+                      {profile.last_name || <span className="italic text-muted-foreground">Not set</span>}
+                    </p>
+                    <button
+                      onClick={() => setEditingLastName(true)}
+                      className="text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+                      title="Edit last name"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        <path d="m15 5 4 4" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div>
                 {editingBio ? (
                   <div className="flex items-start gap-2">

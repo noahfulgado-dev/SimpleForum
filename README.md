@@ -150,13 +150,8 @@ The frontend uses **TanStack Query** for server-state caching. Feed data is cach
 | `DATABASE_URL` | No | PostgreSQL connection string (overrides `DB_ENGINE`/`DB_NAME`) | `postgresql://user:pass@host:5432/db?sslmode=require` |
 | `DB_ENGINE` | No | Database engine class (fallback when no `DATABASE_URL`) | `django.db.backends.sqlite3` |
 | `DB_NAME` | No | Database name or file path (fallback when no `DATABASE_URL`) | `db.sqlite3` |
-| `EMAIL_BACKEND` | Yes | Email backend — use `console` for dev | `django.core.mail.backends.console.EmailBackend` |
-| `EMAIL_HOST` | No | SMTP server host | `smtp.gmail.com` |
-| `EMAIL_PORT` | No | SMTP server port | `587` |
-| `EMAIL_USE_TLS` | No | Enable TLS for email | `True` |
-| `EMAIL_HOST_USER` | No* | SMTP email address | `your-email@gmail.com` |
-| `EMAIL_HOST_PASSWORD` | No* | SMTP password or app password | (Gmail app password) |
-| `DEFAULT_FROM_EMAIL` | No | Default sender address | `your-email@gmail.com` |
+| `DEFAULT_FROM_EMAIL` | Yes | Default sender address (must be verified in Brevo) | `noreply@yourdomain.com` |
+| `BREVO_API_KEY` | No* | Brevo v3 API key for sending emails | (from Brevo dashboard) |
 | `CORS_ALLOWED_ORIGINS` | Yes | Comma-separated allowed origins | `http://localhost:5173` |
 | `FRONTEND_URL` | No | Frontend URL (for password reset emails & OAuth redirect) | `http://localhost:5173` |
 | `GOOGLE_CLIENT_ID` | No | Google OAuth client ID | `xxx.apps.googleusercontent.com` |
@@ -164,7 +159,7 @@ The frontend uses **TanStack Query** for server-state caching. Feed data is cach
 | `VITE_GOOGLE_CLIENT_ID` | Yes | Frontend Google OAuth client ID (same as `GOOGLE_CLIENT_ID`) | `xxx.apps.googleusercontent.com` |
 | `REDIS_URL` | No | Redis connection string (enables caching and global rate limiting) | `redis://default:token@host:6379` |
 
-*\*Required when using SMTP email backend.*
+*\*Required when using Brevo email. For development, set `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend` to print emails to the console instead.*
 
 ## API Overview
 
