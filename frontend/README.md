@@ -1,36 +1,74 @@
-# Bun + React + TypeScript + Vite + ShadCN + Tailwind v4
+# SimpleForum — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-Using `bun` instead of `npm`, and `bunx` instead of npx.
+React SPA for the SimpleForum discussion platform. Built with Vite, TypeScript, Tailwind CSS v4, and ShadCN UI.
 
-## Tailwind + ShadCN for easy UI dev
+## Stack
 
-[Tailwind](https://tailwindcss.com/docs/guides/vite) is already setup for easy yet powerfully custom styling.
-[ShadCN](https://ui.shadcn.com/docs/installation/vite) providing a simple layer above [Radix UI](https://www.radix-ui.com/) and Tailwind.
+| Component | |
+---|---
+React 18 | TypeScript |
+Vite 6 | Tailwind CSS v4 |
+ShadCN UI + Radix | Lucide Icons |
+TanStack Query | Axios |
+React Router v7 | Bun |
 
-Start Dev
-`bun run dev`
+## Getting Started
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+```bash
+bun install
+bun run dev
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+The app is at `http://localhost:5173`.
+
+## Build
+
+```bash
+bun run build
+```
+
+Output goes to `dist/`. Deploy the `dist/` folder to any static host.
+
+## Vercel Deployment
+
+The frontend is deployed on Vercel. A `vercel.json` at the project root provides a catch-all rewrite rule so that direct URL access (e.g., refreshing `/feed`) serves `index.html` instead of returning a 404:
+
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+## Features
+
+- **Topic feed** — Paginated, searchable list of topics sorted by hot score
+- **Topic detail** — Topic with up to 20 inline replies (nested to 10 children), like/bookmark/share buttons
+- **Profile pages** — View any user's topics, replies, shares, and follow counts
+- **Edit post** — Author can edit their own topics and replies inline
+- **Share modal** — Share topics with attribution chain preserved
+- **Authentication** — JWT-based auth with HttpOnly cookies, login/register/logout
+- **Google OAuth** — Sign in with Google
+- **TanStack Query** — Client-side caching with 5-minute stale time and `placeholderData` for smooth pagination
+- **Responsive** — Mobile-friendly layout with sidebar navigation
+
+## Project Structure
+
+```
+frontend/
+├── public/
+├── src/
+│   ├── components/       # UI components (post, replies, modals, navbar, sidebar)
+│   ├── hooks/            # Custom React hooks (auth, follow, etc.)
+│   ├── lib/              # Utilities (timeAgo, API client)
+│   ├── pages/            # Route pages (feed, topic detail, profile, auth)
+│   ├── services/         # API service layer and TypeScript interfaces
+│   ├── types/            # Shared TypeScript types
+│   ├── App.tsx
+│   └── main.tsx
+├── vercel.json
+├── vite.config.ts
+├── tsconfig.json
+└── package.json
+```
