@@ -3,8 +3,9 @@ from django.views.generic import TemplateView
 
 from dj_rest_auth.views import (
     LoginView, LogoutView, PasswordChangeView,
-    PasswordResetConfirmView, PasswordResetView, UserDetailsView,
+    PasswordResetConfirmView, UserDetailsView,
 )
+from accounts.views import PasswordResetView
 from dj_rest_auth.registration.views import (
     RegisterView, VerifyEmailView, ResendEmailVerificationView,
     SocialLoginView,
