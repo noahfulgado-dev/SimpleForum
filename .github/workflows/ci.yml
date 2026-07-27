@@ -19,11 +19,7 @@ jobs:
       DB_ENGINE: django.db.backends.sqlite3
       DB_NAME: db.sqlite3
       EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
-      EMAIL_USE_TLS: True
-      EMAIL_HOST: localhost
-      EMAIL_PORT: "587"
-      EMAIL_HOST_USER: test@example.com
-      EMAIL_HOST_PASSWORD: test-password
+      BREVO_API_KEY: ci-test-brevo-key
       DEFAULT_FROM_EMAIL: test@example.com
       CORS_ALLOWED_ORIGINS: http://localhost:5173
       FRONTEND_URL: http://localhost:5173
