@@ -27,19 +27,37 @@ class PasswordResetView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        reset_form = serializer.reset_form
+        email = serializer.validated_data['email']
 
         def _send():
             from allauth.account.forms import default_token_generator
+            from django.core.mail import send_mail
+            from django.db import close_old_connections
+            from django.template.loader import render_to_string
             try:
-                opts = {
-                    'use_https': request.is_secure(),
-                    'from_email': settings.DEFAULT_FROM_EMAIL,
-                    'request': request,
-                    'token_generator': default_token_generator,
-                    'url_generator': frontend_password_reset_url,
-                }
-                reset_form.save(**opts)
+                close_old_connections()
+                User = get_user_model()
+                users = User.objects.filter(email__iexact=email, is_active=True)
+                for user in users:
+                    temp_key = default_token_generator.make_token(user)
+                    url = frontend_password_reset_url(None, user, temp_key)
+                    context = {
+                        'user': user,
+                        'password_reset_url': url,
+                        'key': temp_key,
+                        'site_name': 'SimpleForum',
+                    }
+                    subject = 'Password Reset'
+                    body = render_to_string(
+                        'account/email/password_reset_key_message.txt',
+                        context,
+                    )
+                    send_mail(
+                        subject, body,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [user.email],
+                    )
+                    logger.info('Password reset email sent to %s', user.email)
             except Exception:
                 logger.exception('Failed to send password reset email')
 
