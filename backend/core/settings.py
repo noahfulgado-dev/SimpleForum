@@ -256,14 +256,12 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-EMAIL_BACKEND = os.environ['EMAIL_BACKEND']
-EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS'].strip().lower() == 'true'
-EMAIL_HOST = os.environ['EMAIL_HOST']
-EMAIL_PORT = os.environ['EMAIL_PORT']
-EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'anymail.backends.sendinblue.EmailBackend')
 DEFAULT_FROM_EMAIL = os.environ['DEFAULT_FROM_EMAIL']
-EMAIL_TIMEOUT = 10
+
+ANYMAIL = {
+    'SENDINBLUE_API_KEY': os.environ.get('BREVO_API_KEY', ''),
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
