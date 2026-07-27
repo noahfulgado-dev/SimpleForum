@@ -28,7 +28,7 @@ class ScopedRegisterView(RegisterView):
 
 auth_urlpatterns = [
     re_path(r'password/reset/?$', PasswordResetView.as_view(), name='rest_password_reset'),
-    re_path(r'password/reset/confirm/?$', PasswordResetConfirmView.as_view(), name='rest_password_reset_confirm'),
+    re_path(r'password/reset/confirm/?$', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     re_path(r'login/?$', ScopedLoginView.as_view(), name='rest_login'),
     re_path(r'logout/?$', LogoutView.as_view(), name='rest_logout'),
     re_path(r'user/?$', UserDetailsView.as_view(), name='rest_user_details'),
