@@ -1,8 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.mail import send_mail
+from django.db import close_old_connections
 from django.db.models import Count, Subquery, OuterRef, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
@@ -20,11 +23,66 @@ class PasswordResetView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        email = serializer.validated_data['email']
+        print(f'[PW_RESET] Starting thread for {email}')
+
+        def _send():
+            from allauth.account.forms import default_token_generator
+            try:
+                close_old_connections()
+                print(f'[PW_RESET] Thread running for {email}')
+                User = get_user_model()
+                users = list(User.objects.filter(email__iexact=email, is_active=True))
+                print(f'[PW_RESET] Found {len(users)} users for {email}')
+                for user in users:
+                    temp_key = default_token_generator.make_token(user)
+                    url = frontend_password_reset_url(None, user, temp_key)
+                    print(f'[PW_RESET] URL generated: {url}')
+                    context = {
+                        'user': user,
+                        'password_reset_url': url,
+                        'key': temp_key,
+                        'site_name': 'SimpleForum',
+                    }
+                    subject = 'Password Reset'
+                    body = render_to_string(
+                        'account/email/password_reset_key_message.txt',
+                        context,
+                    )
+                    print(f'[PW_RESET] Template rendered, sending to {user.email}')
+                    send_mail(
+                        subject, body,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [user.email],
+                    )
+                    print(f'[PW_RESET] Email sent to {user.email}')
+                    logger.info('Password reset email sent to %s', user.email)
+            except Exception as e:
+                print(f'[PW_RESET] ERROR: {e}')
+                logger.exception('Failed to send password reset email')
+
+        thread = threading.Thread(target=_send)
+        thread.start()
+        print(f'[PW_RESET] Thread started, returning response')
         return Response(
             {'detail': _('Password reset e-mail has been sent.')},
             status=status.HTTP_200_OK,
         )
+
+
+@api_view(['POST'])
+@permission_classes([])
+def test_email(request):
+    email = request.data.get('email', '')
+    print(f'[TEST_EMAIL] Sending test to {email}')
+    send_mail(
+        'Test Email from SimpleForum',
+        'If you receive this, SMTP is configured correctly.',
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+    )
+    print(f'[TEST_EMAIL] Sent to {email}')
+    return Response({'detail': 'Test email sent'})
 
 from accounts.serializers import UserSerializer, UserDetailSerializer
 from accounts.models import Follow
