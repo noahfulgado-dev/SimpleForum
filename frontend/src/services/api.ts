@@ -87,6 +87,12 @@ export const authAPI = {
 
   googleLogin: (accessToken: string) =>
     axiosInstance.post<AuthTokens>('/auth/google/', { access_token: accessToken }),
+
+  passwordReset: (email: string) =>
+    axiosInstance.post('/auth/password/reset/', { email }),
+
+  passwordResetConfirm: (data: { uid: string; token: string; new_password1: string; new_password2: string }) =>
+    axiosInstance.post('/auth/password/reset/confirm/', data),
 };
 
 export const usersAPI = {
@@ -126,6 +132,9 @@ export const forumAPI = {
 
   deleteReply: (id: number) =>
     axiosInstance.delete(`/api/replies/${id}/`),
+
+  updateReply: (id: number, data: { content: string }) =>
+    axiosInstance.patch<Reply>(`/api/replies/${id}/`, data),
 
   likeTopic: (topicId: number) =>
     axiosInstance.post(`/api/topics/${topicId}/like/`),

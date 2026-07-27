@@ -93,9 +93,9 @@ export function Login() {
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
                                     />
-                                    <a className="text-xs cursor-pointer hover:text-primary transition-colors underline underline-offset-4 text-muted-foreground w-fit">
+                                    <Link to="/forgot-password" className="text-xs cursor-pointer hover:text-primary transition-colors underline underline-offset-4 text-muted-foreground w-fit">
                                         Forgot your password?
-                                    </a>
+                                    </Link>
                                 </div>
                                 {error && (
                                     <p className="text-destructive text-sm">{error}</p>
