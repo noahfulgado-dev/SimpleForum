@@ -5,9 +5,15 @@ from rest_framework import serializers
 User = get_user_model()
 
 
-def frontend_password_reset_url(request, user, temp_key):
+def frontend_password_reset_url(request_or_url, user, temp_key):
     from allauth.account.utils import user_pk_to_url_str
-    frontend_url = settings.LOGIN_REDIRECT_URL.split(',')[0].strip()
+    if isinstance(request_or_url, str):
+        frontend_url = request_or_url
+    else:
+        frontend_url = request_or_url.META.get(
+            'HTTP_ORIGIN',
+            getattr(settings, 'LOGIN_REDIRECT_URL', 'http://localhost:5173'),
+        )
     uid = user_pk_to_url_str(user)
     return f"{frontend_url}/reset-password?uid={uid}&key={temp_key}"
 
