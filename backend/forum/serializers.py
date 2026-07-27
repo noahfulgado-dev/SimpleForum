@@ -140,7 +140,7 @@ class ReplySerializer(serializers.ModelSerializer):
         depth = self.context.get('depth', 0)
         if depth <= 0:
             return []
-        children = obj.children.select_related('user').prefetch_related('likes')[:10]
+        children = obj.children.select_related('user').prefetch_related('likes')
         return ReplySerializer(children, many=True, context={**self.context, 'depth': depth - 1}).data
 
     def get_user_has_liked(self, obj):

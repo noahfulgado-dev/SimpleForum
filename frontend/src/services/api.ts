@@ -11,6 +11,9 @@ export interface User {
   topic_count?: number;
   reply_count?: number;
   is_following?: boolean;
+  total_likes?: number;
+  topics?: Topic[];
+  replies?: Reply[];
 }
 
 export interface Topic {
@@ -32,6 +35,7 @@ export interface Topic {
 export interface Reply {
   id: number;
   topic: number;
+  parent?: number | null;
   user: User;
   content: string;
   created: string;
@@ -117,7 +121,7 @@ export const forumAPI = {
   deleteTopic: (id: number) =>
     axiosInstance.delete(`/api/topics/${id}/`),
 
-  createReply: (topicId: number, data: { content: string }) =>
+  createReply: (topicId: number, data: { content: string; parent?: number | null }) =>
     axiosInstance.post<Reply>(`/api/topics/${topicId}/replies/`, data),
 
   deleteReply: (id: number) =>
@@ -143,6 +147,11 @@ export const forumAPI = {
 
   getBookmarks: (params?: { page?: number }) =>
     axiosInstance.get<{ results: BookmarkEntry[]; count: number; next: string | null }>('/api/bookmarks/', { params }),
+};
+
+export const notificationsAPI = {
+  getUnreadCount: () =>
+    axiosInstance.get<{ count: number }>('/api/notifications/unread-count/'),
 };
 
 export default {
