@@ -258,7 +258,10 @@ AUTHENTICATION_BACKENDS = [
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'anymail.backends.sendinblue.EmailBackend')
 DEFAULT_FROM_EMAIL = os.environ['DEFAULT_FROM_EMAIL']
-EMAIL_TIMEOUT = 10
+
+ANYMAIL = {
+    'SENDINBLUE_API_KEY': os.environ.get('BREVO_API_KEY', ''),
+}
 
 ANYMAIL = {
     'SENDINBLUE_API_KEY': os.environ.get('BREVO_API_KEY', ''),

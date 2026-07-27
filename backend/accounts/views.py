@@ -35,7 +35,7 @@ class PasswordResetView(GenericAPIView):
             'HTTP_ORIGIN',
             getattr(settings, 'LOGIN_REDIRECT_URL', 'http://localhost:5173'),
         )
-        print(f'[PW_RESET] Starting thread for {email}, frontend_url={frontend_url}'); sys.stdout.flush()
+        print(f'[PW_RESET] Starting thread, frontend_url={frontend_url}'); sys.stdout.flush()
         thread = threading.Thread(target=send_password_reset_email, args=(email, frontend_url))
         thread.start()
         print(f'[PW_RESET] Thread started, returning response'); sys.stdout.flush()
@@ -48,10 +48,10 @@ class PasswordResetView(GenericAPIView):
 def send_password_reset_email(email, frontend_url):
     try:
         close_old_connections()
-        print(f'[PW_RESET] Thread running for {email}'); sys.stdout.flush()
+        print(f'[PW_RESET] Thread running'); sys.stdout.flush()
         User = get_user_model()
         users = list(User.objects.filter(email__iexact=email, is_active=True))
-        print(f'[PW_RESET] Found {len(users)} users for {email}'); sys.stdout.flush()
+        print(f'[PW_RESET] Found {len(users)} users'); sys.stdout.flush()
         for user in users:
             temp_key = default_token_generator.make_token(user)
             url = frontend_password_reset_url(frontend_url, user, temp_key)
@@ -67,13 +67,13 @@ def send_password_reset_email(email, frontend_url):
                 'account/email/password_reset_key_message.txt',
                 context,
             )
-            print(f'[PW_RESET] Template rendered, sending to {user.email}'); sys.stdout.flush()
+            print(f'[PW_RESET] Template rendered, sending email'); sys.stdout.flush()
             send_mail(
                 subject, body,
                 settings.DEFAULT_FROM_EMAIL,
                 [user.email],
             )
-            print(f'[PW_RESET] Email sent to {user.email}'); sys.stdout.flush()
+            print(f'[PW_RESET] Email sent'); sys.stdout.flush()
             logger.info('Password reset email sent to %s', user.email)
     except Exception as e:
         print(f'[PW_RESET] ERROR: {e}'); sys.stdout.flush()
@@ -84,14 +84,14 @@ def send_password_reset_email(email, frontend_url):
 @permission_classes([])
 def test_email(request):
     email = request.data.get('email', '')
-    print(f'[TEST_EMAIL] Sending test to {email}')
+    print(f'[TEST_EMAIL] Sending test')
     send_mail(
         'Test Email from SimpleForum',
         'If you receive this, SMTP is configured correctly.',
         settings.DEFAULT_FROM_EMAIL,
         [email],
     )
-    print(f'[TEST_EMAIL] Sent to {email}')
+    print(f'[TEST_EMAIL] Sent')
     return Response({'detail': 'Test email sent'})
 
 from accounts.serializers import UserSerializer, UserDetailSerializer

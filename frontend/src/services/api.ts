@@ -3,6 +3,8 @@ import axiosInstance from './axios';
 export interface User {
   id: number;
   username: string;
+  first_name?: string;
+  last_name?: string;
   email?: string;
   bio?: string;
   avatar?: string;
@@ -110,7 +112,7 @@ export const usersAPI = {
   toggleFollow: (userId: number) =>
     axiosInstance.post<{ status: string; follower_count: number }>(`/api/users/${userId}/follow/`),
 
-  updateProfile: (data: { username?: string; bio?: string; avatar?: string }) =>
+  updateProfile: (data: { username?: string; first_name?: string; last_name?: string; bio?: string; avatar?: string }) =>
     axiosInstance.patch<User>('/api/users/me/', data),
 
   uploadAvatar: (file: File) => {
