@@ -31,6 +31,10 @@ export function Replies({ topic, onClose }: RepliesProps) {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [replyingTo, setReplyingTo] = useState<Reply | null>(null);
     const [expandedChildren, setExpandedChildren] = useState<Record<number, boolean>>({});
+    const [editingReplyId, setEditingReplyId] = useState<number | null>(null);
+    const [editContent, setEditContent] = useState('');
+    const [replyMenuOpen, setReplyMenuOpen] = useState<Record<number, boolean>>({});
+    const [replyConfirmDelete, setReplyConfirmDelete] = useState<Record<number, boolean>>({});
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     const { data: currentTopic, isLoading, error } = useQuery({
@@ -128,6 +132,29 @@ export function Replies({ topic, onClose }: RepliesProps) {
         },
     });
 
+    const replyDeleteMutation = useMutation({
+        mutationFn: (id: number) => forumAPI.deleteReply(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['topic', topic.id] });
+        },
+        onError: () => {
+            alert('Failed to delete reply.');
+        },
+    });
+
+    const replyEditMutation = useMutation({
+        mutationFn: ({ id, content }: { id: number; content: string }) =>
+            forumAPI.updateReply(id, { content }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['topic', topic.id] });
+            setEditingReplyId(null);
+            setEditContent('');
+        },
+        onError: () => {
+            alert('Failed to edit reply.');
+        },
+    });
+
     const replyShareMutation = useMutation({
         mutationFn: (replyId: number) => forumAPI.shareReply(replyId),
         onError: (_err, replyId) => {
@@ -215,6 +242,10 @@ export function Replies({ topic, onClose }: RepliesProps) {
         const children = reply.children ?? [];
         const isExpanded = expandedChildren[reply.id] ?? false;
         const showMoreCount = children.length - 3;
+        const isOwnReply = reply.user.id === user?.id;
+        const isEditing = editingReplyId === reply.id;
+        const isMenuOpen = replyMenuOpen[reply.id] ?? false;
+        const isConfirmDelete = replyConfirmDelete[reply.id] ?? false;
 
         return (
             <div key={reply.id} className="relative pl-10">
@@ -223,19 +254,104 @@ export function Replies({ topic, onClose }: RepliesProps) {
                     <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
                         <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
                     </div>
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-[0.8rem] font-medium text-foreground">
-                                {reply.user.username}
-                            </span>
-                            <span className="text-[0.55rem] text-muted-foreground">•</span>
-                            <span className="text-[0.7rem] text-muted-foreground">
-                                {timeAgo(reply.created)}
-                            </span>
+                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[0.8rem] font-medium text-foreground">
+                                    {reply.user.username}
+                                </span>
+                                <span className="text-[0.55rem] text-muted-foreground">•</span>
+                                <span className="text-[0.7rem] text-muted-foreground">
+                                    {timeAgo(reply.created)}
+                                </span>
+                            </div>
+                            <div className="relative">
+                                <button
+                                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                    onClick={() => setReplyMenuOpen(prev => ({ ...prev, [reply.id]: !isMenuOpen }))}
+                                >
+                                    <PostMenu />
+                                </button>
+                                {isMenuOpen && (
+                                    <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                                        {isOwnReply ? (
+                                            <>
+                                                <button
+                                                    className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                                    onClick={() => {
+                                                        setEditingReplyId(reply.id);
+                                                        setEditContent(reply.content);
+                                                        setReplyMenuOpen(prev => ({ ...prev, [reply.id]: false }));
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <div className="border-t border-border" />
+                                                {isConfirmDelete ? (
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[0.7rem] text-muted-foreground p-1">Delete this reply?</span>
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                                onClick={() => replyDeleteMutation.mutate(reply.id)}
+                                                                disabled={replyDeleteMutation.isPending}
+                                                            >
+                                                                {replyDeleteMutation.isPending ? 'Deleting...' : 'Yes'}
+                                                            </button>
+                                                            <button
+                                                                className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                                onClick={() => setReplyConfirmDelete(prev => ({ ...prev, [reply.id]: false }))}
+                                                                disabled={replyDeleteMutation.isPending}
+                                                            >
+                                                                No
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                                        onClick={() => setReplyConfirmDelete(prev => ({ ...prev, [reply.id]: true }))}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="text-[0.9rem] font-extralight tertiary-text text-foreground break-words">
-                            {reply.content}
-                        </div>
+                        {isEditing ? (
+                            <div className="flex flex-col gap-2 mt-1">
+                                <textarea
+                                    value={editContent}
+                                    onChange={(e) => setEditContent(e.target.value)}
+                                    className="w-full resize-none focus:outline-none focus:ring-0 focus:border-transparent font-light text-[0.9rem] bg-transparent text-foreground border border-border rounded-[5px] p-2"
+                                    rows={2}
+                                />
+                                <div className="flex gap-2 justify-end">
+                                    <button
+                                        onClick={() => { setEditingReplyId(null); setEditContent(''); }}
+                                        className="px-3 py-1 text-[0.75rem] rounded-[5px] hover:bg-muted transition-all duration-200 cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => replyEditMutation.mutate({ id: reply.id, content: editContent })}
+                                        disabled={replyEditMutation.isPending || !editContent.trim()}
+                                        className="px-3 py-1 text-[0.75rem] rounded-[5px] bg-foreground text-background hover:opacity-90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                    >
+                                        {replyEditMutation.isPending ? 'Saving...' : 'Save'}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-[0.9rem] font-extralight tertiary-text text-foreground break-words">
+                                {reply.content}
+                            </div>
+                        )}
                         <div className="flex items-center gap-1 mt-0.5">
                             <button
                                 onClick={() => handleReplyLike(reply)}

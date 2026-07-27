@@ -127,6 +127,9 @@ export const forumAPI = {
   deleteReply: (id: number) =>
     axiosInstance.delete(`/api/replies/${id}/`),
 
+  updateReply: (id: number, data: { content: string }) =>
+    axiosInstance.patch<Reply>(`/api/replies/${id}/`, data),
+
   likeTopic: (topicId: number) =>
     axiosInstance.post(`/api/topics/${topicId}/like/`),
 
