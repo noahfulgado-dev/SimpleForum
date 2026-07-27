@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://simpleforum-1m94.onrend
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
