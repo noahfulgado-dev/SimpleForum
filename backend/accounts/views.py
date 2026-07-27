@@ -1,7 +1,3 @@
-import logging
-import threading
-
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db.models import Count, Subquery, OuterRef, Value
@@ -13,9 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from accounts.serializers import PasswordResetSerializer, frontend_password_reset_url
-
-logger = logging.getLogger(__name__)
+from accounts.serializers import PasswordResetSerializer
 
 
 class PasswordResetView(GenericAPIView):
@@ -26,44 +20,7 @@ class PasswordResetView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        email = serializer.validated_data['email']
-
-        def _send():
-            from allauth.account.forms import default_token_generator
-            from django.core.mail import send_mail
-            from django.db import close_old_connections
-            from django.template.loader import render_to_string
-            try:
-                close_old_connections()
-                User = get_user_model()
-                users = User.objects.filter(email__iexact=email, is_active=True)
-                for user in users:
-                    temp_key = default_token_generator.make_token(user)
-                    url = frontend_password_reset_url(None, user, temp_key)
-                    context = {
-                        'user': user,
-                        'password_reset_url': url,
-                        'key': temp_key,
-                        'site_name': 'SimpleForum',
-                    }
-                    subject = 'Password Reset'
-                    body = render_to_string(
-                        'account/email/password_reset_key_message.txt',
-                        context,
-                    )
-                    send_mail(
-                        subject, body,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [user.email],
-                    )
-                    logger.info('Password reset email sent to %s', user.email)
-            except Exception:
-                logger.exception('Failed to send password reset email')
-
-        thread = threading.Thread(target=_send)
-        thread.start()
-
+        serializer.save()
         return Response(
             {'detail': _('Password reset e-mail has been sent.')},
             status=status.HTTP_200_OK,
