@@ -16,7 +16,7 @@ export function ResetPassword() {
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const uid = searchParams.get('uid')
-    const token = searchParams.get('token')
+    const key = searchParams.get('key')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [error, setError] = useState('')
@@ -26,7 +26,7 @@ export function ResetPassword() {
         e.preventDefault()
         setError('')
 
-        if (!uid || !token) {
+        if (!uid || !key) {
             setError('Invalid reset link. Please request a new one.')
             return
         }
@@ -45,7 +45,7 @@ export function ResetPassword() {
         try {
             await authAPI.passwordResetConfirm({
                 uid,
-                token,
+                token: key,
                 new_password1: password,
                 new_password2: confirmPassword,
             })
@@ -63,7 +63,7 @@ export function ResetPassword() {
         }
     }
 
-    if (!uid || !token) {
+    if (!uid || !key) {
         return (
             <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
                 <div className="w-full max-w-md px-4">
