@@ -1,15 +1,21 @@
+import logging
+import threading
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db.models import Count, Subquery, OuterRef, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from django.utils.translation import gettext_lazy as _
 from rest_framework.generics import GenericAPIView
+from rest_framework.response import Response
 
-from accounts.serializers import PasswordResetSerializer
+from accounts.serializers import PasswordResetSerializer, frontend_password_reset_url
+
+logger = logging.getLogger(__name__)
 
 
 class PasswordResetView(GenericAPIView):
@@ -20,7 +26,26 @@ class PasswordResetView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+
+        reset_form = serializer.reset_form
+
+        def _send():
+            from allauth.account.forms import default_token_generator
+            try:
+                opts = {
+                    'use_https': request.is_secure(),
+                    'from_email': settings.DEFAULT_FROM_EMAIL,
+                    'request': request,
+                    'token_generator': default_token_generator,
+                    'url_generator': frontend_password_reset_url,
+                }
+                reset_form.save(**opts)
+            except Exception:
+                logger.exception('Failed to send password reset email')
+
+        thread = threading.Thread(target=_send)
+        thread.start()
+
         return Response(
             {'detail': _('Password reset e-mail has been sent.')},
             status=status.HTTP_200_OK,

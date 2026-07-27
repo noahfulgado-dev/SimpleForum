@@ -10,4 +10,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      '/auth/password': {
+        target: 'https://simpleforum-1m94.onrender.com',
+        changeOrigin: true,
+      },
+    },
+  },
 })
