@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { forumAPI, type Topic, type Reply } from '@/services/api';
@@ -18,6 +19,7 @@ interface RepliesProps {
 }
 
 export function Replies({ topic, onClose }: RepliesProps) {
+    const navigate = useNavigate();
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const isOwnPost = topic.user.id === user?.id;
@@ -251,13 +253,19 @@ export function Replies({ topic, onClose }: RepliesProps) {
             <div key={reply.id} className="relative pl-10">
                 <div className="absolute left-[22px] top-0 w-[18px] h-[34px] border-l-2 border-b-2 dark:border-white/20 border-border/60 rounded-bl-[4px] pointer-events-none"></div>
                 <div className="flex-1 flex flex-row gap-3 p-4 border border-border rounded-[10px] bg-card">
-                    <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
+                    <div
+                        className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5 cursor-pointer"
+                        onClick={() => navigate(`/profile/${reply.user.id}`)}
+                    >
                         <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
                     </div>
                     <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
-                                <span className="text-[0.8rem] font-medium text-foreground">
+                                <span
+                                    className="text-[0.8rem] font-medium text-foreground cursor-pointer hover:underline"
+                                    onClick={() => navigate(`/profile/${reply.user.id}`)}
+                                >
                                     {reply.user.username}
                                 </span>
                                 <span className="text-[0.55rem] text-muted-foreground">•</span>
@@ -444,13 +452,19 @@ export function Replies({ topic, onClose }: RepliesProps) {
                         <div className="relative">
                             <div className="flex flex-col gap-3">
                                 <div className="flex flex-row gap-3 items-start">
-                                    <div className="relative group w-10 h-10 flex items-center justify-center shrink-0">
+                                    <div
+                                        className="relative group w-10 h-10 flex items-center justify-center shrink-0 cursor-pointer"
+                                        onClick={() => navigate(`/profile/${topic.user.id}`)}
+                                    >
                                         <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-border rounded-full" />
                                     </div>
                                     <div className="flex flex-col min-w-0 flex-1">
                                         <div className="flex items-center justify-between">
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-medium leading-none text-foreground font-geist">
+                                                <span
+                                                    className="text-sm font-medium leading-none text-foreground font-geist cursor-pointer hover:underline"
+                                                    onClick={() => navigate(`/profile/${topic.user.id}`)}
+                                                >
                                                     {topic.user.username}
                                                 </span>
                                                 <span className="text-xs font-light leading-none text-muted-foreground font-geist mt-0.5">

@@ -81,12 +81,18 @@ export function Post({ topic, onDelete }: PostProps) {
             <div className="rounded-[10px] p-7 flex flex-row gap-5 bg-[linear-gradient(135deg,var(--accent)/0.2_0%,transparent_60%)] bg-card border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted transition-all duration-300 ease-in-out">
                 <div className="w-[100%] flex flex-col gap-2">
                     <div className="flex flex-row gap-2 items-center">
-                        <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
+                        <div
+                            className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/profile/${topic.user.id}`); }}
+                        >
                             <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
                             <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                         </div>
                         <div className="flex flex-row items-center gap-1.5">
-                            <span className="text-sm font-medium text-foreground font-geist">
+                            <span
+                                className="text-sm font-medium text-foreground font-geist cursor-pointer hover:underline"
+                                onClick={(e) => { e.stopPropagation(); navigate(`/profile/${topic.user.id}`); }}
+                            >
                                 {topic.user.username}
                             </span>
                             <span className="text-xs text-muted-foreground">•</span>

@@ -99,6 +99,12 @@ export const usersAPI = {
   getProfile: () =>
     axiosInstance.get<User>('/api/users/me/'),
 
+  getUser: (id: number) =>
+    axiosInstance.get<User>(`/api/users/${id}/`),
+
+  toggleFollow: (userId: number) =>
+    axiosInstance.post<{ status: string; follower_count: number }>(`/api/users/${userId}/follow/`),
+
   updateProfile: (data: { username?: string; bio?: string; avatar?: string }) =>
     axiosInstance.patch<User>('/api/users/me/', data),
 
