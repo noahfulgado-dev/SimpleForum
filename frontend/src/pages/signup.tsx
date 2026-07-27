@@ -6,123 +6,166 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { Button } from "../components/ui/button";
-import { Link, useNavigate } from 'react-router-dom';
-import { Input } from "@/components/ui/input";
-
-import React, { useState } from 'react';
-import { authAPI } from '../services/api';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'
+import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import { authAPI } from '../services/api'
 
 export function Signup() {
-    document.title ="Signup | SimpleForum";
+    document.title = "Signup | SimpleForum"
 
-    const navigate = useNavigate();
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
+    const navigate = useNavigate()
+    const [username, setUsername] = useState('')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [error, setError] = useState('')
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
+        e.preventDefault()
+        setError('')
 
         if (password !== confirmPassword) {
-            setError('Passwords do not match.');
-            return;
+            setError('Passwords do not match.')
+            return
         }
 
+        setIsSubmitting(true)
         try {
             await authAPI.register({
                 username,
                 email,
                 password1: password,
                 password2: confirmPassword,
-            });
-            navigate('/login');
+            })
+            navigate('/login')
         } catch (err: any) {
-            const data = err.response?.data;
+            const data = err.response?.data
             if (typeof data === 'object' && data !== null) {
-                const messages = Object.values(data).flat().join(' ');
-                setError(messages || 'Registration failed. Please try again.');
+                const messages = Object.values(data).flat().join(' ')
+                setError(messages || 'Registration failed. Please try again.')
             } else {
-                setError('Registration failed. Please try again.');
+                setError('Registration failed. Please try again.')
             }
+        } finally {
+            setIsSubmitting(false)
         }
-    };
+    }
+
+    const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+        setError('')
+        try {
+            const res = await authAPI.googleLogin(credentialResponse.credential!)
+            localStorage.setItem('simpleforum_user', JSON.stringify(res.data.user))
+            navigate('/feed')
+        } catch {
+            setError('Google sign-in failed. Please try again.')
+        }
+    }
 
     return (
-        <>
-            <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
-                <div className="w-dvw h-1/2 flex items-center justify-center flex-col gap-5">
-                    <h1 className="text-[clamp(0.5rem,5vw,3rem)] font-semibold leading-none text-foreground primary-font tracking-wider">
-                        SimpleForum
-                    </h1>
-                    <Card className="w-125 h-[400px]! rounded-none drop-shadow-none font-lexend">
-                        <CardHeader>
-                            <CardTitle className="text-4xl text-left text-box-trim primary-font text-foreground">Sign Up</CardTitle>
-                            <Link to="/login"><CardAction className="under primary-font text-foreground">Login</CardAction></Link>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit}>
-                                
-                                <div className="flex flex-col gap-6">
-                                    <div className="">
-                                        <Input
-                                            className="rounded-none primary-font bg-background text-foreground"
-                                            id="username"
-                                            type="username"
-                                            placeholder="Username"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="">
-                                        <Input
-                                            className="rounded-none primary-font bg-background text-foreground"
-                                            id="email"
-                                            type="email"
-                                            placeholder="Email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Input
-                                            className="rounded-none primary-font bg-background text-foreground"
-                                            id="password"
-                                            type="password"
-                                            placeholder="Password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Input
-                                            className="rounded-none primary-font bg-background text-foreground"
-                                            id="confirmPassword"
-                                            type="password"
-                                            placeholder="Confirm Password"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    {error && (
-                                        <p className="text-destructive text-sm">{error}</p>
-                                    )}
-                                </div>
-                            </form>
-                        </CardContent>
-                        <CardFooter>
-                            <Button type="submit" onClick={handleSubmit} className="cursor-pointer hover:bg-primary! transition-all duration-300 ease-in-out neutral-bg-color primary-font">Sign Up</Button>
-                        </CardFooter>
-                    </Card>
-                </div>
+        <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
+            <div className="w-full max-w-md px-4 flex items-center justify-center flex-col gap-6">
+                <h1 className="text-[clamp(1.5rem,5vw,3rem)] tracking-wider font-bold leading-none text-foreground primary-font">
+                    SimpleForum
+                </h1>
+                <Card className="w-full shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-3xl text-left text-foreground primary-font">
+                            Sign Up
+                        </CardTitle>
+                        <Link to="/login">
+                            <CardAction className="text-foreground text-sm underline underline-offset-4 hover:text-primary transition-colors">
+                                Login
+                            </CardAction>
+                        </Link>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit}>
+                            <div className="flex flex-col gap-4">
+                                <Input
+                                    className="bg-background text-foreground"
+                                    id="username"
+                                    type="text"
+                                    placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                />
+                                <Input
+                                    className="bg-background text-foreground"
+                                    id="email"
+                                    type="email"
+                                    placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                                <Input
+                                    className="bg-background text-foreground"
+                                    id="password"
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                                <Input
+                                    className="bg-background text-foreground"
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="Confirm Password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                />
+                                {error && (
+                                    <p className="text-destructive text-sm">{error}</p>
+                                )}
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="cursor-pointer w-full mt-1"
+                                >
+                                    {isSubmitting ? 'Creating account...' : 'Sign Up'}
+                                </Button>
+                            </div>
+                        </form>
+
+                        <div className="relative my-5">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t border-border" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-card px-3 text-muted-foreground">
+                                    or continue with
+                                </span>
+                            </div>
+                        </div>
+
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => setError('Google sign-in failed')}
+                            theme="outline"
+                            size="large"
+                            text="continue_with"
+                            shape="rectangular"
+                            width="100%"
+                        />
+                    </CardContent>
+                    <CardFooter className="justify-center">
+                        <p className="text-xs text-muted-foreground">
+                            Already have an account?{' '}
+                            <Link to="/login" className="underline underline-offset-4 hover:text-primary transition-colors">
+                                Login
+                            </Link>
+                        </p>
+                    </CardFooter>
+                </Card>
             </div>
-        </>
+        </div>
     )
 }
