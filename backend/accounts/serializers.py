@@ -1,7 +1,38 @@
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from rest_framework import serializers
 
 User = get_user_model()
+
+
+def frontend_password_reset_url(request, user, temp_key):
+    from allauth.account.utils import user_pk_to_url_str
+    frontend_url = settings.LOGIN_REDIRECT_URL.split(',')[0].strip()
+    uid = user_pk_to_url_str(user)
+    return f"{frontend_url}/reset-password?uid={uid}&key={temp_key}"
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        from dj_rest_auth.forms import AllAuthPasswordResetForm
+        self.reset_form = AllAuthPasswordResetForm(data=self.initial_data)
+        if not self.reset_form.is_valid():
+            raise serializers.ValidationError(self.reset_form.errors)
+        return value
+
+    def save(self):
+        from allauth.account.forms import default_token_generator
+        request = self.context.get('request')
+        opts = {
+            'use_https': request.is_secure(),
+            'from_email': getattr(settings, 'DEFAULT_FROM_EMAIL'),
+            'request': request,
+            'token_generator': default_token_generator,
+            'url_generator': frontend_password_reset_url,
+        }
+        self.reset_form.save(**opts)
 
 
 class UserSerializer(serializers.ModelSerializer):

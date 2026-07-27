@@ -3,9 +3,28 @@ from django.core.cache import cache
 from django.db.models import Count, Subquery, OuterRef, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from django.utils.translation import gettext_lazy as _
+from rest_framework.generics import GenericAPIView
+
+from accounts.serializers import PasswordResetSerializer
+
+
+class PasswordResetView(GenericAPIView):
+    serializer_class = PasswordResetSerializer
+    permission_classes = []
+    throttle_scope = 'dj_rest_auth'
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {'detail': _('Password reset e-mail has been sent.')},
+            status=status.HTTP_200_OK,
+        )
 
 from accounts.serializers import UserSerializer, UserDetailSerializer
 from accounts.models import Follow
