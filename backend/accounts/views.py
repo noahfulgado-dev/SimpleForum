@@ -1,3 +1,6 @@
+import logging
+import threading
+
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.mail import send_mail
@@ -12,7 +15,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from accounts.serializers import PasswordResetSerializer
+from accounts.serializers import PasswordResetSerializer, frontend_password_reset_url
+
+logger = logging.getLogger(__name__)
 
 
 class PasswordResetView(GenericAPIView):
