@@ -1,6 +1,8 @@
 import logging
+import sys
 import threading
 
+from allauth.account.forms import default_token_generator
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -25,55 +27,53 @@ class PasswordResetView(GenericAPIView):
     serializer_class = PasswordResetSerializer
     permission_classes = []
     throttle_scope = 'dj_rest_auth'
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
-        print(f'[PW_RESET] Starting thread for {email}')
-
-        def _send():
-            from allauth.account.forms import default_token_generator
-            try:
-                close_old_connections()
-                print(f'[PW_RESET] Thread running for {email}')
-                User = get_user_model()
-                users = list(User.objects.filter(email__iexact=email, is_active=True))
-                print(f'[PW_RESET] Found {len(users)} users for {email}')
-                for user in users:
-                    temp_key = default_token_generator.make_token(user)
-                    url = frontend_password_reset_url(None, user, temp_key)
-                    print(f'[PW_RESET] URL generated: {url}')
-                    context = {
-                        'user': user,
-                        'password_reset_url': url,
-                        'key': temp_key,
-                        'site_name': 'SimpleForum',
-                    }
-                    subject = 'Password Reset'
-                    body = render_to_string(
-                        'account/email/password_reset_key_message.txt',
-                        context,
-                    )
-                    print(f'[PW_RESET] Template rendered, sending to {user.email}')
-                    send_mail(
-                        subject, body,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [user.email],
-                    )
-                    print(f'[PW_RESET] Email sent to {user.email}')
-                    logger.info('Password reset email sent to %s', user.email)
-            except Exception as e:
-                print(f'[PW_RESET] ERROR: {e}')
-                logger.exception('Failed to send password reset email')
-
-        thread = threading.Thread(target=_send)
+        print(f'[PW_RESET] Starting thread for {email}'); sys.stdout.flush()
+        thread = threading.Thread(target=send_password_reset_email, args=(email,))
         thread.start()
-        print(f'[PW_RESET] Thread started, returning response')
+        print(f'[PW_RESET] Thread started, returning response'); sys.stdout.flush()
         return Response(
             {'detail': _('Password reset e-mail has been sent.')},
             status=status.HTTP_200_OK,
         )
+
+
+def send_password_reset_email(email):
+    try:
+        close_old_connections()
+        print(f'[PW_RESET] Thread running for {email}'); sys.stdout.flush()
+        User = get_user_model()
+        users = list(User.objects.filter(email__iexact=email, is_active=True))
+        print(f'[PW_RESET] Found {len(users)} users for {email}'); sys.stdout.flush()
+        for user in users:
+            temp_key = default_token_generator.make_token(user)
+            url = frontend_password_reset_url(None, user, temp_key)
+            print(f'[PW_RESET] URL generated: {url}'); sys.stdout.flush()
+            context = {
+                'user': user,
+                'password_reset_url': url,
+                'key': temp_key,
+                'site_name': 'SimpleForum',
+            }
+            subject = 'Password Reset'
+            body = render_to_string(
+                'account/email/password_reset_key_message.txt',
+                context,
+            )
+            print(f'[PW_RESET] Template rendered, sending to {user.email}'); sys.stdout.flush()
+            send_mail(
+                subject, body,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+            )
+            print(f'[PW_RESET] Email sent to {user.email}'); sys.stdout.flush()
+            logger.info('Password reset email sent to %s', user.email)
+    except Exception as e:
+        print(f'[PW_RESET] ERROR: {e}'); sys.stdout.flush()
+        logger.exception('Failed to send password reset email')
 
 
 @api_view(['POST'])
