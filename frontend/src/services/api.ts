@@ -80,6 +80,9 @@ export const authAPI = {
 
   getCurrentUser: () =>
     axiosInstance.get<User>('/auth/user/'),
+
+  googleLogin: (accessToken: string) =>
+    axiosInstance.post<AuthTokens>('/auth/google/', { access_token: accessToken }),
 };
 
 export const usersAPI = {

@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from core.auth_urls import auth_urlpatterns, registration_urlpatterns
+from core.auth_urls import auth_urlpatterns, registration_urlpatterns, social_urlpatterns
 from core.views import health
 
 schema_view = get_schema_view(
@@ -23,6 +23,7 @@ urlpatterns = [
 
     path('auth/', include(auth_urlpatterns)),
     path('auth/registration/', include(registration_urlpatterns)),
+    path('auth/', include(social_urlpatterns)),
 
     path('accounts/', include('allauth.urls')),
 

@@ -7,9 +7,15 @@ from dj_rest_auth.views import (
 )
 from dj_rest_auth.registration.views import (
     RegisterView, VerifyEmailView, ResendEmailVerificationView,
+    SocialLoginView,
 )
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from rest_framework_simplejwt.views import TokenVerifyView
 from dj_rest_auth.jwt_auth import get_refresh_view
+
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
 
 
 class ScopedLoginView(LoginView):
@@ -45,4 +51,8 @@ registration_urlpatterns = [
         TemplateView.as_view(),
         name='account_email_verification_sent',
     ),
+]
+
+social_urlpatterns = [
+    path('google/', GoogleLogin.as_view(), name='google_login'),
 ]
