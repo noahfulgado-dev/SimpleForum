@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.core.cache import cache
 from django.contrib.contenttypes.models import ContentType
 
 from forum.models import Topic, Reply
@@ -22,11 +23,13 @@ def toggle_topic_like(request, topic_id):
 
     if not created:
         like.delete()
+        cache.delete(f"profile:{topic.user.id}")
         return Response({
             'status': 'unliked',
             'like_count': topic.likes.count()
         })
 
+    cache.delete(f"profile:{topic.user.id}")
     return Response({
         'status': 'liked',
         'like_count': topic.likes.count()
@@ -45,11 +48,13 @@ def toggle_reply_like(request, reply_id):
 
     if not created:
         like.delete()
+        cache.delete(f"profile:{reply.user.id}")
         return Response({
             'status': 'unliked',
             'like_count': reply.likes.count()
         })
 
+    cache.delete(f"profile:{reply.user.id}")
     return Response({
         'status': 'liked',
         'like_count': reply.likes.count()
@@ -135,11 +140,15 @@ def toggle_topic_share(request, topic_id):
 
     if not created:
         share.delete()
+        cache.delete(f"profile:{request.user.id}")
+        cache.delete(f"profile:{topic.user.id}")
         return Response({
             'status': 'unshared',
             'shared_count': Share.objects.filter(content_type=topic_type, object_id=topic.id).count()
         })
 
+    cache.delete(f"profile:{request.user.id}")
+    cache.delete(f"profile:{topic.user.id}")
     return Response({
         'status': 'shared',
         'shared_count': Share.objects.filter(content_type=topic_type, object_id=topic.id).count()
@@ -160,11 +169,15 @@ def toggle_reply_share(request, reply_id):
 
     if not created:
         share.delete()
+        cache.delete(f"profile:{request.user.id}")
+        cache.delete(f"profile:{reply.user.id}")
         return Response({
             'status': 'unshared',
             'shared_count': Share.objects.filter(content_type=reply_type, object_id=reply.id).count()
         })
 
+    cache.delete(f"profile:{request.user.id}")
+    cache.delete(f"profile:{reply.user.id}")
     return Response({
         'status': 'shared',
         'shared_count': Share.objects.filter(content_type=reply_type, object_id=reply.id).count()

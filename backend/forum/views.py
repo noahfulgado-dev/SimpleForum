@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import BooleanField, Case, Count, Exists, ExpressionWrapper, F, FloatField, IntegerField, OuterRef, Subquery, Value, When
 from django.db.models.functions import Coalesce, Extract, Now
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 
 from forum.cache import clear_topic_cache, get_cached_topic_ids, set_cached_topic_ids
 from forum.models import Topic, Reply
@@ -25,19 +26,10 @@ class TopicListView(generics.ListCreateAPIView):
         topic_type = ContentType.objects.get_for_model(Topic)
         from django.db import connection
 
-        base = qs.select_related('user').annotate(
-            like_count=Count('likes', distinct=True),
-            reply_count=Count('replies', distinct=True),
-        ).annotate(
-            hot_score=ExpressionWrapper(
-                F('like_count') * 3.0 + F('reply_count') * 2.0
-                - Extract(Now() - F('created'), 'epoch') / 86400.0 * 2.0,
-                output_field=FloatField()
-            ),
-        )
-
         if connection.vendor == 'postgresql':
-            base = base.annotate(
+            base = qs.select_related('user').annotate(
+                like_count=Count('likes', distinct=True),
+                reply_count=Count('replies', distinct=True),
                 hot_score=ExpressionWrapper(
                     F('like_count') * 3.0 + F('reply_count') * 2.0
                     - Extract(Now() - F('created'), 'epoch') / 86400.0 * 2.0,
@@ -45,7 +37,9 @@ class TopicListView(generics.ListCreateAPIView):
                 ),
             )
         else:
-            base = base.annotate(
+            base = qs.select_related('user').annotate(
+                like_count=Count('likes', distinct=True),
+                reply_count=Count('replies', distinct=True),
                 hot_score=ExpressionWrapper(
                     F('like_count') * 3.0 + F('reply_count') * 2.0,
                     output_field=FloatField()
@@ -129,8 +123,8 @@ class TopicListView(generics.ListCreateAPIView):
         return self.get_paginated_response(serializer.data)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-        clear_topic_cache()
+        topic = serializer.save(user=self.request.user)
+        cache.delete(f"profile:{topic.user.id}")
 
 
 class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -169,11 +163,14 @@ class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
         if topic.user != self.request.user and not self.request.user.is_staff:
             raise PermissionDenied("You do not have permission to edit this topic.")
         serializer.save()
+        cache.delete(f"profile:{topic.user.id}")
+        clear_topic_cache()
 
     def perform_destroy(self, instance):
         if instance.user != self.request.user and not self.request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this topic.")
         instance.delete()
+        cache.delete(f"profile:{instance.user.id}")
         clear_topic_cache()
 
 
@@ -189,6 +186,7 @@ class ReplyCreateView(generics.CreateAPIView):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({'parent': 'Parent reply must belong to the same topic.'})
         serializer.save(topic=topic, user=self.request.user)
+        cache.delete(f"profile:{self.request.user.id}")
 
 
 class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):

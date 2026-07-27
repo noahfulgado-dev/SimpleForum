@@ -54,15 +54,23 @@ class CachedProfileMixin:
         )
         share_data = ShareSerializer(shares, many=True, context={'request': request}).data
 
+        counts = User.objects.filter(pk=user.pk).annotate(
+            topic_count=Count('topics', distinct=True),
+            reply_count=Count('replies', distinct=True),
+            share_count=Count('shares', distinct=True),
+            follower_count=Count('followers', distinct=True),
+            following_count=Count('following', distinct=True),
+        ).values('topic_count', 'reply_count', 'share_count', 'follower_count', 'following_count').first()
+
         return {
             'topics': topic_data,
             'replies': reply_data,
             'shares': share_data,
-            'topic_count': user.topics.count(),
-            'reply_count': user.replies.count(),
-            'share_count': user.shares.count(),
-            'follower_count': user.followers.count(),
-            'following_count': user.following.count(),
+            'topic_count': counts['topic_count'],
+            'reply_count': counts['reply_count'],
+            'share_count': counts['share_count'],
+            'follower_count': counts['follower_count'],
+            'following_count': counts['following_count'],
         }
 
 
@@ -120,6 +128,8 @@ def toggle_follow(request, user_id):
     if target == request.user:
         return Response({'error': 'You cannot follow yourself.'}, status=400)
     follow, created = Follow.objects.get_or_create(follower=request.user, following=target)
+    cache.delete(f"profile:{request.user.id}")
+    cache.delete(f"profile:{target.id}")
     if not created:
         follow.delete()
         return Response({'status': 'unfollowed', 'follower_count': target.followers.count()})

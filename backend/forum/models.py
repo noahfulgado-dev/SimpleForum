@@ -53,3 +53,7 @@ class Reply(models.Model):
     class Meta:
         ordering = ['created']
         db_table = 'core_reply'
+        indexes = [
+            models.Index(fields=['created']),
+            models.Index(fields=['topic', 'created']),
+        ]
