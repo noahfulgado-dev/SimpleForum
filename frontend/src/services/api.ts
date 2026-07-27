@@ -145,6 +145,11 @@ export const forumAPI = {
     axiosInstance.get<{ results: BookmarkEntry[]; count: number; next: string | null }>('/api/bookmarks/', { params }),
 };
 
+export const notificationsAPI = {
+  getUnreadCount: () =>
+    axiosInstance.get<{ count: number }>('/api/notifications/unread-count/'),
+};
+
 export default {
   auth: authAPI,
   forum: forumAPI,
