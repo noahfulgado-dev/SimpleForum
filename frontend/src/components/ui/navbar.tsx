@@ -52,7 +52,7 @@ export function Navbar() {
                     </form>
                 </div>
                 <div className="flex items-center justify-end gap-1 w-[33.3%]">
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="hover:bg-muted">
                         <BellIcon hasUnread={hasUnread} />
                     </Button>
                     <div className="relative group w-8 h-8 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
