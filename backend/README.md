@@ -33,8 +33,9 @@ API at `http://localhost:8000`. Swagger at `/swagger/`.
 
 ## Caching
 
-- **Topic list** — Cached in Redis via a version-keyed invalidation strategy. Clearing the cache increments a version counter, instantly invalidating all cached pages.
-- **Profile data** — User profiles (topics, replies, shares, counts) are cached in Redis for 5 minutes (TTL).
+- **Topic list** — Cached in Redis via a version-keyed invalidation strategy. Clearing the cache increments a version counter, instantly invalidating all cached pages. On cache miss, IDs are fetched from the DB and re-cached for 5 minutes.
+- **Profile data** — User profiles (topics, replies, shares, counts) are cached in Redis for 5 minutes (TTL). The cache is invalidated on any relevant interaction (like, share, follow, reply, topic create/update/delete) to keep counts fresh.
+- **Redis fallback** — Falls back to `LocMemCache` when `REDIS_URL` is not set, so caching never silently fails in development.
 - **Client-side** — The React frontend uses TanStack Query with a 5-minute stale time. Navigate back to the feed without re-fetching.
 
 ## Apps
@@ -119,7 +120,7 @@ Notifications fire on reply and like events. A 30-minute cooldown per target mer
 | Scope | Rate | Endpoints |
 |-------|------|-----------|
 | `anon` | 5/minute | All unauthenticated requests |
-| `user` | 200/day | All authenticated requests |
+| `user` | 10000/day | All authenticated requests |
 | `login` | 3/minute | `POST /auth/login/` |
 | `register` | 2/minute | `POST /auth/registration/` |
 
@@ -153,10 +154,22 @@ Two files split by environment:
 
 Production adds `psycopg2-binary` (PostgreSQL driver, needs `libpq-dev`) and `gunicorn` (WSGI server). Local dev uses SQLite + `manage.py runserver`, so neither is needed.
 
+## Scalability
+
+Recent optimizations to handle production traffic:
+
+- **Indexed queries** — `Reply.created` and composite `(topic, created)` indexes added for efficient reply listing and ordering.
+- **Unbounded query protection** — Nested replies limited to 20 top-level and 10 children per reply in serializers.
+- **Content size limits** — `Reply.content` capped at 10,000 characters.
+- **Profile cache invalidation** — Profile caches invalidate on like, share, follow, reply, and topic changes (no more 5-minute stale counts).
+- **Reduced query overhead** — 5 separate `COUNT` queries per profile view combined into 1 annotated query.
+- **Efficient annotations** — Removed duplicate `hot_score` annotation that ran 3 times on PostgreSQL.
+- **Password security** — Argon2 configured as the default password hasher.
+
 ## Tests
 
 ```bash
-python manage.py test
+python manage.py test forum.tests accounts.tests interactions.tests
 ```
 
 ## Deployment

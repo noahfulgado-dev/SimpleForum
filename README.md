@@ -27,9 +27,10 @@ A fullstack discussion forum — create topics, reply nested threads, like, book
 | dj-rest-auth + SimpleJWT | Vite 6 |
 | django-allauth (Google OAuth) | Tailwind CSS v4 |
 | PostgreSQL / SQLite | ShadCN UI + Radix |
-| Redis (Upstash) | Lucide Icons |
+| Redis (Upstash) / LocMemCache | Lucide Icons |
 | Gunicorn + Whitenoise | TanStack Query |
 | GitHub Actions (CI/CD) | Axios |
+| Vercel (frontend deployment) | Bun package manager |
 
 ## Architecture
 
@@ -259,7 +260,7 @@ Topic and reply responses include `user_has_liked`, `user_has_bookmarked`, `user
 | Scope | Rate | Applies To |
 |-------|------|------------|
 | `anon` | 5/minute | All unauthenticated requests |
-| `user` | 200/day | All authenticated requests |
+| `user` | 10000/day | All authenticated requests |
 | `login` | 3/minute | `POST /auth/login/` |
 | `register` | 2/minute | `POST /auth/registration/` |
 
