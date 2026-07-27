@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { forumAPI, type Topic } from '@/services/api';
+import { forumAPI, type Topic, type Reply } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/ui/navbar';
 import SidebarLeft from '@/components/ui/sidebar_left';
@@ -10,11 +10,12 @@ import defaultAvatar from './../assets/image/default_avatar.jpg';
 import { Like, Liked } from '@/components/ui/like';
 import { Bookmark, Bookmarked } from '@/components/ui/bookmark';
 import { Share } from '@/components/ui/share';
-import Reply from '@/components/ui/reply';
+import ReplyIcon from '@/components/ui/reply';
 import PostMenu from '@/components/ui/post_menu';
 import ShareModal from '@/components/ui/share_modal';
 import { SharedQuoteCard, parseSharedDescription } from '@/components/ui/shared_quote_card';
 import { TopicDetailSkeleton } from '@/components/ui/skeleton';
+import { timeAgo } from '@/lib/time';
 
 export function TopicDetail() {
     const { id } = useParams<{ id: string }>();
@@ -24,6 +25,9 @@ export function TopicDetail() {
     const topicId = Number(id);
     const [replyContent, setReplyContent] = useState('');
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<Reply | null>(null);
+    const [expandedChildren, setExpandedChildren] = useState<Record<number, boolean>>({});
+    const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     const { data: topic, isLoading, error } = useQuery({
@@ -70,13 +74,29 @@ export function TopicDetail() {
     });
 
     const replyMutation = useMutation({
-        mutationFn: (content: string) => forumAPI.createReply(topicId, { content }),
+        mutationFn: (data: { content: string; parent?: number | null }) =>
+            forumAPI.createReply(topicId, data),
         onSuccess: (res) => {
-            queryClient.setQueryData(['topic', topicId], (prev: Topic) => prev ? {
-                ...prev,
-                replies: [...(prev.replies || []), res.data],
-            } : prev);
+            queryClient.setQueryData(['topic', topicId], (prev: Topic) => {
+                if (!prev) return prev;
+                const parentId = res.data.parent;
+                if (parentId) {
+                    const addChild = (items: Reply[]): Reply[] =>
+                        items.map(r => {
+                            if (r.id === parentId) {
+                                return { ...r, children: [...(r.children || []), res.data] };
+                            }
+                            if (r.children?.length) {
+                                return { ...r, children: addChild(r.children) };
+                            }
+                            return r;
+                        });
+                    return { ...prev, replies: addChild(prev.replies || []) };
+                }
+                return { ...prev, replies: [...(prev.replies || []), res.data] };
+            });
             setReplyContent('');
+            setReplyingTo(null);
         },
         onError: () => alert('Failed to post reply.'),
     });
@@ -152,7 +172,7 @@ export function TopicDetail() {
 
     const handleSubmitReply = () => {
         if (!replyContent.trim() || replyMutation.isPending) return;
-        replyMutation.mutate(replyContent.trim());
+        replyMutation.mutate({ content: replyContent.trim(), parent: replyingTo?.id });
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -160,6 +180,82 @@ export function TopicDetail() {
             e.preventDefault();
             handleSubmitReply();
         }
+    };
+
+    const renderReply = (reply: Reply, depth: number = 0): React.ReactNode => {
+        const likeState = replyLikes[reply.id];
+        const isLiked = likeState?.isLiked ?? reply.user_has_liked;
+        const likeCount = likeState?.likeCount ?? reply.like_count;
+        const isBookmarked = replyBookmarks[reply.id] ?? reply.user_has_bookmarked;
+        const shareState = replyShares[reply.id];
+        const shareCount = shareState?.shareCount ?? reply.shared_count;
+        const children = reply.children ?? [];
+        const isExpanded = expandedChildren[reply.id] ?? false;
+        const showMoreCount = children.length - 3;
+
+        return (
+            <div key={reply.id} className="relative pl-10">
+                <div className="absolute left-[22px] top-0 w-[18px] h-[34px] border-l-2 border-b-2 dark:border-white/20 border-border/20 rounded-bl-[4px] pointer-events-none"></div>
+                <div className="flex-1 flex flex-row gap-3 p-4 border border-border rounded-[10px] bg-card">
+                    <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
+                        <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
+                    </div>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[0.8rem] font-medium text-foreground">{reply.user.username}</span>
+                            <span className="text-[0.55rem] text-muted-foreground">•</span>
+                            <span className="text-[0.7rem] text-muted-foreground">{timeAgo(reply.created)}</span>
+                        </div>
+                        <div className="text-[0.9rem] font-extralight tertiary-text text-foreground break-words">{reply.content}</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <button onClick={() => handleReplyLike(reply)} className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                {isLiked ? <Liked fillColor="#ef4444" /> : <Like />}
+                            </button>
+                            <span className={`text-[0.7rem] ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}>{likeCount}</span>
+                            <button onClick={() => handleReplyBookmark(reply)} className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                {isBookmarked ? <Bookmarked fillColor="#eab308" /> : <Bookmark />}
+                            </button>
+                            <button onClick={() => handleReplyShare(reply)} className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                <Share />
+                            </button>
+                            <span className="text-[0.7rem] text-muted-foreground">{shareCount}</span>
+                            <button
+                                onClick={() => {
+                                    setReplyingTo(reply);
+                                    textareaRef.current?.focus();
+                                }}
+                                className="ml-2 text-[0.7rem] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            >
+                                Reply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {children.length > 0 && (
+                    <div className="ml-8 flex flex-col gap-3 mt-3">
+                        {(isExpanded ? children : children.slice(0, 3)).map((child) =>
+                            renderReply(child, depth + 1)
+                        )}
+                        {!isExpanded && showMoreCount > 0 && (
+                            <button
+                                onClick={() => setExpandedChildren(prev => ({ ...prev, [reply.id]: true }))}
+                                className="text-[0.75rem] text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left pl-10"
+                            >
+                                Show {showMoreCount} more {showMoreCount === 1 ? 'reply' : 'replies'}
+                            </button>
+                        )}
+                        {isExpanded && showMoreCount > 0 && (
+                            <button
+                                onClick={() => setExpandedChildren(prev => ({ ...prev, [reply.id]: false }))}
+                                className="text-[0.75rem] text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left pl-10"
+                            >
+                                Show less
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
     };
 
     if (error) {
@@ -178,11 +274,8 @@ export function TopicDetail() {
         );
     }
 
-    const formattedDate = topic ? new Date(topic.created).toLocaleString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
-    }) : '';
-
     return (
+        <>
         <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
             <div className="p-5 pb-0 shrink-0 relative z-50">
                 <Navbar />
@@ -208,13 +301,14 @@ export function TopicDetail() {
                                             <div className="relative group w-10 h-10 flex items-center justify-center shrink-0">
                                                 <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full" />
                                             </div>
-                                            <div className="flex flex-col">
-                                                <div className="text-[clamp(0.5rem,5vw,1.2rem)] font-medium leading-none text-foreground font-geist">
+                                            <div className="flex flex-row items-center gap-1.5">
+                                                <span className="text-sm font-medium text-foreground font-geist">
                                                     {topic.user.username}
-                                                </div>
-                                                <div className="text-[clamp(0.5rem,5vw,1rem)] font-light leading-none text-foreground font-geist">
-                                                    {formattedDate}
-                                                </div>
+                                                </span>
+                                                <span className="text-xs text-muted-foreground">•</span>
+                                                <span className="text-sm font-light text-muted-foreground font-geist">
+                                                    {timeAgo(topic.created)}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -240,7 +334,7 @@ export function TopicDetail() {
                                                 <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>{likeCount}</span>
                                             </button>
                                             <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                                <Reply />
+                                                <ReplyIcon />
                                                 <span className="text-sm m-1 text-muted-foreground">{replies.length}</span>
                                             </button>
                                             <button onClick={() => setIsShareModalOpen(true)} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
@@ -259,7 +353,14 @@ export function TopicDetail() {
                                             {isBookmarked ? <Bookmarked fillColor="#eab308" /> : <Bookmark />}
                                         </button>
                                         <div className="relative">
-                                            <PostMenu />
+                                            <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setIsPostMenuOpen(!isPostMenuOpen)}>
+                                                <PostMenu />
+                                            </button>
+                                            {isPostMenuOpen && (
+                                                <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                                                    <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -271,57 +372,33 @@ export function TopicDetail() {
                                 <div className="text-center text-muted-foreground py-8">No replies yet. Be the first to share your thoughts!</div>
                             )}
 
-                            {topic && replies.map((reply) => {
-                                const replyDate = new Date(reply.created).toLocaleDateString('en-US', {
-                                    year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
-                                });
-                                const likeState = replyLikes[reply.id];
-                                const isLiked = likeState?.isLiked ?? reply.user_has_liked;
-                                const likeCount = likeState?.likeCount ?? reply.like_count;
-                                const isBookmarked = replyBookmarks[reply.id] ?? reply.user_has_bookmarked;
-                                const shareState = replyShares[reply.id];
-                                const shareCount = shareState?.shareCount ?? reply.shared_count;
-                                return (
-                                    <div key={reply.id} className="flex flex-row gap-3 p-4 border border-border rounded-[10px] bg-card">
-                                        <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
-                                            <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
-                                        </div>
-                                        <div className="flex flex-col gap-0.5 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[0.8rem] font-medium text-foreground">{reply.user.username}</span>
-                                                <span className="text-[0.7rem] text-muted-foreground">{replyDate}</span>
-                                            </div>
-                                            <div className="text-[0.9rem] font-extralight tertiary-text text-foreground break-words">{reply.content}</div>
-                                            <div className="flex items-center gap-1 mt-0.5">
-                                                <button onClick={() => handleReplyLike(reply)} className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                                    {isLiked ? <Liked fillColor="#ef4444" /> : <Like />}
-                                                </button>
-                                                <span className={`text-[0.7rem] ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}>{likeCount}</span>
-                                                <button onClick={() => handleReplyBookmark(reply)} className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                                    {isBookmarked ? <Bookmarked fillColor="#eab308" /> : <Bookmark />}
-                                                </button>
-                                                <button onClick={() => handleReplyShare(reply)} className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                                    <Share />
-                                                </button>
-                                                <span className="text-[0.7rem] text-muted-foreground">{shareCount}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                            {topic && replies.map((reply) =>
+                                renderReply(reply, 0)
+                            )}
 
                             {topic && (
                                 <div className="border-t border-border pt-4 flex flex-col gap-2">
+                                    {replyingTo && (
+                                        <div className="flex items-center gap-1 text-[0.75rem] text-muted-foreground px-1">
+                                            <span>Replying to <span className="font-medium text-foreground">@{replyingTo.user.username}</span></span>
+                                            <button
+                                                onClick={() => setReplyingTo(null)}
+                                                className="ml-auto text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    )}
                                     <div className="flex flex-row gap-3 items-start">
                                         <div className="relative group w-8 h-8 flex items-center justify-center shrink-0">
-                                            <img src={user?.avatar || defaultAvatar} alt="Your Avatar" className="w-8 h-8 border border-border rounded-full" />
+                                            <img key={user?.avatar} src={user?.avatar || defaultAvatar} alt="Your Avatar" className="w-8 h-8 border border-border rounded-full" />
                                         </div>
                                         <textarea
                                             ref={textareaRef}
                                             value={replyContent}
                                             onChange={(e) => setReplyContent(e.target.value)}
                                             onKeyDown={handleKeyDown}
-                                            placeholder="Write a reply..."
+                                            placeholder={replyingTo ? `Reply to @${replyingTo.user.username}...` : "Write a reply..."}
                                             className="w-full resize-none focus:outline-none focus:ring-0 focus:border-transparent font-light text-[0.9rem] bg-transparent text-foreground"
                                             rows={1}
                                         />
@@ -344,6 +421,7 @@ export function TopicDetail() {
                 </div>
             </div>
         </div>
+        </>
     )
 }
 

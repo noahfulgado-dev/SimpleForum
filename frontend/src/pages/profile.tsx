@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Navbar } from '@/components/ui/navbar';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
@@ -30,6 +30,7 @@ export function Profile() {
   const [usernameDraft, setUsernameDraft] = useState('');
   const [bioDraft, setBioDraft] = useState('');
   const [editingBio, setEditingBio] = useState(false);
+  const [activeTab, setActiveTab] = useState<'posts' | 'replies'>('posts');
 
   useEffect(() => {
     if (profile) {
@@ -193,17 +194,77 @@ export function Profile() {
                   </div>
                 )}
               </div>
+
+              <div className="border-t border-border pt-3 mt-3">
+                <ProfileStats profile={profile} />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-card">
-            <CardHeader>
-              <CardTitle className="text-foreground">Stats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProfileStats profile={profile} />
-            </CardContent>
-          </Card>
+          <div className="bg-card border border-border rounded-[10px] overflow-hidden">
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setActiveTab('posts')}
+                className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'posts' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Posts {profile.topic_count != null && `(${profile.topic_count})`}
+              </button>
+              <button
+                onClick={() => setActiveTab('replies')}
+                className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'replies' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Replies {profile.reply_count != null && `(${profile.reply_count})`}
+              </button>
+            </div>
+            <div className="p-4">
+              {activeTab === 'posts' && (
+                <>
+                  {profile.topics && profile.topics.length > 0 ? (
+                    <div className="space-y-3">
+                      {profile.topics.map(topic => (
+                        <div
+                          key={topic.id}
+                          onClick={() => window.location.href = `/topic/${topic.id}`}
+                          className="p-3 border border-border rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
+                        >
+                          <div className="font-medium text-foreground text-sm">{topic.title}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{topic.description}</div>
+                          <div className="flex items-center gap-2 mt-1.5 text-[0.65rem] text-muted-foreground">
+                            <span>{topic.like_count ?? 0} likes</span>
+                            <span>•</span>
+                            <span>{topic.reply_count ?? 0} replies</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-6">No posts yet.</p>
+                  )}
+                </>
+              )}
+              {activeTab === 'replies' && (
+                <>
+                  {profile.replies && profile.replies.length > 0 ? (
+                    <div className="space-y-3">
+                      {profile.replies.map(reply => (
+                        <div
+                          key={reply.id}
+                          onClick={() => window.location.href = `/topic/${reply.topic}`}
+                          className="p-3 border border-border rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
+                        >
+                          <div className="text-xs text-muted-foreground">on a topic</div>
+                          <div className="text-sm text-foreground mt-0.5 line-clamp-2">{reply.content}</div>
+                          <div className="text-[0.65rem] text-muted-foreground mt-1">{reply.like_count ?? 0} likes</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-6">No replies yet.</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

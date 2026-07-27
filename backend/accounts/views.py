@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.db.models import Count
+from django.db.models import Count, Subquery, OuterRef, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework.decorators import api_view, permission_classes
@@ -10,6 +11,7 @@ from accounts.serializers import UserSerializer, UserDetailSerializer
 from accounts.models import Follow
 from forum.serializers import TopicListSerializer, ReplySerializer
 from interactions.serializers import ShareSerializer
+from interactions.models import Likes
 
 User = get_user_model()
 
@@ -54,13 +56,17 @@ class CachedProfileMixin:
         )
         share_data = ShareSerializer(shares, many=True, context={'request': request}).data
 
+        topic_likes_subq = Likes.objects.filter(topic__user=OuterRef('pk')).values('topic__user').annotate(count=Count('*')).values('count')
+        reply_likes_subq = Likes.objects.filter(reply__user=OuterRef('pk')).values('reply__user').annotate(count=Count('*')).values('count')
+
         counts = User.objects.filter(pk=user.pk).annotate(
             topic_count=Count('topics', distinct=True),
             reply_count=Count('replies', distinct=True),
             share_count=Count('shares', distinct=True),
             follower_count=Count('followers', distinct=True),
             following_count=Count('following', distinct=True),
-        ).values('topic_count', 'reply_count', 'share_count', 'follower_count', 'following_count').first()
+            total_likes=Coalesce(Subquery(topic_likes_subq), Value(0)) + Coalesce(Subquery(reply_likes_subq), Value(0)),
+        ).values('topic_count', 'reply_count', 'share_count', 'follower_count', 'following_count', 'total_likes').first()
 
         return {
             'topics': topic_data,
@@ -71,6 +77,7 @@ class CachedProfileMixin:
             'share_count': counts['share_count'],
             'follower_count': counts['follower_count'],
             'following_count': counts['following_count'],
+            'total_likes': counts['total_likes'],
         }
 
 

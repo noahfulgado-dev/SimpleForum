@@ -192,7 +192,7 @@ export function Post({ topic, onDelete }: PostProps) {
                                         )}
                                     </>
                                 ) : (
-                                    <span className="text-[0.7rem] text-muted-foreground p-1">No actions available</span>
+                                    <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
                                 )}
                             </div>
                         )}
