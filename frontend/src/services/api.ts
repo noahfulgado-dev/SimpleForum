@@ -89,10 +89,10 @@ export const authAPI = {
     axiosInstance.post<AuthTokens>('/auth/google/', { access_token: accessToken }),
 
   passwordReset: (email: string) =>
-    axiosInstance.post('/auth/password/reset/', { email }),
+    axiosInstance.post('/auth/password/reset/', { email }, { withCredentials: false }),
 
   passwordResetConfirm: (data: { uid: string; token: string; new_password1: string; new_password2: string }) =>
-    axiosInstance.post('/auth/password/reset/confirm/', data),
+    axiosInstance.post('/auth/password/reset/confirm/', data, { withCredentials: false }),
 };
 
 export const usersAPI = {
