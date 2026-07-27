@@ -4,5 +4,6 @@ from django.conf import settings
 
 class AccountAdapter(DefaultAccountAdapter):
     def send_mail(self, template_prefix, email, context):
-        context['FRONTEND_URL'] = settings.LOGIN_REDIRECT_URL
+        frontend_url = settings.LOGIN_REDIRECT_URL
+        context['FRONTEND_URL'] = frontend_url.split(',')[0].strip()
         super().send_mail(template_prefix, email, context)
