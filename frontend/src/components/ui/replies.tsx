@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
-import { forumAPI, type Topic } from '@/services/api';
+import { forumAPI, type Topic, type Reply } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { timeAgo } from '@/lib/time';
-import Reply from './reply';
+import ReplyIcon from './reply';
 import { Like, Liked } from './like';
 import { Bookmark, Bookmarked } from './bookmark';
 import { Share } from './share';
@@ -29,6 +29,8 @@ export function Replies({ topic, onClose }: RepliesProps) {
     const [postShareCount, setPostShareCount] = useState(topic.shared_count ?? 0);
     const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<Reply | null>(null);
+    const [expandedChildren, setExpandedChildren] = useState<Record<number, boolean>>({});
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     const { data: currentTopic, isLoading, error } = useQuery({
@@ -60,13 +62,29 @@ export function Replies({ topic, onClose }: RepliesProps) {
     });
 
     const replyMutation = useMutation({
-        mutationFn: (content: string) => forumAPI.createReply(topic.id, { content }),
+        mutationFn: (data: { content: string; parent?: number | null }) =>
+            forumAPI.createReply(topic.id, data),
         onSuccess: (res) => {
-            queryClient.setQueryData(['topic', topic.id], (prev: Topic) => prev ? {
-                ...prev,
-                replies: [...(prev.replies || []), res.data],
-            } : prev);
+            queryClient.setQueryData(['topic', topic.id], (prev: Topic) => {
+                if (!prev) return prev;
+                const parentId = res.data.parent;
+                if (parentId) {
+                    const addChild = (items: Reply[]): Reply[] =>
+                        items.map(r => {
+                            if (r.id === parentId) {
+                                return { ...r, children: [...(r.children || []), res.data] };
+                            }
+                            if (r.children?.length) {
+                                return { ...r, children: addChild(r.children) };
+                            }
+                            return r;
+                        });
+                    return { ...prev, replies: addChild(prev.replies || []) };
+                }
+                return { ...prev, replies: [...(prev.replies || []), res.data] };
+            });
             setReplyContent('');
+            setReplyingTo(null);
         },
         onError: () => alert('Failed to post reply.'),
     });
@@ -177,7 +195,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
 
     const handleSubmit = () => {
         if (!replyContent.trim() || replyMutation.isPending) return;
-        replyMutation.mutate(replyContent.trim());
+        replyMutation.mutate({ content: replyContent.trim(), parent: replyingTo?.id });
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -185,6 +203,109 @@ export function Replies({ topic, onClose }: RepliesProps) {
             e.preventDefault();
             handleSubmit();
         }
+    };
+
+    const renderReply = (reply: Reply, depth: number = 0): React.ReactNode => {
+        const likeState = replyLikes[reply.id];
+        const isLiked = likeState?.isLiked ?? reply.user_has_liked;
+        const likeCount = likeState?.likeCount ?? reply.like_count;
+        const isBookmarked = replyBookmarks[reply.id] ?? reply.user_has_bookmarked;
+        const shareState = replyShares[reply.id];
+        const shareCount = shareState?.shareCount ?? reply.shared_count;
+        const children = reply.children ?? [];
+        const isExpanded = expandedChildren[reply.id] ?? false;
+        const showMoreCount = children.length - 3;
+
+        return (
+            <div key={reply.id} className="relative pl-10">
+                <div className="absolute left-[22px] top-0 w-[18px] h-[34px] border-l-2 border-b-2 dark:border-white/20 border-border/20 rounded-bl-[4px] pointer-events-none"></div>
+                <div className="flex-1 flex flex-row gap-3 p-4 border border-border rounded-[10px] bg-card">
+                    <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
+                        <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
+                    </div>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[0.8rem] font-medium text-foreground">
+                                {reply.user.username}
+                            </span>
+                            <span className="text-[0.55rem] text-muted-foreground">•</span>
+                            <span className="text-[0.7rem] text-muted-foreground">
+                                {timeAgo(reply.created)}
+                            </span>
+                        </div>
+                        <div className="text-[0.9rem] font-extralight tertiary-text text-foreground break-words">
+                            {reply.content}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <button
+                                onClick={() => handleReplyLike(reply)}
+                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                            >
+                                {isLiked ? (
+                                    <Liked fillColor="#ef4444" />
+                                ) : (
+                                    <Like />
+                                )}
+                            </button>
+                            <span className={`text-[0.7rem] ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                {likeCount}
+                            </span>
+                            <button
+                                onClick={() => handleReplyBookmark(reply)}
+                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                            >
+                                {isBookmarked ? (
+                                    <Bookmarked fillColor="#eab308" />
+                                ) : (
+                                    <Bookmark />
+                                )}
+                            </button>
+                            <button
+                                onClick={() => handleReplyShare(reply)}
+                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                            >
+                                <Share />
+                            </button>
+                            <span className="text-[0.7rem] text-muted-foreground">
+                                {shareCount}
+                            </span>
+                            <button
+                                onClick={() => {
+                                    setReplyingTo(reply);
+                                    textareaRef.current?.focus();
+                                }}
+                                className="ml-2 text-[0.7rem] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            >
+                                Reply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {children.length > 0 && (
+                    <div className="ml-8 flex flex-col gap-3 mt-3">
+                        {(isExpanded ? children : children.slice(0, 3)).map((child) =>
+                            renderReply(child, depth + 1)
+                        )}
+                        {!isExpanded && showMoreCount > 0 && (
+                            <button
+                                onClick={() => setExpandedChildren(prev => ({ ...prev, [reply.id]: true }))}
+                                className="text-[0.75rem] text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left pl-10"
+                            >
+                                Show {showMoreCount} more {showMoreCount === 1 ? 'reply' : 'replies'}
+                            </button>
+                        )}
+                        {isExpanded && showMoreCount > 0 && (
+                            <button
+                                onClick={() => setExpandedChildren(prev => ({ ...prev, [reply.id]: false }))}
+                                className="text-[0.75rem] text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left pl-10"
+                            >
+                                Show less
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -203,215 +324,171 @@ export function Replies({ topic, onClose }: RepliesProps) {
                         </button>
                     </div>
 
-                    <div className="overflow-y-auto px-5 pb-3 flex flex-col gap-3">
-                        <div className="flex flex-row gap-3 items-start">
-                            <div className="relative group w-10 h-10 flex items-center justify-center shrink-0">
-                                <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-border rounded-full" />
-                            </div>
-                            <div className="flex flex-col min-w-0 flex-1">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-medium leading-none text-foreground font-geist">
-                                            {topic.user.username}
-                                        </span>
-                                        <span className="text-xs font-light leading-none text-muted-foreground font-geist mt-0.5">
-                                            {timeAgo(topic.created)}
-                                        </span>
+                    <div className="overflow-y-auto px-5 pb-3">
+                        <div className="relative">
+                            <div className="flex flex-col gap-3">
+                                <div className="flex flex-row gap-3 items-start">
+                                    <div className="relative group w-10 h-10 flex items-center justify-center shrink-0">
+                                        <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-border rounded-full" />
                                     </div>
-                                    <div className="relative">
-                                        <button
-                                            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
-                                            onClick={() => { setIsPostMenuOpen(!isPostMenuOpen); setConfirmDelete(false); }}
-                                        >
-                                            <PostMenu />
-                                        </button>
-                                        {isPostMenuOpen && (
-                                            <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
-                                                {isOwnPost ? (
-                                                    confirmDelete ? (
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
-                                                            <div className="flex gap-1">
-                                                                <button
-                                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                                                                    onClick={() => deletePost(topic.id)}
-                                                                    disabled={deleteMutation.isPending}
-                                                                    >
-                                                                    {deleteMutation.isPending ? 'Deleting...' : 'Yes'}
-                                                                </button>
-                                                                <button
-                                                                    className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
-                                                                    onClick={() => setConfirmDelete(false)}
-                                                                    disabled={deleteMutation.isPending}
-                                                                >
-                                                                    No
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
-                                                    )
-                                                ) : (
-                                                    <span className="text-[0.7rem] text-muted-foreground p-1">No actions available</span>
+                                    <div className="flex flex-col min-w-0 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium leading-none text-foreground font-geist">
+                                                    {topic.user.username}
+                                                </span>
+                                                <span className="text-xs font-light leading-none text-muted-foreground font-geist mt-0.5">
+                                                    {timeAgo(topic.created)}
+                                                </span>
+                                            </div>
+                                            <div className="relative">
+                                                <button
+                                                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                                    onClick={() => { setIsPostMenuOpen(!isPostMenuOpen); setConfirmDelete(false); }}
+                                                >
+                                                    <PostMenu />
+                                                </button>
+                                                {isPostMenuOpen && (
+                                                    <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                                                        {isOwnPost ? (
+                                                            confirmDelete ? (
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
+                                                                    <div className="flex gap-1">
+                                                                        <button
+                                                                            className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                                            onClick={() => deletePost(topic.id)}
+                                                                            disabled={deleteMutation.isPending}
+                                                                            >
+                                                                            {deleteMutation.isPending ? 'Deleting...' : 'Yes'}
+                                                                        </button>
+                                                                        <button
+                                                                            className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                                            onClick={() => setConfirmDelete(false)}
+                                                                            disabled={deleteMutation.isPending}
+                                                                        >
+                                                                            No
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
+                                                            )
+                                                        ) : (
+                                                            <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+        
+                                <div>
+                                    <div className="font-semibold text-[1.2rem] text-foreground">
+                                        {topic.title}
+                                    </div>
+                                    <div className="font-extralight tertiary-font text-foreground mt-1">
+                                        {(() => {
+                                            const parsed = parseSharedDescription(topic.description);
+                                            if (parsed) {
+                                                return (
+                                                    <>
+                                                        {parsed.text && <div>{parsed.text}</div>}
+                                                        <SharedQuoteCard sharedFrom={parsed.sharedFrom} />
+                                                    </>
+                                                );
+                                            }
+                                            return topic.description;
+                                        })()}
+                                    </div>
+                                </div>
+        
+                                <div className="flex flex-row gap-4 items-center">
+                                    <button onClick={handlePostLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                        {postIsLiked ? (
+                                            <Liked fillColor="#ef4444" />
+                                        ) : (
+                                            <Like />
                                         )}
-                                    </div>
+                                        <span className={`text-sm ${postIsLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>
+                                            {postLikeCount}
+                                        </span>
+                                    </button>
+                                    <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                        <ReplyIcon />
+                                        <span className="text-sm m-1 text-muted-foreground">
+                                            {replyCount}
+                                        </span>
+                                    </button>
+                                    <button onClick={handlePostBookmark} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                        {postIsBookmarked ? (
+                                            <Bookmarked fillColor="#eab308" />
+                                        ) : (
+                                            <Bookmark />
+                                        )}
+                                    </button>
+                                    <button onClick={handlePostShare} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                        <Share />
+                                        <span className="text-sm m-1 text-muted-foreground">
+                                            {postShareCount}
+                                        </span>
+                                    </button>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="font-semibold text-[1.2rem] text-foreground">
-                                {topic.title}
-                            </div>
-                            <div className="font-extralight tertiary-font text-foreground mt-1">
-                                {(() => {
-                                    const parsed = parseSharedDescription(topic.description);
-                                    if (parsed) {
-                                        return (
-                                            <>
-                                                {parsed.text && <div>{parsed.text}</div>}
-                                                <SharedQuoteCard sharedFrom={parsed.sharedFrom} />
-                                            </>
-                                        );
-                                    }
-                                    return topic.description;
-                                })()}
-                            </div>
-                        </div>
-
-                        <div className="flex flex-row gap-4 items-center">
-                            <button onClick={handlePostLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                {postIsLiked ? (
-                                    <Liked fillColor="#ef4444" />
-                                ) : (
-                                    <Like />
-                                )}
-                                <span className={`text-sm ${postIsLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>
-                                    {postLikeCount}
-                                </span>
-                            </button>
-                            <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                <Reply />
-                                <span className="text-sm m-1 text-muted-foreground">
-                                    {replyCount}
-                                </span>
-                            </button>
-                            <button onClick={handlePostBookmark} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                {postIsBookmarked ? (
-                                    <Bookmarked fillColor="#eab308" />
-                                ) : (
-                                    <Bookmark />
-                                )}
-                            </button>
-                            <button onClick={handlePostShare} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                <Share />
-                                <span className="text-sm m-1 text-muted-foreground">
-                                    {postShareCount}
-                                </span>
-                            </button>
-                        </div>
-
-                        <div className="border-t border-border"></div>
-
-                        {isLoading && (
-                            <div className="flex flex-col gap-4 py-4">
-                                <TopicDetailSkeleton />
-                                <div className="border-t border-border" />
-                                <ReplySkeleton />
-                                <ReplySkeleton />
-                                <ReplySkeleton />
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="flex justify-center py-8">
-                                <span className="text-red-500">Failed to load replies.</span>
-                            </div>
-                        )}
-
-                        {!isLoading && !error && replies.length === 0 && (
-                            <div className="flex justify-center py-8">
-                                <span className="text-muted-foreground">No replies yet. Be the first to share your thoughts!</span>
-                            </div>
-                        )}
-
-                        {!isLoading && !error && replies.map((reply) => {
-                            const likeState = replyLikes[reply.id];
-                            const isLiked = likeState?.isLiked ?? reply.user_has_liked;
-                            const likeCount = likeState?.likeCount ?? reply.like_count;
-                            const isBookmarked = replyBookmarks[reply.id] ?? reply.user_has_bookmarked;
-                            const shareState = replyShares[reply.id];
-                            const shareCount = shareState?.shareCount ?? reply.shared_count;
-                            return (
-                                <div key={reply.id} className="flex flex-row gap-3 p-4 border border-border rounded-[10px] bg-card">
-                                    <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
-                                        <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
+        
+                                <div className="border-t border-border"></div>
+        
+                                {isLoading && (
+                                    <div className="flex flex-col gap-4 py-4">
+                                        <TopicDetailSkeleton />
+                                        <div className="border-t border-border" />
+                                        <ReplySkeleton />
+                                        <ReplySkeleton />
+                                        <ReplySkeleton />
                                     </div>
-                                    <div className="flex flex-col gap-0.5 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[0.8rem] font-medium text-foreground">
-                                                {reply.user.username}
-                                            </span>
-                                            <span className="text-[0.7rem] text-muted-foreground">
-                                                {timeAgo(reply.created)}
-                                            </span>
-                                        </div>
-                                        <div className="text-[0.9rem] font-extralight tertiary-text text-foreground break-words">
-                                            {reply.content}
-                                        </div>
-                                        <div className="flex items-center gap-1 mt-0.5">
-                                            <button
-                                                onClick={() => handleReplyLike(reply)}
-                                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
-                                            >
-                                                {isLiked ? (
-                                                    <Liked fillColor="#ef4444" />
-                                                ) : (
-                                                    <Like />
-                                                )}
-                                            </button>
-                                            <span className={`text-[0.7rem] ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}>
-                                                {likeCount}
-                                            </span>
-                                            <button
-                                                onClick={() => handleReplyBookmark(reply)}
-                                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
-                                            >
-                                                {isBookmarked ? (
-                                                    <Bookmarked fillColor="#eab308" />
-                                                ) : (
-                                                    <Bookmark />
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={() => handleReplyShare(reply)}
-                                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
-                                            >
-                                                <Share />
-                                            </button>
-                                            <span className="text-[0.7rem] text-muted-foreground">
-                                                {shareCount}
-                                            </span>
-                                        </div>
+                                )}
+        
+                                {error && (
+                                    <div className="flex justify-center py-8">
+                                        <span className="text-red-500">Failed to load replies.</span>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                )}
+        
+                                {!isLoading && !error && replies.length === 0 && (
+                                    <div className="flex justify-center py-8">
+                                        <span className="text-muted-foreground">No replies yet. Be the first to share your thoughts!</span>
+                                    </div>
+                                )}
+        
+                                {!isLoading && !error && replies.map((reply) =>
+                                    renderReply(reply, 0)
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     <div className="border-t border-border p-4 flex flex-col gap-2">
+                        {replyingTo && (
+                            <div className="flex items-center gap-1 text-[0.75rem] text-muted-foreground px-1">
+                                <span>Replying to <span className="font-medium text-foreground">@{replyingTo.user.username}</span></span>
+                                <button
+                                    onClick={() => setReplyingTo(null)}
+                                    className="ml-auto text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
                         <div className="flex flex-row gap-3 items-start">
                             <div className="relative group w-8 h-8 flex items-center justify-center shrink-0">
-                                <img src={user?.avatar || defaultAvatar} alt="Your Avatar" className="w-8 h-8 border border-border rounded-full" />
+                                <img key={user?.avatar} src={user?.avatar || defaultAvatar} alt="Your Avatar" className="w-8 h-8 border border-border rounded-full" />
                             </div>
                             <textarea
                                 ref={textareaRef}
                                 value={replyContent}
                                 onChange={(e) => setReplyContent(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Write a reply..."
+                                placeholder={replyingTo ? `Reply to @${replyingTo.user.username}...` : "Write a reply..."}
                                 className="w-full resize-none focus:outline-none focus:ring-0 focus:border-transparent font-light text-[0.9rem] bg-transparent text-foreground"
                                 rows={1}
                             />

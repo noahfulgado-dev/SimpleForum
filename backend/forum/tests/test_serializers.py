@@ -140,3 +140,16 @@ class ReplySerializerTest(TestCase):
         self.assertEqual(len(data['children']), 1)
         self.assertEqual(data['children'][0]['content'], 'Child reply')
         self.assertEqual(data['children'][0]['parent'], self.reply.id)
+
+    def test_reply_children_not_capped(self):
+        """Test reply children serializer does not limit to 10."""
+        for i in range(15):
+            Reply.objects.create(
+                topic=self.topic,
+                user=self.user,
+                content=f'Child reply {i}',
+                parent=self.reply
+            )
+        serializer = ReplySerializer(self.reply, context={'depth': 1})
+        data = serializer.data
+        self.assertEqual(len(data['children']), 15)
