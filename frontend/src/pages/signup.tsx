@@ -56,10 +56,13 @@ export function Signup() {
     }
 
     const handleGoogleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
+        flow: 'auth-code',
+        ux_mode: 'popup',
+        redirect_uri: 'postmessage',
+        onSuccess: async (codeResponse) => {
             setError('')
             try {
-                const res = await authAPI.googleLogin(tokenResponse.access_token)
+                const res = await authAPI.googleLogin(codeResponse.code)
                 localStorage.setItem('simpleforum_user', JSON.stringify(res.data.user))
                 navigate('/feed')
             } catch {

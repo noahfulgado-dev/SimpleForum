@@ -89,8 +89,8 @@ export const authAPI = {
   getCurrentUser: () =>
     axiosInstance.get<User>('/auth/user/'),
 
-  googleLogin: (accessToken: string) =>
-    axiosInstance.post<AuthTokens>('/auth/google/', { access_token: accessToken }),
+  googleLogin: (code: string) =>
+    axiosInstance.post<AuthTokens>('/auth/google/', { code }),
 
   passwordReset: (email: string) =>
     axiosInstance.post('/auth/password/reset/', { email }, { withCredentials: false }),

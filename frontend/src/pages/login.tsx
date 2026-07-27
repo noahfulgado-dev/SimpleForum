@@ -46,10 +46,13 @@ export function Login() {
     }
 
     const handleGoogleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
+        flow: 'auth-code',
+        ux_mode: 'popup',
+        redirect_uri: 'postmessage',
+        onSuccess: async (codeResponse) => {
             setError('')
             try {
-                await googleLogin(tokenResponse.access_token)
+                await googleLogin(codeResponse.code)
                 navigate('/feed')
             } catch {
                 setError('Google sign-in failed. Please try again.')
