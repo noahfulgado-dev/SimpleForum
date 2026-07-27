@@ -243,6 +243,7 @@ STORAGES = {
     },
 }
 
+ACCOUNT_ADAPTER = 'accounts.adapters.AccountAdapter'
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
@@ -282,6 +283,7 @@ REST_FRAMEWORK = {
         'user': '10000/day',   # Limit for logged-in users
         'login': '3/minute',
         'register': '2/minute',
+        'dj_rest_auth': '3/minute',
     }
 }
 
