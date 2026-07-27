@@ -36,10 +36,13 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_online = serializers.BooleanField(read_only=True)
+    last_seen = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'avatar']
-        read_only_fields = ['id', 'username', 'email', 'avatar']
+        fields = ['id', 'username', 'avatar', 'is_online', 'last_seen']
+        read_only_fields = ['id', 'username', 'email', 'avatar', 'is_online', 'last_seen']
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -53,6 +56,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
     follower_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
     is_following = serializers.SerializerMethodField()
+    is_online = serializers.BooleanField(read_only=True)
+    last_seen = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = User
@@ -71,6 +76,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'follower_count',
             'following_count',
             'is_following',
+            'is_online',
+            'last_seen',
         ]
 
     def get_topics(self, obj):

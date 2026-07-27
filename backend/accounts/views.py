@@ -1,7 +1,3 @@
-import logging
-import threading
-
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.mail import send_mail
@@ -16,9 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from accounts.serializers import PasswordResetSerializer, frontend_password_reset_url
-
-logger = logging.getLogger(__name__)
+from accounts.serializers import PasswordResetSerializer
 
 
 class PasswordResetView(GenericAPIView):
@@ -29,7 +23,6 @@ class PasswordResetView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         email = serializer.validated_data['email']
         print(f'[PW_RESET] Starting thread for {email}')
 
@@ -71,7 +64,6 @@ class PasswordResetView(GenericAPIView):
         thread = threading.Thread(target=_send)
         thread.start()
         print(f'[PW_RESET] Thread started, returning response')
-
         return Response(
             {'detail': _('Password reset e-mail has been sent.')},
             status=status.HTTP_200_OK,
@@ -121,6 +113,8 @@ class CachedProfileMixin:
                 user.followers.filter(follower=request.user).exists()
                 if request.user.is_authenticated else False
             ),
+            'is_online': user.is_online,
+            'last_seen': user.last_seen,
         })
 
     def _build_cached_profile(self, user, request):
@@ -170,6 +164,15 @@ class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class FollowingListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    ordering = ['-last_seen', 'username']
+
+    def get_queryset(self):
+        return User.objects.filter(followers__follower=self.request.user)
 
 
 class UserDetailView(CachedProfileMixin, generics.RetrieveAPIView):

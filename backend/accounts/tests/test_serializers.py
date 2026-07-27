@@ -24,6 +24,8 @@ class UserSerializerTest(TestCase):
 
         self.assertEqual(data['id'], self.user.id)
         self.assertEqual(data['username'], 'testuser')
+        self.assertIn('is_online', data)
+        self.assertIn('last_seen', data)
 
 
 class UserDetailSerializerTest(TestCase):
@@ -59,6 +61,8 @@ class UserDetailSerializerTest(TestCase):
         self.assertIn('total_likes', data)
         self.assertIn('is_following', data)
         self.assertFalse(data['is_following'])
+        self.assertIn('is_online', data)
+        self.assertIn('last_seen', data)
         self.assertEqual(data['follower_count'], 0)
         self.assertEqual(data['following_count'], 0)
         self.assertEqual(data['total_likes'], 0)

@@ -14,6 +14,8 @@ export interface User {
   total_likes?: number;
   topics?: Topic[];
   replies?: Reply[];
+  is_online?: boolean;
+  last_seen?: string;
 }
 
 export interface Topic {
@@ -98,6 +100,15 @@ export const authAPI = {
 export const usersAPI = {
   getProfile: () =>
     axiosInstance.get<User>('/api/users/me/'),
+
+  getUser: (id: number) =>
+    axiosInstance.get<User>(`/api/users/${id}/`),
+
+  getFollowing: () =>
+    axiosInstance.get<{ results: User[] }>('/api/users/me/following/'),
+
+  toggleFollow: (userId: number) =>
+    axiosInstance.post<{ status: string; follower_count: number }>(`/api/users/${userId}/follow/`),
 
   updateProfile: (data: { username?: string; bio?: string; avatar?: string }) =>
     axiosInstance.patch<User>('/api/users/me/', data),

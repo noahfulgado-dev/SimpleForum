@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { Huni } from "@/components/ui/huni"
 
 export function Login() {
     document.title = "Login | SimpleForum"
@@ -57,9 +58,13 @@ export function Login() {
     return (
         <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
             <div className="w-full max-w-md px-4 flex items-center justify-center flex-col gap-6">
+                <div className="flex-row flex items-center gap-1">
+                    <Huni></Huni>
                 <h1 className="text-[clamp(1.5rem,5vw,3rem)] tracking-wider font-bold leading-none text-foreground primary-font">
-                    SimpleForum
+                    huni
                 </h1>
+                </div>
+                
                 <Card className="w-full shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-3xl text-left text-foreground primary-font">
