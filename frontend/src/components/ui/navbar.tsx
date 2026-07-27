@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { Huni } from './huni';
+import { Button } from './button';
 import BellIcon from './bell_icon';
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { useAuth } from '@/context/AuthContext';
@@ -50,10 +51,10 @@ export function Navbar() {
                         />
                     </form>
                 </div>
-                <div className="flex items-center justify-end gap-4 w-[33.3%]">
-                    <div className="w-7 h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                <div className="flex items-center justify-end gap-1 w-[33.3%]">
+                    <Button variant="ghost" size="icon">
                         <BellIcon hasUnread={hasUnread} />
-                    </div>
+                    </Button>
                     <div className="relative group w-8 h-8 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                         <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full object-cover" />
                         <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
