@@ -249,7 +249,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
 
         return (
             <div key={reply.id} className="relative pl-10">
-                <div className="absolute left-[22px] top-0 w-[18px] h-[34px] border-l-2 border-b-2 dark:border-white/20 border-border/20 rounded-bl-[4px] pointer-events-none"></div>
+                <div className="absolute left-[22px] top-0 w-[18px] h-[34px] border-l-2 border-b-2 dark:border-white/20 border-border/60 rounded-bl-[4px] pointer-events-none"></div>
                 <div className="flex-1 flex flex-row gap-3 p-4 border border-border rounded-[10px] bg-card">
                     <div className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
                         <img src={reply.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />

@@ -243,6 +243,7 @@ STORAGES = {
     },
 }
 
+ACCOUNT_ADAPTER = 'accounts.adapters.AccountAdapter'
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
