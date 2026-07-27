@@ -34,7 +34,7 @@ class TopicSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created', 'updated', 'user']
 
     def get_replies(self, obj):
-        replies = obj.replies.filter(parent__isnull=True).select_related('user').prefetch_related('likes').all()
+        replies = obj.replies.filter(parent__isnull=True).select_related('user').prefetch_related('likes')[:20]
         return ReplySerializer(replies, many=True, context={**self.context, 'depth': 1}).data
 
     def get_user_has_liked(self, obj):
@@ -140,7 +140,7 @@ class ReplySerializer(serializers.ModelSerializer):
         depth = self.context.get('depth', 0)
         if depth <= 0:
             return []
-        children = obj.children.select_related('user').prefetch_related('likes').all()
+        children = obj.children.select_related('user').prefetch_related('likes')[:10]
         return ReplySerializer(children, many=True, context={**self.context, 'depth': depth - 1}).data
 
     def get_user_has_liked(self, obj):
