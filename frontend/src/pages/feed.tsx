@@ -16,13 +16,13 @@ export function Feed() {
             </div>
             <SidebarLeft />
             <SidebarRight />
-            <div className="flex-1 overflow-y-auto px-5 pb-5">
+            <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
                 <div className="flex gap-5 justify-center min-h-full">
-                    <div className="w-[300px] shrink-0" />
+                    <div className="hidden xl:block w-[300px] shrink-0" />
                     <div className="flex-1 max-w-[900px] min-w-0">
                         <FeedContent search={search} />
                     </div>
-                    <div className="w-[300px] shrink-0" />
+                    <div className="hidden xl:block w-[300px] shrink-0" />
                 </div>
             </div>
         </div>

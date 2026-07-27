@@ -101,11 +101,19 @@ export function Profile() {
 
   if (isLoading) {
     return (
-      <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
-        <div className="p-5 main-container w-full min-h-screen">
+      <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+        <div className="p-5 pb-0 shrink-0 relative z-50">
           <Navbar />
-          <SidebarLeft />
-          <ProfileSkeleton />
+        </div>
+        <SidebarLeft />
+        <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+          <div className="flex gap-5 justify-center min-h-full">
+            <div className="hidden xl:block w-[300px] shrink-0" />
+            <div className="flex-1 max-w-[900px] min-w-0 mt-8">
+              <ProfileSkeleton />
+            </div>
+            <div className="hidden xl:block w-[300px] shrink-0" />
+          </div>
         </div>
       </div>
     );
@@ -113,12 +121,18 @@ export function Profile() {
 
   if (!profile) {
     return (
-      <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
-        <div className="p-5 main-container w-full min-h-screen">
+      <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+        <div className="p-5 pb-0 shrink-0 relative z-50">
           <Navbar />
-          <SidebarLeft />
-          <div className="flex justify-center items-center mt-20">
-            <p className="text-muted-foreground">Could not load profile.</p>
+        </div>
+        <SidebarLeft />
+        <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+          <div className="flex gap-5 justify-center min-h-full">
+            <div className="hidden xl:block w-[300px] shrink-0" />
+            <div className="flex-1 max-w-[900px] min-w-0 mt-8 flex justify-center items-center">
+              <p className="text-muted-foreground">Could not load profile.</p>
+            </div>
+            <div className="hidden xl:block w-[300px] shrink-0" />
           </div>
         </div>
       </div>
@@ -126,11 +140,15 @@ export function Profile() {
   }
 
   return (
-    <div className="absolute inset-0 -z-10 h-fit w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
-      <div className="p-5 main-container w-full min-h-screen">
+    <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+      <div className="p-5 pb-0 shrink-0 relative z-50">
         <Navbar />
-        <SidebarLeft />
-        <div className="[grid-area:main] mt-8 space-y-6 w-full max-w-[900px]">
+      </div>
+      <SidebarLeft />
+      <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+        <div className="flex gap-5 justify-center min-h-full">
+          <div className="hidden xl:block w-[300px] shrink-0" />
+          <div className="flex-1 max-w-[900px] min-w-0 mt-8 space-y-6">
           <Card className="bg-card">
             <CardHeader>
               <div className="flex items-center gap-6">
@@ -265,6 +283,8 @@ export function Profile() {
               )}
             </div>
           </div>
+        </div>
+          <div className="hidden xl:block w-[300px] shrink-0" />
         </div>
       </div>
     </div>

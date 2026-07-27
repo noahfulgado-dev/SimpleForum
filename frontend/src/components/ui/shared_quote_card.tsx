@@ -5,7 +5,8 @@ interface SharedFrom {
     title: string;
 }
 
-export function parseSharedDescription(description: string): { text: string; sharedFrom: SharedFrom } | null {
+export function parseSharedDescription(description: string | undefined): { text: string; sharedFrom: SharedFrom } | null {
+    if (!description) return null;
     const marker = '\n\n---\nOriginally shared from @';
     const idx = description.indexOf(marker);
     if (idx === -1) return null;
