@@ -221,3 +221,63 @@ class FollowAPITest(TestCase):
         response = self.client.get(f'/api/users/{self.target.id}/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['is_following'])
+
+    def test_user_detail_includes_online_fields(self):
+        """Test user detail includes is_online and last_seen."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get(f'/api/users/{self.target.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('is_online', response.data)
+        self.assertIn('last_seen', response.data)
+
+
+class FollowingListTest(TestCase):
+    """Test Following list API endpoint."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.target = User.objects.create_user(
+            username='targetuser',
+            email='target@example.com',
+            password='targetpass123'
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+
+    def test_following_list_returns_followed_users(self):
+        """Test following list returns users the current user follows."""
+        Follow.objects.create(follower=self.user, following=self.target)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/users/me/following/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('results', response.data)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], self.target.id)
+        self.assertEqual(response.data['results'][0]['username'], 'targetuser')
+
+    def test_following_list_empty(self):
+        """Test following list is empty when not following anyone."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/users/me/following/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0)
+
+    def test_following_list_includes_online_fields(self):
+        """Test following list includes is_online and last_seen."""
+        Follow.objects.create(follower=self.user, following=self.target)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/users/me/following/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_data = response.data['results'][0]
+        self.assertIn('is_online', user_data)
+        self.assertIn('last_seen', user_data)
+
+    def test_following_list_unauthenticated(self):
+        """Test unauthenticated users cannot access following list."""
+        response = self.client.get('/api/users/me/following/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

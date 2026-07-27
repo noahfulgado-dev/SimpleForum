@@ -55,6 +55,8 @@ class CachedProfileMixin:
                 user.followers.filter(follower=request.user).exists()
                 if request.user.is_authenticated else False
             ),
+            'is_online': user.is_online,
+            'last_seen': user.last_seen,
         })
 
     def _build_cached_profile(self, user, request):
@@ -104,6 +106,15 @@ class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class FollowingListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    ordering = ['-last_seen', 'username']
+
+    def get_queryset(self):
+        return User.objects.filter(followers__follower=self.request.user)
 
 
 class UserDetailView(CachedProfileMixin, generics.RetrieveAPIView):

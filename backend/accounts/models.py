@@ -1,11 +1,22 @@
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class User(AbstractUser):
     bio = models.TextField(max_length=500, blank=True)
     avatar = models.URLField(max_length=500, blank=True)
+    last_seen = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-last_seen', 'username']
+
+    @property
+    def is_online(self):
+        if not self.last_seen:
+            return False
+        return (timezone.now() - self.last_seen).total_seconds() < 300
 
     def __str__(self):
         return self.username
