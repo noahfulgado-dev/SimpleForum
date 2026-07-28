@@ -83,13 +83,13 @@ export function FeedContent({ search = '' }: FeedContentProps) {
                         <PostButton onPostCreated={handlePostCreated} />
                     </div>
 
-                    <div className="flex flex-col gap-5 w-full">
+                    <div className="flex flex-col gap-0 md:gap-5 w-full">
 
                         {authLoading && (
                             <div className="text-center text-gray-500 py-8">Loading...</div>
                         )}
                         {!authLoading && topicsLoading && (
-                            <div className="flex flex-col gap-5">
+                            <div className="flex flex-col gap-0 md:gap-5">
                                 <TopicCardSkeleton />
                                 <TopicCardSkeleton />
                                 <TopicCardSkeleton />
