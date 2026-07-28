@@ -81,9 +81,16 @@ export function UserProfile() {
                                         </button>
                                     </div>
                                 )}
-                                <Card className="bg-card">
+                                <Card className="bg-card overflow-hidden pt-0">
+                                    <div className="h-[200px] rounded-t-xl overflow-hidden bg-muted flex items-center justify-center">
+                                        {profile.banner ? (
+                                            <img src={profile.banner} alt="Banner" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-muted-foreground text-sm">No banner</span>
+                                        )}
+                                    </div>
                                     <CardHeader>
-                                        <div className="flex items-center gap-6">
+                                        <div className="flex items-center gap-6 -mt-12 relative z-10">
                                             <div className="relative group w-24 h-24 flex items-center justify-center shrink-0">
                                                 <img src={profile.avatar || defaultAvatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-2 border-border" />
                                             </div>

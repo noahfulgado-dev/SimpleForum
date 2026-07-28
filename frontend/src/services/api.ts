@@ -8,6 +8,7 @@ export interface User {
   email?: string;
   bio?: string;
   avatar?: string;
+  banner?: string;
   follower_count?: number;
   following_count?: number;
   topic_count?: number;
@@ -119,6 +120,14 @@ export const usersAPI = {
     const formData = new FormData();
     formData.append('avatar', file);
     return axiosInstance.post<{ avatar: string }>('/api/users/me/avatar/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  uploadBanner: (file: File) => {
+    const formData = new FormData();
+    formData.append('banner', file);
+    return axiosInstance.post<{ banner: string }>('/api/users/me/banner/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },

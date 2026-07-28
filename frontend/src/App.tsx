@@ -1,3 +1,4 @@
+import { Toaster } from 'sonner';
 import { Routes, Route } from 'react-router-dom';
 import { Landing } from './pages/landing';
 import { Login } from './pages/login';
@@ -15,20 +16,22 @@ import { PublicRoute } from './components/auth/PublicRoute';
 
 function App() {
   return (
-    
-    <Routes>
-      <Route path="/" element={<PublicRoute><Landing/></PublicRoute>}/>
-      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} /> 
-      <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} /> 
-      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} /> 
-      <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} /> 
-      <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} /> 
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} /> 
-      <Route path="/profile/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} /> 
-      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} /> 
-      <Route path="/topic/:id" element={<ProtectedRoute><TopicDetail /></ProtectedRoute>} /> 
-    </Routes>
+    <>
+      <Toaster richColors position="top-right" />
+      <Routes>
+        <Route path="/" element={<PublicRoute><Landing/></PublicRoute>}/>
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} /> 
+        <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} /> 
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} /> 
+        <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} /> 
+        <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} /> 
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} /> 
+        <Route path="/profile/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} /> 
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/bookmarks" element={<ProtectedRoute><Bookmarks /></ProtectedRoute>} /> 
+        <Route path="/topic/:id" element={<ProtectedRoute><TopicDetail /></ProtectedRoute>} /> 
+      </Routes>
+    </>
   );
 }
 
