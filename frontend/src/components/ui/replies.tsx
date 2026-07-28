@@ -545,7 +545,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                         <img
                                             src={topic.image}
                                             alt="Post image"
-                                            className="relative w-full max-h-96 object-contain mx-auto rounded-[5px]"
+                                            className="relative max-h-96 max-w-full object-contain mx-auto rounded-[5px]"
                                         />
                                     </div>
                                 )}
