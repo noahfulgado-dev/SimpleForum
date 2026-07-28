@@ -12,7 +12,7 @@ import { notificationsAPI } from '@/services/api';
 export function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -83,6 +83,13 @@ export function Navbar() {
                                 <div className={`w-9 h-5 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-primary' : 'bg-muted-foreground/30'} relative`}>
                                     <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
                                 </div>
+                            </button>
+                            <div className="border-t border-border" />
+                            <button
+                                onClick={() => { logout(); navigate('/'); }}
+                                className="w-full text-left p-2 rounded-[5px] text-destructive hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                            >
+                                Logout
                             </button>
                         </div>
                     )}
