@@ -78,8 +78,8 @@ export function Post({ topic, onDelete }: PostProps) {
 
     return (
         <>
-            <div className="rounded-[10px] p-0 bg-[linear-gradient(135deg,var(--accent)/0.2_0%,transparent_60%)] bg-card border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted transition-all duration-300 ease-in-out max-w-2xl self-center w-full">
-                <div className="p-7 pb-0 flex flex-row gap-5">
+            <div className="rounded-[10px] p-0 flex flex-col gap-3 bg-[linear-gradient(135deg,var(--accent)/0.2_0%,transparent_60%)] bg-card border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted transition-all duration-300 ease-in-out max-w-2xl self-center w-full">
+                <div className="p-7 flex flex-row gap-5">
                     <div className="flex-1 min-w-0 flex flex-col gap-2">
                         <div className="flex flex-row gap-2 items-center">
                             <div
@@ -184,7 +184,7 @@ export function Post({ topic, onDelete }: PostProps) {
                     </div>
                 )}
 
-                <div className="p-7 pt-0 flex flex-row gap-4">
+                <div className="p-7 flex flex-row gap-4">
                     <button onClick={(e) => { e.stopPropagation(); handleLike(); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                         {isLiked ? (
                             <Liked fillColor="#ef4444" />
