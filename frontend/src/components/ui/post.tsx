@@ -175,7 +175,7 @@ export function Post({ topic, onDelete }: PostProps) {
                 </div>
 
                 {topic.image && (
-                    <div className="w-full overflow-hidden">
+                    <div className="w-full overflow-hidden py-2">
                         <img
                             src={topic.image}
                             alt="Post image"
