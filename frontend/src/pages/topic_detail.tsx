@@ -434,7 +434,7 @@ export function TopicDetail() {
                             {isLoading && <TopicDetailSkeleton />}
 
                             {topic && (
-                                <div className="border border-border rounded-[10px] p-0 flex flex-col gap-3 bg-card">
+                                <div className="border border-border rounded-[10px] p-0 flex flex-col gap-2 bg-card">
                                     <div className="p-7 flex flex-row gap-5">
                                         <div className="flex-1 min-w-0 flex flex-col gap-2">
                                             <div className="flex flex-row gap-2">
