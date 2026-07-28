@@ -37,9 +37,7 @@ axiosInstance.interceptors.response.use(
 
         return axiosInstance(originalRequest);
       } catch {
-        if (!['/auth/login/', '/auth/registration/', '/auth/user/', '/auth/logout/', '/auth/password/reset/'].some(path => originalRequest.url?.includes(path))) {
-          window.location.href = '/login';
-        }
+        window.dispatchEvent(new CustomEvent('auth:logout'));
         return Promise.reject(error);
       }
     }

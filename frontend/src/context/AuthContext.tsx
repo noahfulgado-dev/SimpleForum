@@ -37,6 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    const handleLogout = () => {
+      localStorage.removeItem(USER_STORAGE_KEY);
+      setUser(null);
+    };
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     const res = await authAPI.login({ email, password });
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.data.user));
