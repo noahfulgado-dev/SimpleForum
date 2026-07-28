@@ -410,7 +410,7 @@ export function TopicDetail() {
                 <div className="flex gap-5 justify-center min-h-full">
                     <div className="hidden xl:block w-[300px] shrink-0" />
                     <div className="flex-1 max-w-[900px] min-w-0">
-                        <div className="rounded-[10px] p-0 md:p-5 flex flex-col gap-5 pl-0 pr-0 md:pl-10 md:pr-10">
+                        <div className="rounded-none md:rounded-[10px] p-0 md:p-5 flex flex-col gap-5 pl-0 pr-0 md:pl-10 md:pr-10">
 
                             <button onClick={() => navigate(-1)} className="w-max text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                                 ← Back
@@ -419,7 +419,7 @@ export function TopicDetail() {
                             {isLoading && <TopicDetailSkeleton />}
 
                             {topic && (
-                                <div className="border border-border rounded-[10px] p-7 flex flex-row gap-5 bg-card">
+                                <div className="border-0 md:border md:border-border rounded-none md:rounded-[10px] p-7 flex flex-row gap-5 bg-card">
                                     <div className="w-full flex flex-col gap-2">
                                         <div className="flex flex-row gap-2">
                                             <div
