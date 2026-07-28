@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, House, Bookmark, User } from 'lucide-react';
+import { House, Bookmark, User, Plus } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Huni } from './huni';
 import { Button } from './button';
 import BellIcon from './bell_icon';
@@ -8,16 +9,18 @@ import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { notificationsAPI } from '@/services/api';
+import { CreatePost } from './post_modal';
 
 export function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [hasUnread, setHasUnread] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const navItems = [
         { label: 'Home', path: '/feed', icon: House },
@@ -38,13 +41,16 @@ export function Navbar() {
         navigate(q ? `/feed?search=${encodeURIComponent(q)}` : '/feed');
     };
 
+    const handlePostCreated = () => {
+        queryClient.invalidateQueries({ queryKey: ['topics'] });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setIsCreateModalOpen(false);
+    };
+
     return (
         <>
-            <nav className="[grid-area:navbar] border border-border rounded-[10px] p-2 pl-5 pr-5 flex items-center justify-between bg-background w-full relative">
+            <nav className="hidden xl:flex [grid-area:navbar] border border-border rounded-[10px] p-2 pl-5 pr-5 items-center justify-between bg-background w-full relative">
                 <div className="w-[33.3%] flex items-center justify-start gap-2">
-                    <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="xl:hidden p-2 rounded-[5px] hover:bg-muted transition-all duration-200 cursor-pointer">
-                        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                    </button>
                     <Link to="/feed">
                         <div className="text-[1.2rem] text-foreground font-medium font-cousine rounded-[10px] flex items-center gap-2">
                             <Huni className="h-8 w-auto hover:-rotate-4 transition-all duration-150 ease-in-out" />
@@ -94,29 +100,59 @@ export function Navbar() {
                         </div>
                     )}
                 </div>
-                {mobileMenuOpen && (
-                    <div className="xl:hidden absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-1 z-50 shadow-lg">
-                        {navItems.map((item) => {
-                            const isActive = location.pathname === item.path;
-                            const Icon = item.icon;
-                            return (
-                                <button
-                                    key={item.path}
-                                    onClick={() => { navigate(item.path); setMobileMenuOpen(false); }}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm transition-all duration-200 cursor-pointer ${
-                                        isActive
-                                            ? 'bg-foreground/10 text-foreground font-medium'
-                                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                    }`}
-                                >
-                                    <Icon className="w-5 h-5 shrink-0" />
-                                    {item.label}
-                                </button>
-                            )
-                        })}
-                    </div>
-                )}
             </nav>
+
+            <div className="xl:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card/90 backdrop-blur-md border border-border/50 rounded-full px-6 py-3 flex items-center gap-6 shadow-lg">
+                {navItems.slice(0, 1).map((item) => {
+                    const isActive = location.pathname === item.path;
+                    const Icon = item.icon;
+                    return (
+                        <button
+                            key={item.path}
+                            onClick={() => navigate(item.path)}
+                            className={`flex flex-col items-center gap-0.5 transition-colors cursor-pointer ${
+                                isActive
+                                    ? 'text-foreground'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            <Icon className="w-5 h-5" />
+                            <span className="text-[0.6rem] font-medium">{item.label}</span>
+                        </button>
+                    );
+                })}
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground hover:brightness-110 transition-all duration-200 cursor-pointer shadow-md"
+                >
+                    <Plus className="w-5 h-5" />
+                </button>
+                {navItems.slice(1).map((item) => {
+                    const isActive = location.pathname === item.path;
+                    const Icon = item.icon;
+                    return (
+                        <button
+                            key={item.path}
+                            onClick={() => navigate(item.path)}
+                            className={`flex flex-col items-center gap-0.5 transition-colors cursor-pointer ${
+                                isActive
+                                    ? 'text-foreground'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            <Icon className="w-5 h-5" />
+                            <span className="text-[0.6rem] font-medium">{item.label}</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {isCreateModalOpen && (
+                <CreatePost
+                    onClose={() => setIsCreateModalOpen(false)}
+                    onPostCreated={handlePostCreated}
+                />
+            )}
         </>
     )
 }
