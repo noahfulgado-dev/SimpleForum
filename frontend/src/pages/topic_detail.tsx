@@ -385,7 +385,7 @@ export function TopicDetail() {
     if (error) {
         return (
             <div className="h-screen flex flex-col bg-background">
-                <div className="p-5 pb-0 shrink-0 relative z-50"><Navbar /></div>
+                <div className="xl:block p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50"><Navbar /></div>
                 <SidebarLeft />
                 <SidebarRight />
                 <div className="flex-1 flex items-center justify-center">
