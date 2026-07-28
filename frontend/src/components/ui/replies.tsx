@@ -535,7 +535,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 </div>
 
                                 {topic.image && (
-                                    <div className="w-full overflow-hidden py-2">
+                                    <div className="w-full overflow-hidden rounded-[5px]">
                                         <img
                                             src={topic.image}
                                             alt="Post image"

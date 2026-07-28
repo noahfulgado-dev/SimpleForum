@@ -493,7 +493,7 @@ export function TopicDetail() {
                                     </div>
 
                                     {topic.image && (
-                                        <div className="w-full overflow-hidden py-2">
+                                        <div className="w-full overflow-hidden">
                                             <img
                                                 src={topic.image}
                                                 alt="Post image"
