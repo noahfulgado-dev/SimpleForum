@@ -119,6 +119,7 @@ class ReplySerializer(serializers.ModelSerializer):
     user_has_bookmarked = serializers.SerializerMethodField()
     shared_count = serializers.SerializerMethodField()
     user_has_shared = serializers.SerializerMethodField()
+    topic_title = serializers.CharField(source='topic.title', read_only=True)
 
     class Meta:
         model = Reply
@@ -135,6 +136,7 @@ class ReplySerializer(serializers.ModelSerializer):
             'user_has_bookmarked',
             'shared_count',
             'user_has_shared',
+            'topic_title',
         ]
         read_only_fields = ['id', 'created', 'user', 'topic']
 
