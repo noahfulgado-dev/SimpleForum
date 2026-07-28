@@ -41,6 +41,7 @@ export interface Topic {
 export interface Reply {
   id: number;
   topic: number;
+  topic_title?: string;
   parent?: number | null;
   user: User;
   content: string;

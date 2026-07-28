@@ -159,6 +159,9 @@ export function UserProfile() {
                                                             >
                                                                 <div className="font-medium text-foreground text-sm">{topic.title}</div>
                                                                 <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{topic.description}</div>
+                                                                {topic.image && (
+                                                                    <img src={topic.image} alt="" className="w-full h-24 object-cover rounded-[4px] mt-1" />
+                                                                )}
                                                                 <div className="flex items-center gap-2 mt-1.5 text-[0.65rem] text-muted-foreground">
                                                                     <span>{topic.like_count ?? 0} likes</span>
                                                                     <span>•</span>
@@ -182,7 +185,7 @@ export function UserProfile() {
                                                                 onClick={() => window.location.href = `/topic/${reply.topic}`}
                                                                 className="p-3 border border-border rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
                                                             >
-                                                                <div className="text-xs text-muted-foreground">on a topic</div>
+                                                                <div className="text-xs text-muted-foreground truncate">on {reply.topic_title || 'a topic'}</div>
                                                                 <div className="text-sm text-foreground mt-0.5 line-clamp-2">{reply.content}</div>
                                                                 <div className="text-[0.65rem] text-muted-foreground mt-1">{reply.like_count ?? 0} likes</div>
                                                             </div>
