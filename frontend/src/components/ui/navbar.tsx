@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { House, Bookmark, User, Plus } from 'lucide-react';
+import { House, Bookmark, User, Plus, MessageCircle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Huni } from './huni';
 import { Button } from './button';
@@ -121,6 +121,12 @@ export function Navbar() {
                         </button>
                     );
                 })}
+                <button
+                    className="flex flex-col items-center gap-0.5 text-muted-foreground/50 cursor-not-allowed"
+                >
+                    <MessageCircle className="w-5 h-5" />
+                    <span className="text-[0.6rem] font-medium">Messages</span>
+                </button>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground hover:brightness-110 transition-all duration-200 cursor-pointer shadow-md"
