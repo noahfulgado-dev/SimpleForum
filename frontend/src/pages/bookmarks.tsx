@@ -23,11 +23,11 @@ export function Bookmarks() {
             </div>
             <SidebarLeft />
             <SidebarRight />
-            <div className="flex-1 overflow-y-auto px-5 pb-5">
+            <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
                 <div className="flex gap-5 justify-center min-h-full">
                     <div className="w-[300px] shrink-0" />
                     <div className="flex-1 max-w-[900px] min-w-0">
-                        <div className="rounded-[10px] p-5 flex flex-col gap-5 pl-10 pr-10 items-center">
+                        <div className="rounded-[10px] p-5 flex flex-col gap-5 pl-3 pr-3 md:pl-10 md:pr-10 items-center">
                             <div className="flex flex-col gap-5 w-full">
                                 <div className="max-w-[700px] mx-auto w-full">
                                     <h1 className="text-[clamp(0.5rem,5vw,2.5rem)] font-semibold leading-none text-foreground font-geist text-left">
