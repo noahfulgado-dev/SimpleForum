@@ -435,7 +435,7 @@ export function TopicDetail() {
 
                             {topic && (
                                 <div className="border border-border rounded-[10px] p-0 bg-card">
-                                    <div className="p-7 flex flex-row gap-5">
+                                    <div className="p-7 pb-2 flex flex-row gap-5">
                                         <div className="flex-1 min-w-0 flex flex-col gap-2">
                                             <div className="flex flex-row gap-2">
                                                 <div
@@ -502,7 +502,7 @@ export function TopicDetail() {
                                         </div>
                                     )}
 
-                                    <div className="p-7 flex flex-row gap-4">
+                                    <div className="p-7 pt-2 flex flex-row gap-4">
                                         <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                             {isLiked ? <Liked fillColor="#ef4444" /> : <Like />}
                                             <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>{likeCount}</span>
