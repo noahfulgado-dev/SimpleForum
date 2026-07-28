@@ -545,7 +545,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                         <img
                                             src={topic.image}
                                             alt="Post image"
-                                            className="relative w-full object-cover"
+                                            className="relative w-full max-h-[468px] object-cover"
                                         />
                                     </div>
                                 )}
