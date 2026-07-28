@@ -103,6 +103,122 @@ export function Post({ topic, onDelete }: PostProps) {
                                 </span>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="font-extralight tertiary-font cursor-pointer" onClick={() => navigate(`/topic/${topic.id}`)}>
+                        <div className="font-semibold text-[1.2rem]">
+                            {topic.title}
+                        </div>
+                        {(() => {
+                            const parsed = parseSharedDescription(topic.description);
+                            if (parsed) {
+                                return (
+                                    <>
+                                        {parsed.text && <div className="line-clamp-3">{parsed.text}</div>}
+                                        <SharedQuoteCard sharedFrom={parsed.sharedFrom} />
+                                    </>
+                                );
+                            }
+                            return <div className="line-clamp-3">{topic.description}</div>;
+                        })()}
+                    </div>
+                    {topic.image && (
+                        <div className="relative w-full overflow-hidden rounded-[5px] mt-2">
+                            <img
+                                src={topic.image}
+                                alt=""
+                                className="absolute inset-0 w-full h-full scale-110 blur-xl opacity-50 object-cover"
+                                aria-hidden="true"
+                            />
+                            <img
+                                src={topic.image}
+                                alt="Post image"
+                                className="relative w-full max-h-96 object-contain mx-auto rounded-[5px]"
+                            />
+                        </div>
+                    )}
+                    <div className="flex flex-row gap-4 mt-2">
+                        <button onClick={(e) => { e.stopPropagation(); handleLike(); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                            {isLiked ? (
+                                <Liked fillColor="#ef4444" />
+                            ) : (
+                                <Like />
+                            )}
+                            <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>
+                                {likeCount}
+                            </span>
+                        </button>
+                        <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={(e) => { e.stopPropagation(); setIsRepliesOpen(true); document.body.style.overflow = 'hidden'; }}>
+                            <Reply />
+                            <span className={`text-sm m-1 text-muted-foreground`}>
+                                {topic.reply_count ?? topic.replies?.length ?? 0}
+                            </span>
+                        </button>
+                        {isRepliesOpen && (
+                            <Replies topic={topic} onClose={() => { setIsRepliesOpen(false); document.body.style.overflow = 'visible'; }} />
+                        )}
+                        <button onClick={(e) => { e.stopPropagation(); setIsShareModalOpen(true); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                            <Share />
+                            <span className={`text-sm m-1 text-muted-foreground`}>
+                                {shareCount}
+                            </span>
+                        </button>
+                    </div>
+                    {isShareModalOpen && (
+                        <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} onShare={() => setShareCount(c => c + 1)} />
+                    )}
+                    {isEditModalOpen && (
+                        <EditPostModal topic={topic} onClose={() => setIsEditModalOpen(false)} />
+                    )}
+                </div>
+
+                <div className="flex flex-row gap-3 items-start pt-1">
+                    <button onClick={(e) => { e.stopPropagation(); handleBookmark(); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                        {isBookmarked ? (
+                            <Bookmarked fillColor="#eab308" />
+                        ) : (
+                            <Bookmark />
+                        )}
+                    </button>
+                    <div className="relative">
+                        <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsOpen(!isOpen); setConfirmDelete(false); }}>
+                            <PostMenu />
+                        </button>
+                        {isOpen && (
+                            <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                                {isOwnPost ? (
+                                    <>
+                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsEditModalOpen(true); setIsOpen(false); }}>Edit Post</button>
+                                        <div className="border-t border-border" />
+                                        {confirmDelete ? (
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                        onClick={() => deletePost(topic.id)}
+                                                        disabled={isDeleting}
+                                                    >
+                                                        {isDeleting ? 'Deleting...' : 'Yes'}
+                                                    </button>
+                                                    <button
+                                                        className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                        onClick={() => setConfirmDelete(false)}
+                                                        disabled={isDeleting}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
+                                )}
+                            </div>
+                        </div>
 
                         <div className="font-extralight tertiary-font cursor-pointer" onClick={() => navigate(`/topic/${topic.id}`)}>
                             <div className="font-semibold text-[1.2rem]">
