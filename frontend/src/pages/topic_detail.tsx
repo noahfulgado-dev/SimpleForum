@@ -458,6 +458,22 @@ export function TopicDetail() {
                                             })()}
                                         </div>
 
+                                        {topic.image && (
+                                            <div className="relative w-full overflow-hidden rounded-[5px]">
+                                                <img
+                                                    src={topic.image}
+                                                    alt=""
+                                                    className="absolute inset-0 w-full h-full scale-110 blur-xl opacity-50 object-cover"
+                                                    aria-hidden="true"
+                                                />
+                                                <img
+                                                    src={topic.image}
+                                                    alt="Post image"
+                                                    className="relative w-full max-h-96 object-contain mx-auto rounded-[5px]"
+                                                />
+                                            </div>
+                                        )}
+
                                         <div className="flex flex-row gap-4 mt-2">
                                             <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                                 {isLiked ? <Liked fillColor="#ef4444" /> : <Like />}

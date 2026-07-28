@@ -25,6 +25,7 @@ export interface Topic {
   id: number;
   title: string;
   description: string;
+  image?: string;
   user: User;
   created: string;
   updated?: string;
@@ -178,6 +179,14 @@ export const forumAPI = {
 
   getBookmarks: (params?: { page?: number }) =>
     axiosInstance.get<{ results: BookmarkEntry[]; count: number; next: string | null }>('/api/bookmarks/', { params }),
+
+  uploadTopicImage: (topicId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return axiosInstance.post<{ image: string }>(`/api/topics/${topicId}/image/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 export const notificationsAPI = {

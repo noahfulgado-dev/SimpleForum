@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
-from rest_framework import filters, generics, permissions
+from rest_framework import filters, generics, permissions, status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -9,6 +10,7 @@ from django.db.models.functions import Coalesce, Extract, Now
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 
+from accounts.utils import upload_to_imgbb
 from forum.cache import clear_topic_cache, get_cached_topic_ids, set_cached_topic_ids
 from forum.models import Topic, Reply
 from forum.serializers import TopicListSerializer, TopicSerializer, ReplySerializer
@@ -226,3 +228,22 @@ class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
         if instance.user != self.request.user and not self.request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this reply.")
         instance.delete()
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def upload_topic_image(request, pk):
+    topic = get_object_or_404(Topic, pk=pk)
+
+    if topic.user != request.user and not request.user.is_staff:
+        raise PermissionDenied("You do not have permission to edit this topic.")
+
+    if 'image' not in request.FILES:
+        return Response({'error': 'No image provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    topic.image = upload_to_imgbb(request.FILES['image'])
+    topic.save(update_fields=['image'])
+    cache.delete(f"profile:{topic.user.id}")
+    clear_topic_cache()
+
+    return Response({'image': topic.image})
