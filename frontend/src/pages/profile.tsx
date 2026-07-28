@@ -125,11 +125,11 @@ export function Profile() {
   if (isLoading) {
     return (
       <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
-        <div className="p-5 pb-0 shrink-0 relative z-50">
+        <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
         <SidebarLeft />
-        <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+        <div className="flex-1 overflow-y-auto px-0 md:px-5 pb-0 md:pb-5">
           <div className="flex gap-5 justify-center min-h-full">
             <div className="hidden xl:block w-[300px] shrink-0" />
             <div className="flex-1 max-w-[900px] min-w-0 mt-8">
@@ -145,11 +145,11 @@ export function Profile() {
   if (!profile) {
     return (
       <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
-        <div className="p-5 pb-0 shrink-0 relative z-50">
+        <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
         <SidebarLeft />
-        <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+        <div className="flex-1 overflow-y-auto px-0 md:px-5 pb-0 md:pb-5">
           <div className="flex gap-5 justify-center min-h-full">
             <div className="hidden xl:block w-[300px] shrink-0" />
             <div className="flex-1 max-w-[900px] min-w-0 mt-8 flex justify-center items-center">
@@ -164,16 +164,16 @@ export function Profile() {
 
   return (
     <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
-      <div className="p-5 pb-0 shrink-0 relative z-50">
+      <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
         <Navbar />
       </div>
       <SidebarLeft />
-      <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+      <div className="flex-1 overflow-y-auto px-0 md:px-5 pb-0 md:pb-5">
         <div className="flex gap-5 justify-center min-h-full">
           <div className="hidden xl:block w-[300px] shrink-0" />
           <div className="flex-1 max-w-[900px] min-w-0 mt-8 space-y-6">
-            <Card className="bg-card overflow-hidden pt-0">
-              <div className="relative h-[200px] bg-muted rounded-t-xl overflow-hidden">
+            <Card className="bg-card overflow-hidden pt-0 rounded-none md:rounded-xl border-0 md:border">
+              <div className="relative h-[200px] bg-muted rounded-none xl:rounded-t-xl overflow-hidden">
                 {(bannerPreview || profile.banner) ? (
                   <img
                     src={bannerPreview || profile.banner}
@@ -276,7 +276,7 @@ export function Profile() {
               </CardContent>
             </Card>
 
-            <div className="bg-card border border-border rounded-[10px] overflow-hidden">
+            <div className="bg-card border-0 md:border md:border-border rounded-none md:rounded-[10px] overflow-hidden">
               <div className="flex border-b border-border">
                 <button
                   onClick={() => setActiveTab('posts')}
@@ -300,7 +300,7 @@ export function Profile() {
                           <div
                             key={topic.id}
                             onClick={() => window.location.href = `/topic/${topic.id}`}
-                            className="p-3 border border-border rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
+                            className="p-3 border-0 md:border md:border-border rounded-none md:rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
                           >
                             <div className="font-medium text-foreground text-sm">{topic.title}</div>
                             <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{topic.description}</div>
@@ -328,7 +328,7 @@ export function Profile() {
                           <div
                             key={reply.id}
                             onClick={() => window.location.href = `/topic/${reply.topic}`}
-                            className="p-3 border border-border rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
+                            className="p-3 border-0 md:border md:border-border rounded-none md:rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
                           >
                             <div className="text-xs text-muted-foreground truncate">on {reply.topic_title || 'a topic'}</div>
                             <div className="text-sm text-foreground mt-0.5 line-clamp-2">{reply.content}</div>
