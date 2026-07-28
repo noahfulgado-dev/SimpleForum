@@ -1,9 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Post } from './post'
-import PostButton from './post_button'
 import { forumAPI } from '@/services/api'
-import { useAuth } from '@/context/AuthContext'
 import { TopicCardSkeleton } from './skeleton'
 
 interface FeedContentProps {
@@ -11,7 +9,6 @@ interface FeedContentProps {
 }
 
 export function FeedContent({ search = '' }: FeedContentProps) {
-    const { user, loading: authLoading } = useAuth();
     const queryClient = useQueryClient();
     const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -64,44 +61,30 @@ export function FeedContent({ search = '' }: FeedContentProps) {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics', search] }),
     });
 
-    const handlePostCreated = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
     const handleDeleteTopic = (id: number) => {
         deleteMutation.mutate(id);
     };
 
     return (
         <>
-            <div className="rounded-[10px] p-5 flex flex-col gap-5 pl-10 pr-10 items-center">
+            <div className="rounded-none md:rounded-[10px] p-0 md:p-5 flex flex-col gap-5 pl-0 pr-0 md:pl-10 md:pr-10 items-center">
                 <div className="flex flex-col gap-5 w-full">
-                    <div className="w-full flex justify-between items-center max-w-[700px] mx-auto">
-                        <h1 className="text-[clamp(0.5rem,5vw,2.5rem)] font-semibold leading-none text-foreground font-geist text-left">
-                            What's up, {user?.username}! 👋
-                        </h1>
-                        <PostButton onPostCreated={handlePostCreated} />
-                    </div>
+                    <div className="flex flex-col gap-0 md:gap-5 w-full">
 
-                    <div className="flex flex-col gap-5 w-full">
-
-                        {authLoading && (
-                            <div className="text-center text-gray-500 py-8">Loading...</div>
-                        )}
-                        {!authLoading && topicsLoading && (
-                            <div className="flex flex-col gap-5">
+                        {topicsLoading && (
+                            <div className="flex flex-col gap-0 md:gap-5">
                                 <TopicCardSkeleton />
                                 <TopicCardSkeleton />
                                 <TopicCardSkeleton />
                             </div>
                         )}
-                        {!authLoading && error && (
+                        {error && (
                             <div className="text-center text-destructive py-8">Failed to load topics. Please try again.</div>
                         )}
-                        {!authLoading && !topicsLoading && !error && topics.length === 0 && (
+                        {!topicsLoading && !error && topics.length === 0 && (
                             <div className="text-center text-muted-foreground py-8">{search ? `No results for "${search}".` : 'No topics yet. Be the first to post!'}</div>
                         )}
-                        {!authLoading && !topicsLoading && !error && topics.map((topic) => (
+                        {!topicsLoading && !error && topics.map((topic) => (
                             <Post key={topic.id} topic={topic} onDelete={handleDeleteTopic} />
                         ))}
                         {isFetchingNextPage && (

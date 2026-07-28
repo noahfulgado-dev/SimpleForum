@@ -18,16 +18,16 @@ export function Bookmarks() {
 
     return (
         <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
-            <div className="p-5 pb-0 shrink-0 relative z-50">
+            <div className="xl:block p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
                 <Navbar />
             </div>
             <SidebarLeft />
             <SidebarRight />
-            <div className="flex-1 overflow-y-auto px-5 pb-5">
+            <div className="flex-1 overflow-y-auto px-0 md:px-5 pb-0 md:pb-5">
                 <div className="flex gap-5 justify-center min-h-full">
-                    <div className="w-[300px] shrink-0" />
+                    <div className="hidden xl:block w-[300px] shrink-0" />
                     <div className="flex-1 max-w-[900px] min-w-0">
-                        <div className="rounded-[10px] p-5 flex flex-col gap-5 pl-10 pr-10 items-center">
+                        <div className="rounded-none md:rounded-[10px] p-0 md:p-5 flex flex-col gap-5 pl-0 pr-0 md:pl-10 md:pr-10 items-center">
                             <div className="flex flex-col gap-5 w-full">
                                 <div className="max-w-[700px] mx-auto w-full">
                                     <h1 className="text-[clamp(0.5rem,5vw,2.5rem)] font-semibold leading-none text-foreground font-geist text-left">
@@ -55,7 +55,7 @@ export function Bookmarks() {
                             </div>
                         </div>
                     </div>
-                    <div className="w-[300px] shrink-0" />
+                    <div className="hidden xl:block w-[300px] shrink-0" />
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@ export function Skeleton({ className }: { className?: string }) {
 
 export function TopicCardSkeleton() {
   return (
-    <div className="rounded-[10px] p-0 min-h-[100px] bg-card border border-border/50 overflow-hidden max-w-[700px] w-full self-center">
+    <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-card border-0 md:border md:border-border/50 overflow-hidden max-w-[700px] w-full self-center">
       <div className="p-7 pb-2 flex flex-row gap-5">
         <div className="flex-1 min-w-0 flex flex-col gap-2">
           <div className="flex flex-row gap-2">
@@ -35,7 +35,7 @@ export function TopicCardSkeleton() {
 
 export function TopicDetailSkeleton() {
   return (
-    <div className="rounded-[10px] p-0 min-h-[100px] bg-card border border-border/50 overflow-hidden w-full">
+    <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-card border-0 md:border md:border-border/50 overflow-hidden w-full">
       <div className="p-7 pb-2 flex flex-row gap-5">
         <div className="flex-1 min-w-0 flex flex-col gap-2">
           <div className="flex flex-row gap-2">
