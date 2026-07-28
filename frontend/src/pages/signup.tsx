@@ -12,12 +12,14 @@ import { useGoogleLogin } from '@react-oauth/google'
 import { Link, useNavigate } from 'react-router-dom'
 import React, { useState } from 'react'
 import { authAPI } from '../services/api'
+import { useAuth } from '../context/AuthContext'
 import { Huni } from "@/components/ui/huni"
 
 export function Signup() {
     document.title = "Signup | SimpleForum"
 
     const navigate = useNavigate()
+    const { googleLogin } = useAuth()
     const [username, setUsername] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -61,8 +63,7 @@ export function Signup() {
         onSuccess: async (codeResponse) => {
             setError('')
             try {
-                const res = await authAPI.googleLogin(codeResponse.code)
-                localStorage.setItem('simpleforum_user', JSON.stringify(res.data.user))
+                await googleLogin(codeResponse.code)
                 navigate('/feed')
             } catch {
                 setError('Google sign-in failed. Please try again.')

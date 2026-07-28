@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { authAPI, type User } from '../services/api';
+import { ACCESS_KEY, REFRESH_KEY } from '../services/axios';
 
 const USER_STORAGE_KEY = 'simpleforum_user';
 
@@ -25,6 +26,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user;
 
   useEffect(() => {
+    const access = localStorage.getItem(ACCESS_KEY);
+    if (!access) {
+      setLoading(false);
+      return;
+    }
     authAPI.getCurrentUser()
       .then((res) => {
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.data));
@@ -39,6 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handleLogout = () => {
+      localStorage.removeItem(ACCESS_KEY);
+      localStorage.removeItem(REFRESH_KEY);
       localStorage.removeItem(USER_STORAGE_KEY);
       setUser(null);
     };
@@ -48,12 +56,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authAPI.login({ email, password });
+    localStorage.setItem(ACCESS_KEY, res.data.access);
+    localStorage.setItem(REFRESH_KEY, res.data.refresh);
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.data.user));
     setUser(res.data.user);
   }, []);
 
   const googleLogin = useCallback(async (accessToken: string) => {
     const res = await authAPI.googleLogin(accessToken);
+    localStorage.setItem(ACCESS_KEY, res.data.access);
+    localStorage.setItem(REFRESH_KEY, res.data.refresh);
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.data.user));
     setUser(res.data.user);
   }, []);
@@ -64,6 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore server errors
     }
+    localStorage.removeItem(ACCESS_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_STORAGE_KEY);
     setUser(null);
   }, []);
