@@ -26,6 +26,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user;
 
   useEffect(() => {
+    const access = localStorage.getItem(ACCESS_KEY);
+    if (!access) {
+      setLoading(false);
+      return;
+    }
     authAPI.getCurrentUser()
       .then((res) => {
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.data));

@@ -19,7 +19,7 @@ const axiosInstance: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
-const AUTH_PATHS = ['/auth/login/', '/auth/registration/', '/auth/token/refresh/', '/auth/user/', '/auth/logout/', '/auth/password/reset/', '/auth/password/reset/confirm/'];
+const AUTH_PATHS = ['/auth/login/', '/auth/registration/', '/auth/token/refresh/', '/auth/user/', '/auth/logout/', '/auth/password/reset/', '/auth/password/reset/confirm/', '/auth/google/'];
 
 axiosInstance.interceptors.request.use(
   (config) => {
