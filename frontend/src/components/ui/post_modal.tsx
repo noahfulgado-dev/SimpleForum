@@ -140,9 +140,14 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
                         <div className="border-t border-border mt-2 pt-2 flex justify-between items-center">
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="text-muted-foreground hover:text-foreground transition-colors text-sm cursor-pointer"
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer text-muted-foreground hover:text-foreground"
+                                title="Attach Image"
                             >
-                                Attach Image
+                                <svg className="w-5 h-5" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
+                                </svg>
                             </button>
                             <Button
                                 onClick={handleSubmit}
