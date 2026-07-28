@@ -6,6 +6,9 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://simpleforum-1m94.onrender.com';
 
+const ACCESS_KEY = 'simpleforum_access';
+const REFRESH_KEY = 'simpleforum_refresh';
+
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_URL,
   timeout: 15000,
@@ -15,6 +18,17 @@ const axiosInstance: AxiosInstance = axios.create({
   },
   withCredentials: true,
 });
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const access = localStorage.getItem(ACCESS_KEY);
+    if (access) {
+      config.headers.Authorization = `Bearer ${access}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -28,15 +42,25 @@ axiosInstance.interceptors.response.use(
 
       originalRequest._retry = true;
 
+      const refreshToken = localStorage.getItem(REFRESH_KEY);
+      if (!refreshToken) {
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+        return Promise.reject(error);
+      }
+
       try {
-        await axios.post(
+        const { data } = await axios.post(
           `${API_URL}/auth/token/refresh/`,
-          {},
-          { withCredentials: true }
+          { refresh: refreshToken },
         );
+
+        localStorage.setItem(ACCESS_KEY, data.access);
+        originalRequest.headers.Authorization = `Bearer ${data.access}`;
 
         return axiosInstance(originalRequest);
       } catch {
+        localStorage.removeItem(ACCESS_KEY);
+        localStorage.removeItem(REFRESH_KEY);
         window.dispatchEvent(new CustomEvent('auth:logout'));
         return Promise.reject(error);
       }
@@ -45,5 +69,7 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export { ACCESS_KEY, REFRESH_KEY };
 
 export default axiosInstance;
