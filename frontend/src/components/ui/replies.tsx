@@ -551,13 +551,13 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                         ) : (
                                             <Like />
                                         )}
-                                        <span className={`text-sm ${postIsLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>
+                                        <span className={`text-sm ${postIsLiked ? 'text-red-500' : 'text-muted-foreground'} ml-1`}>
                                             {postLikeCount}
                                         </span>
                                     </button>
                                     <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                         <ReplyIcon />
-                                        <span className="text-sm m-1 text-muted-foreground">
+                                        <span className="text-sm ml-1 text-muted-foreground">
                                             {replyCount}
                                         </span>
                                     </button>
@@ -570,7 +570,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                     </button>
                                     <button onClick={handlePostShare} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                         <Share />
-                                        <span className="text-sm m-1 text-muted-foreground">
+                                        <span className="text-sm ml-1 text-muted-foreground">
                                             {postShareCount}
                                         </span>
                                     </button>

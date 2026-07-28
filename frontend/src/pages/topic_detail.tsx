@@ -505,15 +505,15 @@ export function TopicDetail() {
                                     <div className="p-7 pt-2 flex flex-row gap-4 items-center">
                                         <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                             {isLiked ? <Liked fillColor="#ef4444" /> : <Like />}
-                                            <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>{likeCount}</span>
+                                            <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} ml-1`}>{likeCount}</span>
                                         </button>
                                         <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                             <ReplyIcon />
-                                            <span className="text-sm m-1 text-muted-foreground">{replies.length}</span>
+                                            <span className="text-sm ml-1 text-muted-foreground">{replies.length}</span>
                                         </button>
                                         <button onClick={() => setIsShareModalOpen(true)} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                             <Share />
-                                            <span className="text-sm m-1 text-muted-foreground">{shareCount}</span>
+                                            <span className="text-sm ml-1 text-muted-foreground">{shareCount}</span>
                                         </button>
                                     </div>
 

@@ -191,13 +191,13 @@ export function Post({ topic, onDelete }: PostProps) {
                         ) : (
                             <Like />
                         )}
-                        <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>
+                        <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} ml-1`}>
                             {likeCount}
                         </span>
                     </button>
                     <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={(e) => { e.stopPropagation(); setIsRepliesOpen(true); document.body.style.overflow = 'hidden'; }}>
                         <Reply />
-                        <span className={`text-sm m-1 text-muted-foreground`}>
+                        <span className={`text-sm ml-1 text-muted-foreground`}>
                             {topic.reply_count ?? topic.replies?.length ?? 0}
                         </span>
                     </button>
@@ -206,7 +206,7 @@ export function Post({ topic, onDelete }: PostProps) {
                     )}
                     <button onClick={(e) => { e.stopPropagation(); setIsShareModalOpen(true); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                         <Share />
-                        <span className={`text-sm m-1 text-muted-foreground`}>
+                        <span className={`text-sm ml-1 text-muted-foreground`}>
                             {shareCount}
                         </span>
                     </button>
