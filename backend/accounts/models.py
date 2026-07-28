@@ -7,6 +7,7 @@ from django.utils import timezone
 class User(AbstractUser):
     bio = models.TextField(max_length=500, blank=True)
     avatar = models.URLField(max_length=500, blank=True)
+    banner = models.URLField(max_length=500, blank=True)
     last_seen = models.DateTimeField(null=True, blank=True)
 
     class Meta:

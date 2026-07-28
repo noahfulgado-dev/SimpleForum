@@ -118,6 +118,7 @@ class CachedProfileMixin:
             'username': user.username,
             'bio': user.bio,
             'avatar': user.avatar,
+            'banner': user.banner,
             **cached,
             'is_following': (
                 user.followers.filter(follower=request.user).exists()
@@ -224,6 +225,29 @@ def upload_avatar(request):
     user.avatar = url
     user.save(update_fields=['avatar'])
     return Response({'avatar': url})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def upload_banner(request):
+    file = request.FILES.get('banner')
+    if not file:
+        return Response({'error': 'No image file provided.'}, status=400)
+
+    if file.size > 5 * 1024 * 1024:
+        return Response({'error': 'Image must be under 5MB.'}, status=400)
+
+    from accounts.utils import upload_to_imgbb, ImgBBUploadError
+
+    try:
+        url = upload_to_imgbb(file)
+    except ImgBBUploadError as e:
+        return Response({'error': str(e)}, status=e.status_code)
+
+    user = request.user
+    user.banner = url
+    user.save(update_fields=['banner'])
+    return Response({'banner': url})
 
 
 @api_view(['POST'])

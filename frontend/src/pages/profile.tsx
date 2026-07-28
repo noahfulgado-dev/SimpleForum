@@ -4,7 +4,6 @@ import { Navbar } from '@/components/ui/navbar';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/context/AuthContext';
 import { usersAPI } from '@/services/api';
 import defaultAvatar from './../assets/image/default_avatar.jpg';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
@@ -16,10 +15,11 @@ import { ProfileStats } from '@/components/ui/profile_stats';
 export function Profile() {
   document.title = "Profile | SimpleForum";
 
-  const { user: authUser, refreshUser } = useAuth();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarFileRef = useRef<HTMLInputElement>(null);
+  const bannerFileRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -28,10 +28,6 @@ export function Profile() {
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState('');
-  const [firstNameDraft, setFirstNameDraft] = useState('');
-  const [lastNameDraft, setLastNameDraft] = useState('');
-  const [editingFirstName, setEditingFirstName] = useState(false);
-  const [editingLastName, setEditingLastName] = useState(false);
   const [bioDraft, setBioDraft] = useState('');
   const [editingBio, setEditingBio] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'replies'>('posts');
@@ -39,25 +35,19 @@ export function Profile() {
   useEffect(() => {
     if (profile) {
       setUsernameDraft(profile.username);
-      setFirstNameDraft(profile.first_name ?? '');
-      setLastNameDraft(profile.last_name ?? '');
       setBioDraft(profile.bio ?? '');
     }
   }, [profile]);
 
   const profileMutation = useMutation({
-    mutationFn: (data: { username?: string; first_name?: string; last_name?: string; bio?: string }) => usersAPI.updateProfile(data).then(r => r.data),
+    mutationFn: (data: { username?: string; bio?: string }) => usersAPI.updateProfile(data).then(r => r.data),
     onSuccess: (data) => {
       queryClient.setQueryData(['profile'], data);
       setUsernameDraft(data.username);
-      setFirstNameDraft(data.first_name ?? '');
-      setLastNameDraft(data.last_name ?? '');
       setBioDraft(data.bio ?? '');
     },
     onError: () => {
       setUsernameDraft(profile?.username ?? '');
-      setFirstNameDraft(profile?.first_name ?? '');
-      setLastNameDraft(profile?.last_name ?? '');
       setBioDraft(profile?.bio ?? '');
     },
   });
@@ -69,17 +59,25 @@ export function Profile() {
     onSuccess: (data) => {
       queryClient.setQueryData(['profile'], (old: any) => old ? { ...old, avatar: data.avatar } : old);
       setAvatarPreview(null);
-      refreshUser?.();
+    },
+  });
+
+  const bannerMutation = useMutation({
+    mutationFn: (file: File) => usersAPI.uploadBanner(file).then(r => r.data),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['profile'], (old: any) => old ? { ...old, banner: data.banner } : old);
+      setBannerPreview(null);
     },
   });
 
   const uploading = avatarMutation.isPending;
+  const bannerUploading = bannerMutation.isPending;
 
   const handleAvatarClick = () => {
-    fileInputRef.current?.click();
+    avatarFileRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
@@ -88,6 +86,21 @@ export function Profile() {
     }
     setAvatarPreview(URL.createObjectURL(file));
     avatarMutation.mutate(file);
+  };
+
+  const handleBannerClick = () => {
+    bannerFileRef.current?.click();
+  };
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5MB.');
+      return;
+    }
+    setBannerPreview(URL.createObjectURL(file));
+    bannerMutation.mutate(file);
   };
 
   const handleSaveUsername = () => {
@@ -102,26 +115,6 @@ export function Profile() {
   const handleCancelUsername = () => {
     setUsernameDraft(profile?.username ?? '');
     setEditingUsername(false);
-  };
-
-  const handleSaveFirstName = () => {
-    profileMutation.mutate({ first_name: firstNameDraft.trim() });
-    setEditingFirstName(false);
-  };
-
-  const handleCancelFirstName = () => {
-    setFirstNameDraft(profile?.first_name ?? '');
-    setEditingFirstName(false);
-  };
-
-  const handleSaveLastName = () => {
-    profileMutation.mutate({ last_name: lastNameDraft.trim() });
-    setEditingLastName(false);
-  };
-
-  const handleCancelLastName = () => {
-    setLastNameDraft(profile?.last_name ?? '');
-    setEditingLastName(false);
   };
 
   const handleSaveBio = () => {
@@ -179,15 +172,54 @@ export function Profile() {
         <div className="flex gap-5 justify-center min-h-full">
           <div className="hidden xl:block w-[300px] shrink-0" />
           <div className="flex-1 max-w-[900px] min-w-0 mt-8 space-y-6">
-            <Card className="bg-card">
+            <Card className="bg-card overflow-hidden pt-0">
+              <div className="relative h-[200px] bg-muted rounded-t-xl overflow-hidden">
+                {(bannerPreview || profile.banner) ? (
+                  <img
+                    src={bannerPreview || profile.banner}
+                    alt="Banner"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                    No banner
+                  </div>
+                )}
+                <input
+                  ref={bannerFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBannerChange}
+                  disabled={bannerUploading}
+                />
+                <button
+                  onClick={handleBannerClick}
+                  disabled={bannerUploading}
+                  className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/40 transition-colors cursor-pointer group"
+                >
+                  {bannerUploading ? (
+                    <svg className="w-8 h-8 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               <CardHeader>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 -mt-12 relative z-10">
                   <ProfileAvatar
                     src={avatarPreview || profile.avatar || defaultAvatar}
                     uploading={uploading}
-                    fileInputRef={fileInputRef}
+                    fileInputRef={avatarFileRef}
                     onClick={handleAvatarClick}
-                    onChange={handleFileChange}
+                    onChange={handleAvatarChange}
                   />
                   <ProfileInfo
                     username={profile.username}

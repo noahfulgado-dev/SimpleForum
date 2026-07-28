@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SidebarLeft } from "@/components/ui/sidebar_left"
 import { Navbar } from "@/components/ui/navbar"
@@ -35,43 +36,50 @@ export function Settings() {
     }
   }, [profile])
 
-  // Profile update mutation
   const profileMutation = useMutation({
     mutationFn: (data: { first_name?: string; last_name?: string }) =>
       usersAPI.updateProfile(data).then(r => r.data),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.setQueryData(['profile'], data)
-      // Update drafts with new values
-      setFirstNameDraft(data.first_name ?? '')
-      setLastNameDraft(data.last_name ?? '')
+      if (variables.first_name !== undefined) {
+        setFirstNameDraft(data.first_name ?? '')
+        setEditingFirstName(false)
+        toast.success('First name updated')
+      }
+      if (variables.last_name !== undefined) {
+        setLastNameDraft(data.last_name ?? '')
+        setEditingLastName(false)
+        toast.success('Last name updated')
+      }
     },
-    onError: () => {
-      // Revert to original values on error
-      setFirstNameDraft(profile?.first_name ?? '')
-      setLastNameDraft(profile?.last_name ?? '')
+    onError: (_err, variables) => {
+      if (variables.first_name !== undefined) {
+        setFirstNameDraft(profile?.first_name ?? '')
+        toast.error('Failed to update first name')
+      }
+      if (variables.last_name !== undefined) {
+        setLastNameDraft(profile?.last_name ?? '')
+        toast.error('Failed to update last name')
+      }
     },
   })
 
   const saving = profileMutation.isPending
 
-  // Handle save first name
   const handleSaveFirstName = () => {
     if (!firstNameDraft.trim() || firstNameDraft === profile?.first_name) {
       setEditingFirstName(false)
       return
     }
     profileMutation.mutate({ first_name: firstNameDraft.trim() })
-    setEditingFirstName(false)
   }
 
-  // Handle save last name
   const handleSaveLastName = () => {
     if (!lastNameDraft.trim() || lastNameDraft === profile?.last_name) {
       setEditingLastName(false)
       return
     }
     profileMutation.mutate({ last_name: lastNameDraft.trim() })
-    setEditingLastName(false)
   }
 
   // Handle cancel first name
