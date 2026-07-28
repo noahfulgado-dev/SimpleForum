@@ -78,7 +78,7 @@ export function Post({ topic, onDelete }: PostProps) {
 
     return (
         <>
-            <div className="rounded-[10px] p-7 flex flex-row gap-5 bg-[linear-gradient(135deg,var(--accent)/0.2_0%,transparent_60%)] bg-card border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted transition-all duration-300 ease-in-out">
+            <div className="rounded-[10px] p-7 flex flex-row gap-5 bg-[linear-gradient(135deg,var(--accent)/0.2_0%,transparent_60%)] bg-card border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted transition-all duration-300 ease-in-out max-w-3xl self-center w-full">
                 <div className="w-[100%] flex flex-col gap-2">
                     <div className="flex flex-row gap-2 items-center">
                         <div
