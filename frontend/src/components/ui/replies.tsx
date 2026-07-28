@@ -535,17 +535,11 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 </div>
 
                                 {topic.image && (
-                                    <div className="relative w-full overflow-hidden rounded-[5px]">
-                                        <img
-                                            src={topic.image}
-                                            alt=""
-                                            className="absolute inset-0 w-full h-full scale-110 blur-xl opacity-50 object-cover"
-                                            aria-hidden="true"
-                                        />
+                                    <div className="w-full overflow-hidden rounded-[5px] flex justify-center">
                                         <img
                                             src={topic.image}
                                             alt="Post image"
-                                            className="relative max-h-96 max-w-full object-contain mx-auto rounded-[5px]"
+                                            className="max-h-96 max-w-full object-contain rounded-[5px]"
                                         />
                                     </div>
                                 )}
