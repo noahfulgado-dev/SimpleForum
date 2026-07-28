@@ -8,7 +8,6 @@ import { usersAPI } from '@/services/api';
 import defaultAvatar from './../assets/image/default_avatar.jpg';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
 import SidebarLeft from '@/components/ui/sidebar_left';
-import { Post } from '@/components/ui/post';
 import { ProfileAvatar } from '@/components/ui/profile_avatar';
 import { ProfileInfo } from '@/components/ui/profile_info';
 import { ProfileStats } from '@/components/ui/profile_stats';
@@ -292,13 +291,28 @@ export function Profile() {
                   Replies {profile.reply_count != null && `(${profile.reply_count})`}
                 </button>
               </div>
-              <div>
+              <div className="p-4">
                 {activeTab === 'posts' && (
                   <>
                     {profile.topics && profile.topics.length > 0 ? (
-                      <div className="flex flex-col items-center">
+                      <div className="space-y-3">
                         {profile.topics.map(topic => (
-                          <Post key={topic.id} topic={topic} />
+                          <div
+                            key={topic.id}
+                            onClick={() => window.location.href = `/topic/${topic.id}`}
+                            className="p-3 border border-border rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
+                          >
+                            <div className="font-medium text-foreground text-sm">{topic.title}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{topic.description}</div>
+                            {topic.image && (
+                              <img src={topic.image} alt="" className="w-full h-24 object-cover rounded-[4px] mt-1" />
+                            )}
+                            <div className="flex items-center gap-2 mt-1.5 text-[0.65rem] text-muted-foreground">
+                              <span>{topic.like_count ?? 0} likes</span>
+                              <span>•</span>
+                              <span>{topic.reply_count ?? 0} replies</span>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -309,7 +323,7 @@ export function Profile() {
                 {activeTab === 'replies' && (
                   <>
                     {profile.replies && profile.replies.length > 0 ? (
-                      <div className="space-y-3 p-4">
+                      <div className="space-y-3">
                         {profile.replies.map(reply => (
                           <div
                             key={reply.id}
