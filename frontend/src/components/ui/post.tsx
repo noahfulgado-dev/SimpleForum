@@ -121,11 +121,11 @@ export function Post({ topic, onDelete }: PostProps) {
                         })()}
                     </div>
                     {topic.image && (
-                        <div className="w-full overflow-hidden rounded-[5px] mt-2 flex justify-center">
+                        <div className="w-full overflow-hidden rounded-[5px] mt-2">
                             <img
                                 src={topic.image}
                                 alt="Post image"
-                                className="max-h-96 max-w-full object-contain rounded-[5px]"
+                                className="w-full max-h-96 object-cover rounded-[5px]"
                             />
                         </div>
                     )}

@@ -459,11 +459,11 @@ export function TopicDetail() {
                                         </div>
 
                                         {topic.image && (
-                                            <div className="w-full overflow-hidden rounded-[5px] flex justify-center">
+                                            <div className="w-full overflow-hidden rounded-[5px]">
                                                 <img
                                                     src={topic.image}
                                                     alt="Post image"
-                                                    className="max-h-96 max-w-full object-contain rounded-[5px]"
+                                                    className="w-full max-h-96 object-cover rounded-[5px]"
                                                 />
                                             </div>
                                         )}
