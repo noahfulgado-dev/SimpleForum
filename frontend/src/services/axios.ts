@@ -19,8 +19,13 @@ const axiosInstance: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
+const AUTH_PATHS = ['/auth/login/', '/auth/registration/', '/auth/token/refresh/', '/auth/user/', '/auth/logout/', '/auth/password/reset/', '/auth/password/reset/confirm/'];
+
 axiosInstance.interceptors.request.use(
   (config) => {
+    if (config.url && AUTH_PATHS.some(path => config.url?.includes(path))) {
+      return config;
+    }
     const access = localStorage.getItem(ACCESS_KEY);
     if (access) {
       config.headers.Authorization = `Bearer ${access}`;
