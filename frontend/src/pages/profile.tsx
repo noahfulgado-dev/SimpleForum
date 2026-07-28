@@ -132,7 +132,7 @@ export function Profile() {
         <div className="flex-1 overflow-y-auto px-0 md:px-5 pb-0 md:pb-5">
           <div className="flex gap-5 justify-center min-h-full">
             <div className="hidden xl:block w-[300px] shrink-0" />
-            <div className="flex-1 max-w-[900px] min-w-0 mt-8">
+            <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8">
               <ProfileSkeleton />
             </div>
             <div className="hidden xl:block w-[300px] shrink-0" />
@@ -152,7 +152,7 @@ export function Profile() {
         <div className="flex-1 overflow-y-auto px-0 md:px-5 pb-0 md:pb-5">
           <div className="flex gap-5 justify-center min-h-full">
             <div className="hidden xl:block w-[300px] shrink-0" />
-            <div className="flex-1 max-w-[900px] min-w-0 mt-8 flex justify-center items-center">
+            <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8 flex justify-center items-center">
               <p className="text-muted-foreground">Could not load profile.</p>
             </div>
             <div className="hidden xl:block w-[300px] shrink-0" />
@@ -171,7 +171,7 @@ export function Profile() {
       <div className="flex-1 overflow-y-auto px-0 md:px-5 pb-0 md:pb-5">
         <div className="flex gap-5 justify-center min-h-full">
           <div className="hidden xl:block w-[300px] shrink-0" />
-          <div className="flex-1 max-w-[900px] min-w-0 mt-8 space-y-6">
+          <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8 space-y-6">
             <Card className="bg-card overflow-hidden pt-0 rounded-none md:rounded-xl border-0 md:border">
               <div className="relative h-[200px] bg-muted rounded-none xl:rounded-t-xl overflow-hidden">
                 {(bannerPreview || profile.banner) ? (
