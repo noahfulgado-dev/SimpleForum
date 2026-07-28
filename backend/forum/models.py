@@ -6,6 +6,7 @@ from django.utils import timezone
 class Topic(models.Model):
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=500)
+    image = models.URLField(max_length=500, blank=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
