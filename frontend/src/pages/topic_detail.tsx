@@ -286,23 +286,8 @@ export function TopicDetail() {
                                                             >
                                                                 No
                                                             </button>
-                                    </div>
-                                    <div className="flex flex-row gap-3 items-start">
-                                        <button onClick={handleBookmark} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                            {isBookmarked ? <Bookmarked fillColor="#eab308" /> : <Bookmark />}
-                                        </button>
-                                        <div className="relative">
-                                            <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setIsPostMenuOpen(!isPostMenuOpen)}>
-                                                <PostMenu />
-                                            </button>
-                                            {isPostMenuOpen && (
-                                                <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
-                                                    <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                                        </div>
+                                                    </div>
                                                 ) : (
                                                     <button
                                                         className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
@@ -434,61 +419,43 @@ export function TopicDetail() {
                             {isLoading && <TopicDetailSkeleton />}
 
                             {topic && (
-                                <div className="border border-border rounded-[10px] p-0 bg-card">
-                                    <div className="p-7 pb-2 flex flex-row gap-5">
-                                        <div className="flex-1 min-w-0 flex flex-col gap-2">
-                                            <div className="flex flex-row gap-2">
-                                                <div
-                                                    className="relative group w-10 h-10 flex items-center justify-center shrink-0 cursor-pointer"
+                                <div className="border border-border rounded-[10px] p-7 flex flex-row gap-5 bg-card">
+                                    <div className="w-full flex flex-col gap-2">
+                                        <div className="flex flex-row gap-2">
+                                            <div
+                                                className="relative group w-10 h-10 flex items-center justify-center shrink-0 cursor-pointer"
+                                                onClick={() => navigate(`/profile/${topic.user.id}`)}
+                                            >
+                                                <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full" />
+                                            </div>
+                                            <div className="flex flex-row items-center gap-1.5">
+                                                <span
+                                                    className="text-sm font-medium text-foreground font-geist cursor-pointer hover:underline"
                                                     onClick={() => navigate(`/profile/${topic.user.id}`)}
                                                 >
-                                                    <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full" />
-                                                </div>
-                                                <div className="flex flex-row items-center gap-1.5">
-                                                    <span
-                                                        className="text-sm font-medium text-foreground font-geist cursor-pointer hover:underline"
-                                                        onClick={() => navigate(`/profile/${topic.user.id}`)}
-                                                    >
-                                                        {topic.user.username}
-                                                    </span>
-                                                    <span className="text-xs text-muted-foreground">•</span>
-                                                    <span className="text-sm font-light text-muted-foreground font-geist">
-                                                        {timeAgo(topic.created)}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="font-extralight tertiary-font">
-                                                <div className="font-semibold text-[1.2rem]">{topic.title}</div>
-                                                {(() => {
-                                                    const parsed = parseSharedDescription(topic.description);
-                                                    if (parsed) {
-                                                        return (
-                                                            <>
-                                                                {parsed.text && <div>{parsed.text}</div>}
-                                                                <SharedQuoteCard sharedFrom={parsed.sharedFrom} />
-                                                            </>
-                                                        );
-                                                    }
-                                                    return topic.description;
-                                                })()}
+                                                    {topic.user.username}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground">•</span>
+                                                <span className="text-sm font-light text-muted-foreground font-geist">
+                                                    {timeAgo(topic.created)}
+                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-row gap-3 items-start">
-                                            <button onClick={handleBookmark} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                                {isBookmarked ? <Bookmarked fillColor="#eab308" /> : <Bookmark />}
-                                            </button>
-                                            <div className="relative">
-                                                <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setIsPostMenuOpen(!isPostMenuOpen)}>
-                                                    <PostMenu />
-                                                </button>
-                                                {isPostMenuOpen && (
-                                                    <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
-                                                        <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
-                                                    </div>
-                                                )}
-                                            </div>
+                                        <div className="font-extralight tertiary-font">
+                                            <div className="font-semibold text-[1.2rem]">{topic.title}</div>
+                                            {(() => {
+                                                const parsed = parseSharedDescription(topic.description);
+                                                if (parsed) {
+                                                    return (
+                                                        <>
+                                                            {parsed.text && <div>{parsed.text}</div>}
+                                                            <SharedQuoteCard sharedFrom={parsed.sharedFrom} />
+                                                        </>
+                                                    );
+                                                }
+                                                return topic.description;
+                                            })()}
                                         </div>
 
                                         {topic.image && (
@@ -502,12 +469,13 @@ export function TopicDetail() {
                                                 <img
                                                     src={topic.image}
                                                     alt="Post image"
-                                                    className="relative w-full max-h-96 object-contain mx-auto rounded-[5px]"
+                                                    className="relative w-full object-cover"
                                                 />
                                             </div>
                                         )}
 
                                         <div className="flex flex-row gap-4 mt-2">
+                                            <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                                 {isLiked ? <Liked fillColor="#ef4444" /> : <Like />}
                                                 <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>{likeCount}</span>
                                             </button>
@@ -526,34 +494,21 @@ export function TopicDetail() {
                                         )}
                                     </div>
 
-                                    {topic.image && (
-                                        <div className="w-full overflow-hidden my-2">
-                                            <img
-                                                src={topic.image}
-                                                alt="Post image"
-                                                className="w-full max-h-96 object-cover"
-                                            />
+                                    <div className="flex flex-row gap-3 items-start">
+                                        <button onClick={handleBookmark} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                            {isBookmarked ? <Bookmarked fillColor="#eab308" /> : <Bookmark />}
+                                        </button>
+                                        <div className="relative">
+                                            <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setIsPostMenuOpen(!isPostMenuOpen)}>
+                                                <PostMenu />
+                                            </button>
+                                            {isPostMenuOpen && (
+                                                <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                                                    <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-
-                                    <div className="p-7 pt-2 flex flex-row gap-4 items-center">
-                                        <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                            {isLiked ? <Liked fillColor="#ef4444" /> : <Like />}
-                                            <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} ml-1`}>{likeCount}</span>
-                                        </button>
-                                        <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                            <ReplyIcon />
-                                            <span className="text-sm ml-1 text-muted-foreground">{replies.length}</span>
-                                        </button>
-                                        <button onClick={() => setIsShareModalOpen(true)} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
-                                            <Share />
-                                            <span className="text-sm ml-1 text-muted-foreground">{shareCount}</span>
-                                        </button>
                                     </div>
-
-                                    {isShareModalOpen && (
-                                        <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} />
-                                    )}
                                 </div>
                             )}
 

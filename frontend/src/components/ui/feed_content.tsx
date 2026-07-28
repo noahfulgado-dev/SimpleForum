@@ -76,7 +76,7 @@ export function FeedContent({ search = '' }: FeedContentProps) {
         <>
             <div className="rounded-[10px] p-5 flex flex-col gap-5 pl-10 pr-10 items-center">
                 <div className="flex flex-col gap-5 w-full">
-                    <div className="w-full flex justify-between items-center ">
+                    <div className="w-full flex justify-between items-center max-w-[700px] mx-auto">
                         <h1 className="text-[clamp(0.5rem,5vw,2.5rem)] font-semibold leading-none text-foreground font-geist text-left">
                             What's up, {user?.username}! 👋
                         </h1>
