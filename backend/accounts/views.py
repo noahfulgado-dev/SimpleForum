@@ -103,7 +103,7 @@ from interactions.models import Likes
 User = get_user_model()
 
 
-class CachedProfileMixin:
+class CachedProfileMixin(GenericAPIView):
     def retrieve(self, request, *args, **kwargs):
         user = self.get_object()
         cache_key = f"profile:{user.id}"

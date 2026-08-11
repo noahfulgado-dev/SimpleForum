@@ -22,7 +22,7 @@ class CookieJWTAuthentication(JWTAuthentication):
 
         return self.get_user(validated_token), validated_token
 
-    def get_header(self, request):
+    def get_header(self, request):  # type: ignore[reportIncompatibleMethodOverride]
         header = super().get_header(request)
         if header is not None:
             return header

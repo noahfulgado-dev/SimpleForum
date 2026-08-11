@@ -1,0 +1,7 @@
+{
+  "venvPath": "backend",
+  "venv": ".venv",
+  "useLibraryCodeForTypes": false,
+  "typeCheckingMode": "basic",
+  "exclude": ["**/node_modules", "**/__pycache__", "**/.*", "**/migrations"]
+}

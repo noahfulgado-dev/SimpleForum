@@ -229,7 +229,7 @@ class NotificationAPITest(TestCase):
         self.user = User.objects.create_user(username='user', password='pass')
         self.other = User.objects.create_user(username='other', password='pass')
         refresh = RefreshToken.for_user(self.user)
-        self.access_token = str(refresh.access_token)
+        self.access_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
         self.topic = Topic.objects.create(
             title='Topic', description='Desc', user=self.user
         )

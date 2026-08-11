@@ -34,7 +34,7 @@ class LikeAPITest(TestCase):
             content='Test reply'
         )
         refresh = RefreshToken.for_user(self.user)
-        self.access_token = str(refresh.access_token)
+        self.access_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
 
     def test_like_topic(self):
         """Test liking a topic."""
@@ -123,7 +123,7 @@ class BookmarkAPITest(TestCase):
             content='Test reply'
         )
         refresh = RefreshToken.for_user(self.user)
-        self.access_token = str(refresh.access_token)
+        self.access_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
         self.topic_type = ContentType.objects.get_for_model(Topic)
         self.reply_type = ContentType.objects.get_for_model(Reply)
 
@@ -267,7 +267,7 @@ class ShareAPITest(TestCase):
             content='Test reply'
         )
         refresh = RefreshToken.for_user(self.user)
-        self.access_token = str(refresh.access_token)
+        self.access_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
         self.topic_type = ContentType.objects.get_for_model(Topic)
         self.reply_type = ContentType.objects.get_for_model(Reply)
 
