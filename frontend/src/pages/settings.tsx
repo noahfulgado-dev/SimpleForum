@@ -108,7 +108,7 @@ export function Settings() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+      <div className="h-screen flex flex-col bg-background bg-grid">
         <div className="p-5 pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
@@ -117,7 +117,7 @@ export function Settings() {
           <div className="flex gap-5 justify-center min-h-full">
             <div className="hidden xl:block w-[300px] shrink-0" />
             <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8">
-              <Card className="bg-card">
+              <Card className="bg-card shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-3xl text-foreground primary-font">Settings</CardTitle>
                 </CardHeader>
@@ -135,7 +135,7 @@ export function Settings() {
 
   if (!profile) {
     return (
-      <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+      <div className="h-screen flex flex-col bg-background bg-grid">
         <div className="p-5 pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
@@ -154,7 +154,7 @@ export function Settings() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+    <div className="h-screen flex flex-col bg-background bg-grid">
       <div className="p-5 pb-0 shrink-0 relative z-50">
         <Navbar />
       </div>
@@ -163,11 +163,12 @@ export function Settings() {
         <div className="flex gap-5 justify-center min-h-full">
           <div className="hidden xl:block w-[300px] shrink-0" />
           <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8">
-            <Card className="bg-card">
+            <Card className="bg-card shadow-sm">
               <CardHeader>
                 <CardTitle className="text-3xl text-foreground primary-font">Settings</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="px-6">
+                <div className="divide-y divide-border [&>*]:py-5">
                 {/* Theme toggle */}
                 <div className="flex items-center justify-between">
                   <div>
@@ -262,6 +263,7 @@ export function Settings() {
                       </button>
                     </div>
                   )}
+                </div>
                 </div>
               </CardContent>
             </Card>

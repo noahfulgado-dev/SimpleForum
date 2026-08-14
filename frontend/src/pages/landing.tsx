@@ -1,21 +1,47 @@
-import { Button } from "../components/ui/button";
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react'
+import Lenis from 'lenis'
+import { MotionConfig } from 'motion/react'
+import { Hero } from '../components/landing/Hero'
+import { Marquee } from '../components/landing/Marquee'
+import { Features } from '../components/landing/Features'
+import { Showcase } from '../components/landing/Showcase'
+import { Stats } from '../components/landing/Stats'
+import { Cta } from '../components/landing/Cta'
+import { Footer } from '../components/landing/Footer'
+import { NoiseOverlay } from '../components/decor'
 
 export function Landing() {
-  document.title = "Welcome to SimpleForum";
+  document.title = "Welcome to HuniSpace";
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const lenis = new Lenis({ lerp: 0.08 })
+    let rafId = 0
+    const raf = (time: number) => {
+      lenis.raf(time)
+      rafId = requestAnimationFrame(raf)
+    }
+    rafId = requestAnimationFrame(raf)
+    return () => {
+      cancelAnimationFrame(rafId)
+      lenis.destroy()
+    }
+  }, [])
 
   return (
-    <>
-      <div className="absolute inset-0 -z-10 h-full w-full bg-[#fafdf6] bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center primary-font">
-        <div className="w-dvw h-1/2 flex items-center justify-center flex-col gap-5">
-          <h1 className="text-[clamp(0.5rem,6vw,3rem)] leading-none text-[#2d2a32]">
-            Welcome to<br></br><span className="text-[clamp(2.5rem,6vw,6rem)] font-semibold">HuniSpace</span>
-          </h1>
-          <Link to="/login">
-            <Button className="cursor-pointer bg-[#2d2a32] text-[#fafdf6] hover:bg-[#fafdf6] hover:text-[#2d2a32] ease-in-out primary-font">Get Started</Button>
-          </Link>
-        </div>
-      </div>
-    </>
-  );
+    <MotionConfig reducedMotion="user">
+      <NoiseOverlay />
+      <main className="bg-background text-foreground">
+        <Hero />
+        <Marquee />
+        <Features />
+        <Showcase />
+        <Stats />
+        <Cta />
+        <Footer />
+      </main>
+    </MotionConfig>
+  )
 }
+
+export default Landing

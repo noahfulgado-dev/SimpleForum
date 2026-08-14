@@ -254,7 +254,7 @@ export function TopicDetail() {
                                     <PostMenu />
                                 </button>
                                 {isMenuOpen && (
-                                    <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                                    <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-xl p-2 flex flex-col gap-2 z-50 shadow-xl shadow-black/10">
                                         {isOwnReply ? (
                                             <>
                                                 <button
@@ -400,7 +400,7 @@ export function TopicDetail() {
 
     return (
         <>
-        <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+        <div className="h-screen flex flex-col bg-background bg-grid">
             <div className="p-5 pb-0 shrink-0 relative z-50">
                 <Navbar />
             </div>
@@ -503,7 +503,7 @@ export function TopicDetail() {
                                                 <PostMenu />
                                             </button>
                                             {isPostMenuOpen && (
-                                                <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                                                <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-xl p-2 flex flex-col gap-2 z-50 shadow-xl shadow-black/10">
                                                     <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
                                                 </div>
                                             )}

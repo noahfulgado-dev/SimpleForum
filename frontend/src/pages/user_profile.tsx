@@ -31,6 +31,7 @@ export function UserProfile() {
         mutationFn: () => usersAPI.toggleFollow(userId),
         onSuccess: (res) => {
             const data = res.data;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             queryClient.setQueryData(['user', userId], (old: any) => {
                 if (!old) return old;
                 return {
@@ -51,7 +52,7 @@ export function UserProfile() {
         : "Profile | SimpleForum";
 
     return (
-        <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+        <div className="h-screen flex flex-col bg-background bg-grid">
             <div className="xl:block p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
                 <Navbar />
             </div>
@@ -81,8 +82,8 @@ export function UserProfile() {
                                         </button>
                                     </div>
                                 )}
-                                <Card className="bg-card overflow-hidden pt-0">
-                                    <div className="h-[200px] rounded-t-xl overflow-hidden bg-muted flex items-center justify-center">
+                                <Card className="bg-card overflow-hidden pt-0 shadow-sm">
+                                    <div className="h-[200px] rounded-t-xl overflow-hidden bg-gradient-to-br from-primary/25 via-background to-muted flex items-center justify-center">
                                         {profile.banner ? (
                                             <img src={profile.banner} alt="Banner" className="w-full h-full object-cover" />
                                         ) : (
@@ -92,7 +93,7 @@ export function UserProfile() {
                                     <CardHeader>
                                         <div className="flex items-center gap-6 -mt-12 relative z-10">
                                             <div className="relative group w-24 h-24 flex items-center justify-center shrink-0">
-                                                <img src={profile.avatar || defaultAvatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-2 border-border" />
+                                                <img src={profile.avatar || defaultAvatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover ring-4 ring-card border border-border" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-3">
@@ -131,17 +132,17 @@ export function UserProfile() {
                                     </CardContent>
                                 </Card>
 
-                                <div className="bg-card border border-border rounded-[10px] overflow-hidden">
+                                <div className="bg-card border border-border rounded-[10px] overflow-hidden shadow-sm">
                                     <div className="flex border-b border-border">
                                         <button
                                             onClick={() => setActiveTab('posts')}
-                                            className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'posts' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'posts' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             Posts {profile.topic_count != null && `(${profile.topic_count})`}
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('replies')}
-                                            className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'replies' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'replies' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
                                             Replies {profile.reply_count != null && `(${profile.reply_count})`}
                                         </button>

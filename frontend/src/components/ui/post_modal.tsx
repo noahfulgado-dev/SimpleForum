@@ -81,10 +81,10 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
     return (
         <>
             <div
-                className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
                 onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             >
-                <div className="w-[40rem] border border-border rounded-[10px] p-5 flex flex-row gap-5 bg-card">
+                <div className="w-[40rem] border border-border rounded-2xl shadow-2xl shadow-black/20 p-5 flex flex-row gap-5 bg-card">
                     <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
                         <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-border rounded-full" />
                         <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
@@ -93,7 +93,8 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
                         <div className="flex justify-end">
                             <button
                                 onClick={onClose}
-                                className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-xl leading-none cursor-pointer"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200 text-lg leading-none cursor-pointer"
+                                aria-label="Close"
                             >
                                 ✕
                             </button>

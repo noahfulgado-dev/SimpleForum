@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { House, Bookmark, User, Plus, Settings } from 'lucide-react';
+import { House, Bookmark, User, Plus, Settings, Search } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Huni } from './huni';
 import { Button } from './button';
@@ -59,17 +59,26 @@ export function Navbar() {
                     </Link>
                 </div>
                 <div className="search-holder w-[33.3%] flex items-center justify-center">
-                    <form onSubmit={handleSearch} className="border w-full border-border rounded-[10px] p-2 flex items-center justify-between gap-2">
+                    <form onSubmit={handleSearch} className="w-full flex items-center gap-2 rounded-[10px] border border-border bg-muted/40 px-3 py-2 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
+                        <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                         <input
                             type="text"
                             placeholder="Search..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="bg-background focus:outline-none w-full text-foreground"
+                            className="bg-transparent focus:outline-none w-full text-foreground text-sm placeholder:text-muted-foreground"
                         />
                     </form>
                 </div>
                 <div className="flex items-center justify-end gap-1 w-[33.3%]">
+                    <Button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="hidden sm:inline-flex items-center gap-1.5 cursor-pointer"
+                        size="sm"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Post</span>
+                    </Button>
                     <Button variant="ghost" size="icon" className="hover:bg-muted">
                         <BellIcon hasUnread={hasUnread} />
                     </Button>
@@ -78,7 +87,7 @@ export function Navbar() {
                         <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
                     </div>
                     {isOpen && (
-                        <div className="absolute top-20 right-5 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                        <div className="absolute top-20 right-5 w-48 bg-card border border-border rounded-xl p-2 flex flex-col gap-2 z-50 shadow-xl shadow-black/10">
                             <Link to="/profile"><button className="w-full text-left p-2 rounded-[5px] text-foreground hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">Profile</button></Link>
                             <div className="border-t border-border" />
                             <button
@@ -102,7 +111,7 @@ export function Navbar() {
                 </div>
             </nav>
 
-            <div className="xl:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card/90 backdrop-blur-md border border-border/50 rounded-full px-6 py-3 flex items-center gap-6 shadow-lg">
+            <div className="xl:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card/90 backdrop-blur-md border border-border/50 rounded-full px-6 py-3 flex items-center gap-6 shadow-xl shadow-black/10">
                 {navItems.slice(0, 1).map((item) => {
                     const isActive = location.pathname === item.path;
                     const Icon = item.icon;

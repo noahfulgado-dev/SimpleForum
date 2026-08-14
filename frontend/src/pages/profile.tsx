@@ -57,6 +57,7 @@ export function Profile() {
   const avatarMutation = useMutation({
     mutationFn: (file: File) => usersAPI.uploadAvatar(file).then(r => r.data),
     onSuccess: (data) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       queryClient.setQueryData(['profile'], (old: any) => old ? { ...old, avatar: data.avatar } : old);
       setAvatarPreview(null);
     },
@@ -65,6 +66,7 @@ export function Profile() {
   const bannerMutation = useMutation({
     mutationFn: (file: File) => usersAPI.uploadBanner(file).then(r => r.data),
     onSuccess: (data) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       queryClient.setQueryData(['profile'], (old: any) => old ? { ...old, banner: data.banner } : old);
       setBannerPreview(null);
     },
@@ -124,7 +126,7 @@ export function Profile() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+      <div className="h-screen flex flex-col bg-background bg-grid">
         <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
@@ -144,7 +146,7 @@ export function Profile() {
 
   if (!profile) {
     return (
-      <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+      <div className="h-screen flex flex-col bg-background bg-grid">
         <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
@@ -163,7 +165,7 @@ export function Profile() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+    <div className="h-screen flex flex-col bg-background bg-grid">
       <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
         <Navbar />
       </div>
@@ -172,7 +174,7 @@ export function Profile() {
         <div className="flex gap-5 justify-center min-h-full">
           <div className="hidden xl:block w-[300px] shrink-0" />
           <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8 space-y-6">
-            <Card className="bg-card overflow-hidden pt-0 rounded-none md:rounded-xl border-0 md:border">
+            <Card className="bg-card overflow-hidden pt-0 rounded-none md:rounded-xl border-0 md:border shadow-sm">
               <div className="relative h-[200px] bg-muted rounded-none xl:rounded-t-xl overflow-hidden">
                 {(bannerPreview || profile.banner) ? (
                   <img
@@ -181,7 +183,7 @@ export function Profile() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                  <div className="w-full h-full bg-gradient-to-br from-primary/25 via-background to-muted flex items-center justify-center text-muted-foreground text-sm">
                     No banner
                   </div>
                 )}
@@ -276,17 +278,17 @@ export function Profile() {
               </CardContent>
             </Card>
 
-            <div className="bg-card border-0 md:border md:border-border rounded-none md:rounded-[10px] overflow-hidden">
+            <div className="bg-card border-0 md:border md:border-border rounded-none md:rounded-[10px] overflow-hidden shadow-sm">
               <div className="flex border-b border-border">
                 <button
                   onClick={() => setActiveTab('posts')}
-                  className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'posts' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'posts' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   Posts {profile.topic_count != null && `(${profile.topic_count})`}
                 </button>
                 <button
                   onClick={() => setActiveTab('replies')}
-                  className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'replies' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors cursor-pointer ${activeTab === 'replies' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   Replies {profile.reply_count != null && `(${profile.reply_count})`}
                 </button>

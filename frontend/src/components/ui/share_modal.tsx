@@ -49,14 +49,15 @@ export function ShareModal({ topic, onClose, onShare }: ShareModalProps) {
 
     return (
         <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
-            <div className="w-[40rem] border border-border rounded-[10px] p-5 flex flex-col gap-4 bg-card">
+            <div className="w-[40rem] border border-border rounded-2xl shadow-2xl shadow-black/20 p-5 flex flex-col gap-4 bg-card">
                 <div className="flex justify-end">
                     <button
                         onClick={onClose}
-                        className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-xl leading-none cursor-pointer"
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200 text-lg leading-none cursor-pointer"
+                        aria-label="Close"
                     >
                         ✕
                     </button>

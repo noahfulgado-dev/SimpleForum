@@ -78,7 +78,7 @@ export function Post({ topic, onDelete }: PostProps) {
 
     return (
         <>
-            <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-[linear-gradient(135deg,var(--accent)/0.2_0%,transparent_60%)] bg-card border-0 md:border md:border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted transition-all duration-300 ease-in-out overflow-hidden max-w-[700px] w-full self-center">
+            <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-[linear-gradient(135deg,var(--accent)/0.15_0%,transparent_60%)] bg-card border-0 md:border md:border-border/60 shadow-[0_1px_3px_rgb(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted/40 hover:-translate-y-0.5 transition-all duration-300 ease-in-out overflow-hidden max-w-[700px] w-full self-center">
                 <div className="p-7 pb-2 flex flex-row gap-5">
                     <div className="flex-1 min-w-0 flex flex-col gap-2">
                         <div className="flex flex-row gap-2 items-center">
@@ -118,7 +118,7 @@ export function Post({ topic, onDelete }: PostProps) {
                                 <PostMenu />
                             </button>
                             {isOpen && (
-                                <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-[10px] p-2 flex flex-col gap-2 z-50 shadow-lg">
+                                <div className="absolute top-7 right-0 w-48 bg-card border border-border rounded-xl p-2 flex flex-col gap-2 z-50 shadow-xl shadow-black/10">
                                     {isOwnPost ? (
                                         <>
                                             <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => { setIsEditModalOpen(true); setIsOpen(false); }}>Edit Post</button>
