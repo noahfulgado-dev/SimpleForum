@@ -14,7 +14,7 @@ export function ProfileAvatar({ src, uploading, fileInputRef, onClick, onChange 
       <img
         src={src}
         alt="Avatar"
-        className="w-24 h-24 border border-border rounded-full object-cover"
+        className="w-24 h-24 border border-border rounded-full object-cover ring-4 ring-card"
       />
       <input
         ref={fileInputRef}

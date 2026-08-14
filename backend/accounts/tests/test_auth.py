@@ -139,7 +139,7 @@ class FollowAPITest(TestCase):
             password='targetpass123'
         )
         refresh = RefreshToken.for_user(self.user)
-        self.access_token = str(refresh.access_token)
+        self.access_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
 
     def test_follow_user(self):
         """Test following a user."""
@@ -187,7 +187,7 @@ class FollowAPITest(TestCase):
             password='otherpass123'
         )
         other_refresh = RefreshToken.for_user(other_user)
-        other_token = str(other_refresh.access_token)
+        other_token = str(other_refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
 
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.client.post(f'/api/users/{self.target.id}/follow/')
@@ -247,7 +247,7 @@ class FollowingListTest(TestCase):
             password='targetpass123'
         )
         refresh = RefreshToken.for_user(self.user)
-        self.access_token = str(refresh.access_token)
+        self.access_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
 
     def test_following_list_returns_followed_users(self):
         """Test following list returns users the current user follows."""

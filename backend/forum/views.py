@@ -87,7 +87,7 @@ class TopicListView(generics.ListCreateAPIView):
         page = request.query_params.get(self.paginator.page_query_param, 1)
         cached_ids, cached_total = get_cached_topic_ids(page)
 
-        if cached_ids is not None:
+        if cached_ids is not None and cached_total is not None:
             preserved = Case(
                 *[When(id=id, then=Value(i)) for i, id in enumerate(cached_ids)],
                 output_field=IntegerField(),

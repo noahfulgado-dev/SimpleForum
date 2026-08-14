@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Feather, SearchX } from 'lucide-react'
 import { Post } from './post'
 import { forumAPI } from '@/services/api'
 import { TopicCardSkeleton } from './skeleton'
@@ -39,7 +40,7 @@ export function FeedContent({ search = '' }: FeedContentProps) {
             prevSearchRef.current = search;
             queryClient.resetQueries({ queryKey: ['topics', search] });
         }
-    }, [search]);
+    }, [search, queryClient]);
 
     useEffect(() => {
         const el = sentinelRef.current;
@@ -82,7 +83,19 @@ export function FeedContent({ search = '' }: FeedContentProps) {
                             <div className="text-center text-destructive py-8">Failed to load topics. Please try again.</div>
                         )}
                         {!topicsLoading && !error && topics.length === 0 && (
-                            <div className="text-center text-muted-foreground py-8">{search ? `No results for "${search}".` : 'No topics yet. Be the first to post!'}</div>
+                            <div className="flex flex-col items-center gap-2 text-center text-muted-foreground py-14">
+                                {search ? (
+                                    <>
+                                        <SearchX className="w-8 h-8 opacity-60" strokeWidth={1.25} />
+                                        <p className="text-sm">No results for "{search}".</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Feather className="w-8 h-8 opacity-60" strokeWidth={1.25} />
+                                        <p className="text-sm">No topics yet. Be the first to post!</p>
+                                    </>
+                                )}
+                            </div>
                         )}
                         {!topicsLoading && !error && topics.map((topic) => (
                             <Post key={topic.id} topic={topic} onDelete={handleDeleteTopic} />
@@ -91,7 +104,11 @@ export function FeedContent({ search = '' }: FeedContentProps) {
                             <TopicCardSkeleton />
                         )}
                         {!hasNextPage && !topicsLoading && topics.length > 0 && (
-                            <div className="text-center text-muted-foreground py-4 text-sm">You've reached the end</div>
+                            <div className="flex items-center gap-3 py-6">
+                                <div className="h-px flex-1 bg-border" />
+                                <span className="text-xs text-muted-foreground">You've reached the end</span>
+                                <div className="h-px flex-1 bg-border" />
+                            </div>
                         )}
                         <div ref={sentinelRef} className="h-px" />
                     </div>

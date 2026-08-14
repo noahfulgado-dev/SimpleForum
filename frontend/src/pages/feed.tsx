@@ -10,7 +10,7 @@ export function Feed() {
     const search = searchParams.get('search') || '';
 
     return (
-        <div className="h-screen flex flex-col bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px]">
+        <div className="h-screen flex flex-col bg-background bg-grid">
             <div className="xl:block p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
                 <Navbar />
             </div>

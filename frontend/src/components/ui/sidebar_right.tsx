@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usersAPI } from '@/services/api';
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { timeAgo } from '@/lib/time';
+import { UserPlus } from 'lucide-react';
 
 export function SidebarRight() {
   const navigate = useNavigate();
@@ -15,17 +16,25 @@ export function SidebarRight() {
   const following = followingData?.results ?? [];
 
   return (
-    <div className="hidden xl:block fixed top-[88px] right-5 w-[300px] rounded-[15px] border border-border p-5 flex-col gap-5 bg-card z-40 h-[calc(100vh-108px)] overflow-y-auto">
-      <h3 className="text-sm font-semibold text-foreground mb-4">Following</h3>
+    <div className="hidden xl:flex fixed top-[88px] right-5 w-[300px] flex-col rounded-[15px] border border-border bg-card shadow-sm p-5 gap-5 z-40 h-[calc(100vh-108px)] overflow-y-auto">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground">Following</h3>
+        <span className="text-[0.65rem] text-muted-foreground font-medium tabular-nums">{following.length}</span>
+      </div>
       {following.length === 0 && (
-        <p className="text-xs text-muted-foreground">You aren't following anyone yet.</p>
+        <div className="flex flex-col items-center gap-2 rounded-[10px] bg-muted/40 border border-dashed border-border py-8 px-4 text-center">
+          <UserPlus className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            You aren't following anyone yet.
+          </p>
+        </div>
       )}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
         {following.map(user => (
           <div
             key={user.id}
             onClick={() => navigate(`/profile/${user.id}`)}
-            className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-[8px] p-2 -mx-2 transition-colors"
+            className="flex items-center gap-3 cursor-pointer hover:bg-muted/60 rounded-[10px] p-2 -mx-2 transition-colors"
           >
             <div className="relative shrink-0">
               <img

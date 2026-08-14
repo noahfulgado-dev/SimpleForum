@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Lexend+Exa:wght@100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cousine:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Unna:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Martel+Sans:wght@200;300;400;600;700;800;900&display=swap');
 
-/* * {
-  border: 1px solid red;
-} */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 @font-face {
   font-family: 'Muli';
@@ -40,10 +40,11 @@
 }
 
 .secondary-font {
-  font-family: 'Unna', serif  ;
+  font-family: 'Unna', serif;
 }
 
-.tertiary-font {
+.tertiary-font,
+.tertiary-text {
   font-family: 'Martel Sans', sans-serif;
 }
 
@@ -55,18 +56,53 @@
   background-color: var(--foreground);
 }
 
-.main-container {
-  display: grid;
-  grid-template-areas: 
-    "navbar navbar navbar"
-    "sidebar-left main sidebar-right";
-  grid-template-columns: 1fr 3fr 1fr;
-  grid-template-rows: auto 1fr; 
-  gap: 20px;
+/* Soft graph-paper background shared across pages */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(45 42 50 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(45 42 50 / 0.045) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-@import "tailwindcss";
-@import "tw-animate-css";
+.dark .bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(224 224 224 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(224 224 224 / 0.05) 1px, transparent 1px);
+}
+
+/* Dotted field background */
+.bg-dots {
+  background-image: radial-gradient(circle, rgb(45 42 50 / 0.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.dark .bg-dots {
+  background-image: radial-gradient(circle, rgb(224 224 224 / 0.09) 1px, transparent 1px);
+}
+
+/* Film-grain noise texture (use with low opacity) */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+}
+
+/* Ghost / outline display text */
+.text-outline {
+  -webkit-text-stroke: 1.5px rgb(45 42 50 / 0.13);
+  color: transparent;
+}
+
+.dark .text-outline {
+  -webkit-text-stroke: 1.5px rgb(224 224 224 / 0.16);
+}
+
+/* Soft elevated surface for cards */
+.panel {
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
 
 /* width */
 ::-webkit-scrollbar {
@@ -90,11 +126,10 @@
 }
 
 @theme {
-  --font-lexend: "Lexend Exa";
   --font-cousine: "Cousine";
+  --font-geist: "Muli", sans-serif;
+  --font-unna: "Unna", serif;
 }
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -141,7 +176,7 @@
   --foreground: #2d2a32;
   --card: #fafdf6;
   --card-foreground: #2d2a32;
-  --popover: #9ec1a3;
+  --popover: #ffffff;
   --popover-foreground: #2d2a32;
   --primary: #9ec1a3;
   --primary-foreground: #ffffff;
@@ -176,7 +211,7 @@
   --foreground: #e0e0e0;
   --card: #1a1a1a;
   --card-foreground: #e0e0e0;
-  --popover: #1a1a1a;
+  --popover: #1e1e1e;
   --popover-foreground: #e0e0e0;
   --primary: #9ec1a3;
   --primary-foreground: #121212;
@@ -188,8 +223,8 @@
   --accent-foreground: #121212;
   --destructive: #dc2626;
   --destructive-foreground: #e0e0e0;
-  --border: #1f1f1f;
-  --input: #1f1f1f;
+  --border: #2e2e2e;
+  --input: #2e2e2e;
   --ring: #9ec1a3;
   --chart-1: #9ec1a3;
   --chart-2: #6b7280;
@@ -202,7 +237,7 @@
   --sidebar-primary-foreground: #121212;
   --sidebar-accent: #1f1f1f;
   --sidebar-accent-foreground: #e0e0e0;
-  --sidebar-border: #1f1f1f;
+  --sidebar-border: #2e2e2e;
   --sidebar-ring: #9ec1a3;
 }
 

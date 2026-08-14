@@ -27,7 +27,7 @@ class TopicAPITest(TestCase):
             user=self.user
         )
         refresh = RefreshToken.for_user(self.user)
-        self.access_token = str(refresh.access_token)
+        self.access_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
 
     def test_list_topics_unauthenticated(self):
         """Test listing topics requires authentication."""
@@ -78,7 +78,7 @@ class TopicAPITest(TestCase):
             password='otherpass123'
         )
         refresh = RefreshToken.for_user(other_user)
-        other_token = str(refresh.access_token)
+        other_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
 
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
         response = self.client.put(f'/api/topics/{self.topic.id}/', {
@@ -248,7 +248,7 @@ class ReplyAPITest(TestCase):
             content='Test reply'
         )
         refresh = RefreshToken.for_user(self.user)
-        self.access_token = str(refresh.access_token)
+        self.access_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
 
     def test_create_reply_authenticated(self):
         """Test authenticated user can create a reply."""
@@ -325,7 +325,7 @@ class ReplyAPITest(TestCase):
             password='otherpass123'
         )
         refresh = RefreshToken.for_user(other_user)
-        other_token = str(refresh.access_token)
+        other_token = str(refresh.access_token)  # type: ignore[reportAttributeAccessIssue]
 
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
         response = self.client.patch(f'/api/replies/{self.reply.id}/', {

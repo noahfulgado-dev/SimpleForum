@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input"
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import React, { useState } from 'react'
 import { authAPI } from '@/services/api'
+import { Huni } from "@/components/ui/huni"
+import { AuthBackdrop } from "@/components/decor"
 
 export function ResetPassword() {
-    document.title = "Reset Password | SimpleForum"
+    document.title = "Reset Password | HuniSpace"
 
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
@@ -50,6 +52,7 @@ export function ResetPassword() {
                 new_password2: confirmPassword,
             })
             navigate('/login')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             const data = err.response?.data
             if (typeof data === 'object' && data !== null) {
@@ -65,10 +68,14 @@ export function ResetPassword() {
 
     if (!uid || !key) {
         return (
-            <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
-                <div className="w-full max-w-md px-4">
-                    <Card className="w-full shadow-sm">
+            <div className="absolute inset-0 -z-10 h-full w-full bg-background flex items-center justify-center overflow-hidden">
+                <AuthBackdrop />
+                <div className="relative z-10 w-full max-w-md px-4">
+                    <Card className="w-full shadow-xl shadow-black/5">
                         <CardHeader>
+                            <span className="font-cousine text-[0.65rem] uppercase tracking-[0.3em] text-primary">
+                                Reset access — Nº 04
+                            </span>
                             <CardTitle className="text-3xl text-left text-foreground primary-font">
                                 Invalid Link
                             </CardTitle>
@@ -91,13 +98,20 @@ export function ResetPassword() {
     }
 
     return (
-        <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
-            <div className="w-full max-w-md px-4 flex items-center justify-center flex-col gap-6">
-                <h1 className="text-[clamp(1.5rem,5vw,3rem)] tracking-wider font-bold leading-none text-foreground primary-font">
-                    SimpleForum
-                </h1>
-                <Card className="w-full shadow-sm">
+        <div className="absolute inset-0 -z-10 h-full w-full bg-background flex items-center justify-center overflow-hidden">
+            <AuthBackdrop />
+            <div className="relative z-10 w-full max-w-md px-4 flex items-center justify-center flex-col gap-6">
+                <div className="flex-row flex items-center gap-2">
+                    <Huni className="h-12 w-auto" />
+                    <h1 className="text-[clamp(1.5rem,5vw,3rem)] tracking-wider font-bold leading-none text-foreground primary-font">
+                        huni
+                    </h1>
+                </div>
+                <Card className="w-full shadow-xl shadow-black/5">
                     <CardHeader>
+                        <span className="font-cousine text-[0.65rem] uppercase tracking-[0.3em] text-primary">
+                            Reset access — Nº 04
+                        </span>
                         <CardTitle className="text-3xl text-left text-foreground primary-font">
                             Reset Password
                         </CardTitle>
@@ -137,6 +151,9 @@ export function ResetPassword() {
                         </form>
                     </CardContent>
                 </Card>
+                <p className="text-center font-cousine text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground/70">
+                    HuniSpace — a cozy corner of the internet
+                </p>
             </div>
         </div>
     )

@@ -14,9 +14,10 @@ import React, { useState } from 'react'
 import { authAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { Huni } from "@/components/ui/huni"
+import { AuthBackdrop } from "@/components/decor"
 
 export function Signup() {
-    document.title = "Signup | SimpleForum"
+    document.title = "Signup | HuniSpace"
 
     const navigate = useNavigate()
     const { googleLogin } = useAuth()
@@ -45,6 +46,7 @@ export function Signup() {
                 password2: confirmPassword,
             })
             navigate('/login')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             const data = err.response?.data
             if (typeof data === 'object' && data !== null) {
@@ -73,16 +75,20 @@ export function Signup() {
     })
 
     return (
-        <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,var(--muted)_1px,transparent_1px),linear-gradient(to_bottom,var(--muted)_1px,transparent_1px)] bg-size-[40px_40px] flex items-center justify-center">
-            <div className="w-full max-w-md px-4 flex items-center justify-center flex-col gap-6">
+        <div className="absolute inset-0 -z-10 h-full w-full bg-background flex items-center justify-center overflow-hidden">
+            <AuthBackdrop />
+            <div className="relative z-10 w-full max-w-md px-4 flex items-center justify-center flex-col gap-6">
                 <div className="flex-row flex items-center gap-1">
                     <Huni></Huni>
                     <h1 className="text-[clamp(1.5rem,5vw,3rem)] tracking-wider font-bold leading-none text-foreground primary-font">
                         huni
                     </h1>
                 </div>
-                <Card className="w-full shadow-sm">
+                <Card className="w-full shadow-xl shadow-black/5">
                     <CardHeader>
+                        <span className="font-cousine text-[0.65rem] uppercase tracking-[0.3em] text-primary">
+                            Join the circle — Nº 02
+                        </span>
                         <CardTitle className="text-3xl text-left text-foreground primary-font">
                             Sign Up
                         </CardTitle>
@@ -149,7 +155,7 @@ export function Signup() {
                                 <span className="w-full border-t border-border" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-card px-3 text-muted-foreground">
+                                <span className="bg-card px-3 font-cousine text-[0.6rem] tracking-[0.25em] text-muted-foreground">
                                     or continue with
                                 </span>
                             </div>
@@ -178,6 +184,9 @@ export function Signup() {
                         </p>
                     </CardFooter>
                 </Card>
+                <p className="text-center font-cousine text-[0.6rem] uppercase tracking-[0.3em] text-muted-foreground/70">
+                    HuniSpace — a cozy corner of the internet
+                </p>
             </div>
         </div>
     )

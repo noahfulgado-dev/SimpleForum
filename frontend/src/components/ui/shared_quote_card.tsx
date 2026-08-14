@@ -5,6 +5,7 @@ interface SharedFrom {
     title: string;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function parseSharedDescription(description: string | undefined): { text: string; sharedFrom: SharedFrom } | null {
     if (!description) return null;
     const marker = '\n\n---\nOriginally shared from @';
