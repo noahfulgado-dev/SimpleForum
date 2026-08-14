@@ -5,23 +5,21 @@ interface ProfileStatsProps {
 }
 
 export function ProfileStats({ profile }: ProfileStatsProps) {
+  const stats = [
+    { value: profile.follower_count ?? 0, label: 'Followers' },
+    { value: profile.following_count ?? 0, label: 'Following' },
+    { value: profile.topic_count ?? 0, label: 'Topics' },
+    { value: profile.total_likes ?? 0, label: 'Hearts' },
+  ]
+
   return (
-    <div className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
-      <span>
-        <strong className="text-foreground font-medium">{profile.follower_count ?? 0}</strong> Followers
-      </span>
-      <span className="text-xs text-muted-foreground">•</span>
-      <span>
-        <strong className="text-foreground font-medium">{profile.following_count ?? 0}</strong> Following
-      </span>
-      <span className="text-xs text-muted-foreground">•</span>
-      <span>
-        <strong className="text-foreground font-medium">{profile.topic_count ?? 0}</strong> Topics
-      </span>
-      <span className="text-xs text-muted-foreground">•</span>
-      <span>
-        <strong className="text-foreground font-medium">{profile.total_likes ?? 0}</strong> Hearts
-      </span>
+    <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+      {stats.map(({ value, label }) => (
+        <div key={label} className="rounded-xl bg-primary/10 py-3">
+          <p className="primary-font text-lg font-semibold text-foreground tabular-nums">{value}</p>
+          <p className="text-[0.7rem] text-muted-foreground">{label}</p>
+        </div>
+      ))}
     </div>
   )
 }

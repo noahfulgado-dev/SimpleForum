@@ -12,6 +12,8 @@ import { Share } from './share';
 import PostMenu from './post_menu';
 import { TopicDetailSkeleton, ReplySkeleton } from './skeleton';
 import { parseSharedDescription, SharedQuoteCard } from './shared_quote_card';
+import { ModalShell, ModalHeader } from './modal';
+import { Flag, Pencil, Trash2 } from 'lucide-react';
 
 interface RepliesProps {
     topic: Topic;
@@ -250,9 +252,9 @@ export function Replies({ topic, onClose }: RepliesProps) {
         const isConfirmDelete = replyConfirmDelete[reply.id] ?? false;
 
         return (
-            <div key={reply.id} className="relative pl-10">
+            <div key={reply.id} className="relative pl-6 md:pl-10">
                 <div className="absolute left-[22px] top-0 w-[18px] h-[34px] border-l-2 border-b-2 dark:border-white/20 border-border/60 rounded-bl-[4px] pointer-events-none"></div>
-                <div className="flex-1 flex flex-row gap-3 p-4 border-0 md:border md:border-border rounded-none md:rounded-[10px] bg-card">
+                <div className="flex-1 flex flex-row gap-3 p-4 border-0 md:border md:border-border rounded-none md:rounded-2xl bg-card">
                     <div
                         className="relative group w-8 h-8 flex items-center justify-center shrink-0 mt-0.5 cursor-pointer"
                         onClick={() => navigate(`/profile/${reply.user.id}`)}
@@ -285,13 +287,14 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                         {isOwnReply ? (
                                             <>
                                                 <button
-                                                    className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                                    className="w-full text-left px-2 py-1.5 text-[0.75rem] rounded-lg flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
                                                     onClick={() => {
                                                         setEditingReplyId(reply.id);
                                                         setEditContent(reply.content);
                                                         setReplyMenuOpen(prev => ({ ...prev, [reply.id]: false }));
                                                     }}
                                                 >
+                                                    <Pencil className="w-3.5 h-3.5" strokeWidth={1.75} />
                                                     Edit
                                                 </button>
                                                 <div className="border-t border-border" />
@@ -300,14 +303,14 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                                         <span className="text-[0.7rem] text-muted-foreground p-1">Delete this reply?</span>
                                                         <div className="flex gap-1">
                                                             <button
-                                                                className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                                className="flex-1 px-2 py-1 text-[0.7rem] rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
                                                                 onClick={() => replyDeleteMutation.mutate(reply.id)}
                                                                 disabled={replyDeleteMutation.isPending}
                                                             >
                                                                 {replyDeleteMutation.isPending ? 'Deleting...' : 'Yes'}
                                                             </button>
                                                             <button
-                                                                className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                                className="flex-1 px-2 py-1 text-[0.7rem] rounded-lg hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
                                                                 onClick={() => setReplyConfirmDelete(prev => ({ ...prev, [reply.id]: false }))}
                                                                 disabled={replyDeleteMutation.isPending}
                                                             >
@@ -317,15 +320,16 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                                     </div>
                                                 ) : (
                                                     <button
-                                                        className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                                        className="w-full text-left px-2 py-1.5 text-[0.75rem] rounded-lg flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
                                                         onClick={() => setReplyConfirmDelete(prev => ({ ...prev, [reply.id]: true }))}
                                                     >
+                                                        <Trash2 className="w-3.5 h-3.5 text-destructive" strokeWidth={1.75} />
                                                         Delete
                                                     </button>
                                                 )}
                                             </>
                                         ) : (
-                                            <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
+                                            <button className="w-full text-left px-2 py-1.5 text-[0.75rem] rounded-lg flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}><Flag className="w-3.5 h-3.5" strokeWidth={1.75} />Report</button>
                                         )}
                                     </div>
                                 )}
@@ -336,20 +340,20 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 <textarea
                                     value={editContent}
                                     onChange={(e) => setEditContent(e.target.value)}
-                                    className="w-full resize-none focus:outline-none focus:ring-0 focus:border-transparent font-light text-[0.9rem] bg-transparent text-foreground border border-border rounded-[5px] p-2"
+                                    className="w-full resize-none focus:outline-none focus:ring-0 focus:border-transparent font-light text-[0.9rem] bg-transparent text-foreground border border-border rounded-xl p-2"
                                     rows={2}
                                 />
                                 <div className="flex gap-2 justify-end">
                                     <button
                                         onClick={() => { setEditingReplyId(null); setEditContent(''); }}
-                                        className="px-3 py-1 text-[0.75rem] rounded-[5px] hover:bg-muted transition-all duration-200 cursor-pointer"
+                                        className="px-3 py-1.5 text-[0.75rem] rounded-full hover:bg-muted transition-all duration-200 cursor-pointer"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={() => replyEditMutation.mutate({ id: reply.id, content: editContent })}
                                         disabled={replyEditMutation.isPending || !editContent.trim()}
-                                        className="px-3 py-1 text-[0.75rem] rounded-[5px] bg-foreground text-background hover:opacity-90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                        className="px-4 py-1.5 text-[0.75rem] rounded-full bg-foreground text-background hover:opacity-90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                                     >
                                         {replyEditMutation.isPending ? 'Saving...' : 'Save'}
                                     </button>
@@ -363,7 +367,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                         <div className="flex items-center gap-1 mt-0.5">
                             <button
                                 onClick={() => handleReplyLike(reply)}
-                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                className="rounded-full h-7 px-2 flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
                             >
                                 {isLiked ? (
                                     <Liked fillColor="#ef4444" />
@@ -376,7 +380,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                             </span>
                             <button
                                 onClick={() => handleReplyBookmark(reply)}
-                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                className="rounded-full h-7 px-2 flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
                             >
                                 {isBookmarked ? (
                                     <Bookmarked fillColor="#eab308" />
@@ -386,7 +390,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                             </button>
                             <button
                                 onClick={() => handleReplyShare(reply)}
-                                className="w-max h-6 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                className="rounded-full h-7 px-2 flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
                             >
                                 <Share />
                             </button>
@@ -406,7 +410,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                     </div>
                 </div>
                 {children.length > 0 && (
-                    <div className="ml-8 flex flex-col gap-3 mt-3">
+                    <div className="ml-4 md:ml-8 flex flex-col gap-3 mt-3">
                         {(isExpanded ? children : children.slice(0, 3)).map((child) =>
                             renderReply(child, depth + 1)
                         )}
@@ -433,21 +437,11 @@ export function Replies({ topic, onClose }: RepliesProps) {
     };
 
     return (
-        <>
-            <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-            >
-                <div className="w-[40rem] max-h-[80vh] border border-border rounded-2xl shadow-2xl shadow-black/20 flex flex-col bg-card">
-                    <div className="flex justify-end p-3 pb-0">
-                        <button
-                            onClick={onClose}
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200 text-lg leading-none cursor-pointer"
-                            aria-label="Close"
-                        >
-                            ✕
-                        </button>
-                    </div>
+        <ModalShell onClose={onClose} label="Replies">
+            <div className="flex max-h-[80vh] flex-col">
+                <div className="px-6 pt-6 pb-3">
+                    <ModalHeader eyebrow="replies · Nº 04" onClose={onClose} />
+                </div>
 
                     <div className="overflow-y-auto px-5 pb-3">
                         <div className="relative">
@@ -487,14 +481,14 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                                                     <span className="text-[0.7rem] text-muted-foreground p-1">Delete this post?</span>
                                                                     <div className="flex gap-1">
                                                                         <button
-                                                                            className="flex-1 p-1 text-[0.7rem] rounded-[5px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                                            className="flex-1 px-2 py-1 text-[0.7rem] rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 disabled:opacity-50 cursor-pointer"
                                                                             onClick={() => deletePost(topic.id)}
                                                                             disabled={deleteMutation.isPending}
                                                                             >
                                                                             {deleteMutation.isPending ? 'Deleting...' : 'Yes'}
                                                                         </button>
                                                                         <button
-                                                                            className="flex-1 p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                                                                            className="flex-1 px-2 py-1 text-[0.7rem] rounded-lg hover:bg-muted transition-all duration-300 disabled:opacity-50 cursor-pointer"
                                                                             onClick={() => setConfirmDelete(false)}
                                                                             disabled={deleteMutation.isPending}
                                                                         >
@@ -503,10 +497,10 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}>Delete Post</button>
+                                                                <button className="w-full text-left px-2 py-1.5 text-[0.75rem] rounded-lg flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => deletePost(topic.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" strokeWidth={1.75} />Delete Post</button>
                                                             )
                                                         ) : (
-                                                            <button className="w-full text-left p-1 text-[0.7rem] rounded-[5px] hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}>Report</button>
+                                                            <button className="w-full text-left px-2 py-1.5 text-[0.75rem] rounded-lg flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={() => alert('Report submitted.')}><Flag className="w-3.5 h-3.5" strokeWidth={1.75} />Report</button>
                                                         )}
                                                     </div>
                                                 )}
@@ -552,7 +546,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 )}
         
                                 <div className="flex flex-row gap-4 items-center">
-                                    <button onClick={handlePostLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                    <button onClick={handlePostLike} className="w-max h-8 rounded-full px-2.5 flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                         {postIsLiked ? (
                                             <Liked fillColor="#ef4444" />
                                         ) : (
@@ -562,20 +556,20 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                             {postLikeCount}
                                         </span>
                                     </button>
-                                    <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                    <button className="w-max h-8 rounded-full px-2.5 flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                         <ReplyIcon />
                                         <span className="text-sm ml-1 text-muted-foreground">
                                             {replyCount}
                                         </span>
                                     </button>
-                                    <button onClick={handlePostBookmark} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                    <button onClick={handlePostBookmark} className="w-max h-8 rounded-full px-2.5 flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                         {postIsBookmarked ? (
                                             <Bookmarked fillColor="#eab308" />
                                         ) : (
                                             <Bookmark />
                                         )}
                                     </button>
-                                    <button onClick={handlePostShare} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
+                                    <button onClick={handlePostShare} className="w-max h-8 rounded-full px-2.5 flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                         <Share />
                                         <span className="text-sm ml-1 text-muted-foreground">
                                             {postShareCount}
@@ -644,15 +638,14 @@ export function Replies({ topic, onClose }: RepliesProps) {
                             <button
                                 onClick={handleSubmit}
                                 disabled={replyMutation.isPending || !replyContent.trim()}
-                                className="px-4 py-1.5 text-[0.85rem] rounded-[5px] bg-foreground text-background hover:opacity-90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                className="px-5 py-2 text-[0.85rem] rounded-full bg-foreground text-background hover:opacity-90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                             >
                                 {replyMutation.isPending ? 'Replying...' : 'Reply'}
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </>
+        </ModalShell>
     )
 }
 

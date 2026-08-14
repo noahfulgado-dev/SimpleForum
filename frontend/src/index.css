@@ -45,7 +45,7 @@
 
 .tertiary-font,
 .tertiary-text {
-  font-family: 'Martel Sans', sans-serif;
+  font-family: var(--font-martel);
 }
 
 .neutral-color {
@@ -128,6 +128,7 @@
 @theme {
   --font-cousine: "Cousine";
   --font-geist: "Muli", sans-serif;
+  --font-martel: "Martel Sans", sans-serif;
   --font-unna: "Unna", serif;
 }
 
@@ -151,6 +152,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-cream: var(--cream);
+  --color-light-sage: var(--light-sage);
+  --color-deep-cream: var(--deep-cream);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -174,35 +178,38 @@
   --radius: 0.625rem;
   --background: #fafdf6;
   --foreground: #2d2a32;
-  --card: #fafdf6;
+  --card: #fffdf8;
   --card-foreground: #2d2a32;
   --popover: #ffffff;
   --popover-foreground: #2d2a32;
   --primary: #9ec1a3;
   --primary-foreground: #ffffff;
-  --secondary: #e5e5e5;
+  --secondary: #f0d9b5;
   --secondary-foreground: #2d2a32;
-  --muted: #e5e5e5;
+  --muted: #f1ecdf;
   --muted-foreground: #6b7280;
   --accent: #9ec1a3;
   --accent-foreground: #2d2a32;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #d1d5db;
-  --input: #d1d5db;
+  --border: #ded7c6;
+  --input: #ded7c6;
   --ring: #9ec1a3;
+  --cream: #f0d9b5;
+  --light-sage: #d8e6da;
+  --deep-cream: #e8c99a;
   --chart-1: #9ec1a3;
   --chart-2: #6b7280;
   --chart-3: #2d2a32;
   --chart-4: #e5e5e5;
   --chart-5: #9ec1a3;
-  --sidebar: #fafdf6;
+  --sidebar: #fffdf8;
   --sidebar-foreground: #2d2a32;
   --sidebar-primary: #9ec1a3;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e5e5e5;
+  --sidebar-accent: #f1ecdf;
   --sidebar-accent-foreground: #2d2a32;
-  --sidebar-border: #d1d5db;
+  --sidebar-border: #ded7c6;
   --sidebar-ring: #9ec1a3;
 }
 
@@ -223,9 +230,12 @@
   --accent-foreground: #121212;
   --destructive: #dc2626;
   --destructive-foreground: #e0e0e0;
-  --border: #2e2e2e;
-  --input: #2e2e2e;
+  --border: #333027;
+  --input: #333027;
   --ring: #9ec1a3;
+  --cream: #f0d9b5;
+  --light-sage: #d8e6da;
+  --deep-cream: #e8c99a;
   --chart-1: #9ec1a3;
   --chart-2: #6b7280;
   --chart-3: #e0e0e0;
@@ -237,7 +247,7 @@
   --sidebar-primary-foreground: #121212;
   --sidebar-accent: #1f1f1f;
   --sidebar-accent-foreground: #e0e0e0;
-  --sidebar-border: #2e2e2e;
+  --sidebar-border: #333027;
   --sidebar-ring: #9ec1a3;
 }
 

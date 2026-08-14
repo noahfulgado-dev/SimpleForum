@@ -83,17 +83,28 @@ export function FeedContent({ search = '' }: FeedContentProps) {
                             <div className="text-center text-destructive py-8">Failed to load topics. Please try again.</div>
                         )}
                         {!topicsLoading && !error && topics.length === 0 && (
-                            <div className="flex flex-col items-center gap-2 text-center text-muted-foreground py-14">
+                            <div className="flex flex-col items-center gap-3 text-center py-14">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50 border border-dashed border-border">
+                                    {search ? (
+                                        <SearchX className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
+                                    ) : (
+                                        <Feather className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
+                                    )}
+                                </div>
                                 {search ? (
-                                    <>
-                                        <SearchX className="w-8 h-8 opacity-60" strokeWidth={1.25} />
-                                        <p className="text-sm">No results for "{search}".</p>
-                                    </>
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">No results</p>
+                                        <p className="text-sm text-muted-foreground mt-0.5">
+                                            Nothing found for "{search}". Try another keyword.
+                                        </p>
+                                    </div>
                                 ) : (
-                                    <>
-                                        <Feather className="w-8 h-8 opacity-60" strokeWidth={1.25} />
-                                        <p className="text-sm">No topics yet. Be the first to post!</p>
-                                    </>
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">No topics yet</p>
+                                        <p className="text-sm text-muted-foreground mt-0.5">
+                                            Be the first to share a cozy thought.
+                                        </p>
+                                    </div>
                                 )}
                             </div>
                         )}

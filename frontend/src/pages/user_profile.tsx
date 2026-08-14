@@ -10,6 +10,9 @@ import { ProfileSkeleton } from '@/components/ui/skeleton';
 import SidebarLeft from '@/components/ui/sidebar_left';
 import { ProfileStats } from '@/components/ui/profile_stats';
 import { useAuth } from '@/context/AuthContext';
+import { Music2 } from 'lucide-react';
+import { PullIndicator } from '@/components/ui/pull_indicator';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 export function UserProfile() {
     const { id } = useParams<{ id: string }>();
@@ -17,6 +20,9 @@ export function UserProfile() {
     const { user: authUser } = useAuth();
     const queryClient = useQueryClient();
     const userId = Number(id);
+    const { containerRef, pull, refreshing } = usePullToRefresh(() =>
+        queryClient.invalidateQueries({ queryKey: ['user', userId] })
+    );
     const [activeTab, setActiveTab] = useState<'posts' | 'replies'>('posts');
 
     const { data: profile, isLoading } = useQuery({
@@ -48,8 +54,8 @@ export function UserProfile() {
     };
 
     document.title = profile
-        ? `${profile.username} | SimpleForum`
-        : "Profile | SimpleForum";
+        ? `${profile.username} | HuniSpace`
+        : "Profile | HuniSpace";
 
     return (
         <div className="h-screen flex flex-col bg-background bg-grid">
@@ -57,7 +63,8 @@ export function UserProfile() {
                 <Navbar />
             </div>
             <SidebarLeft />
-            <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+            <div ref={containerRef} className="relative flex-1 overflow-y-auto px-3 md:px-5 pb-24 xl:pb-5">
+                <PullIndicator pull={pull} refreshing={refreshing} />
                 <div className="flex gap-5 justify-center min-h-full">
                     <div className="hidden xl:block w-[300px] shrink-0" />
                     <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8 space-y-6">
@@ -82,33 +89,36 @@ export function UserProfile() {
                                         </button>
                                     </div>
                                 )}
-                                <Card className="bg-card overflow-hidden pt-0 shadow-sm">
-                                    <div className="h-[200px] rounded-t-xl overflow-hidden bg-gradient-to-br from-primary/25 via-background to-muted flex items-center justify-center">
+                                <Card className="bg-card overflow-hidden pt-0 rounded-2xl border border-border shadow-sm">
+                                    <div className="h-40 overflow-hidden bg-[linear-gradient(135deg,#9ec1a3_0%,#c9e0cd_55%,#f0d9b5_100%)]">
                                         {profile.banner ? (
                                             <img src={profile.banner} alt="Banner" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-muted-foreground text-sm">No banner</span>
-                                        )}
+                                        ) : null}
                                     </div>
                                     <CardHeader>
-                                        <div className="flex items-center gap-6 -mt-12 relative z-10">
-                                            <div className="relative group w-24 h-24 flex items-center justify-center shrink-0">
-                                                <img src={profile.avatar || defaultAvatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover ring-4 ring-card border border-border" />
+                                        <div className="flex items-center gap-4 sm:gap-6 -mt-9 relative z-10">
+                                            <div className="relative w-20 h-20 shrink-0">
+                                                <img src={profile.avatar || defaultAvatar} alt="Avatar" className="w-20 h-20 border-4 border-card rounded-full object-cover shadow-md" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-3">
-                                                    <h2 className="text-xl font-semibold text-foreground">{profile.username}</h2>
+                                                    <h2 className="primary-font text-lg font-semibold text-foreground">{profile.username}</h2>
                                                     {!isOwnProfile && (
                                                         <Button
                                                             onClick={handleFollowToggle}
                                                             disabled={followMutation.isPending}
-                                                            className={`rounded-[5px] text-xs px-3 py-1 h-auto cursor-pointer disabled:opacity-50 ${profile.is_following ? 'bg-muted text-foreground hover:bg-muted/80' : ''}`}
+                                                            className={`rounded-full text-xs px-4 py-1 h-auto cursor-pointer disabled:opacity-50 ${profile.is_following ? 'bg-muted text-foreground hover:bg-muted/80' : ''}`}
                                                             variant={profile.is_following ? 'outline' : 'default'}
                                                         >
                                                             {followMutation.isPending ? '...' : profile.is_following ? 'Following' : 'Follow'}
                                                         </Button>
                                                     )}
                                                 </div>
+                                                <span className="text-xs text-muted-foreground mt-0.5 block">@{profile.username}</span>
+                                                <p className="flex items-center gap-1.5 font-cousine text-[0.6rem] uppercase tracking-[0.2em] text-primary mt-2">
+                                                    <Music2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                                                    now listening — slow mornings
+                                                </p>
                                             </div>
                                         </div>
                                     </CardHeader>
@@ -126,13 +136,23 @@ export function UserProfile() {
                                             </p>
                                         </div>
 
-                                        <div className="border-t border-border pt-3 mt-3">
+                                        <div className="border-t border-border pt-3 mt-3 space-y-3">
                                             <ProfileStats profile={profile} />
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {['lo-fi', 'jazz', 'cozy pop'].map((genre) => (
+                                                    <span
+                                                        key={genre}
+                                                        className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 font-cousine text-[0.55rem] uppercase tracking-[0.18em] text-primary"
+                                                    >
+                                                        {genre}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>
 
-                                <div className="bg-card border border-border rounded-[10px] overflow-hidden shadow-sm">
+                                <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
                                     <div className="flex border-b border-border">
                                         <button
                                             onClick={() => setActiveTab('posts')}
@@ -156,12 +176,12 @@ export function UserProfile() {
                                                             <div
                                                                 key={topic.id}
                                                                 onClick={() => window.location.href = `/topic/${topic.id}`}
-                                                                className="p-3 border border-border rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
+                                                                className="p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer"
                                                             >
                                                                 <div className="font-medium text-foreground text-sm">{topic.title}</div>
                                                                 <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{topic.description}</div>
                                                                 {topic.image && (
-                                                                    <img src={topic.image} alt="" className="w-full h-24 object-cover rounded-[4px] mt-1" />
+                                                                    <img src={topic.image} alt="" className="w-full h-24 object-cover rounded-lg mt-1" />
                                                                 )}
                                                                 <div className="flex items-center gap-2 mt-1.5 text-[0.65rem] text-muted-foreground">
                                                                     <span>{topic.like_count ?? 0} likes</span>
@@ -184,7 +204,7 @@ export function UserProfile() {
                                                             <div
                                                                 key={reply.id}
                                                                 onClick={() => window.location.href = `/topic/${reply.topic}`}
-                                                                className="p-3 border border-border rounded-[8px] hover:bg-muted/50 transition-colors cursor-pointer"
+                                                                className="p-3 border border-border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer"
                                                             >
                                                                 <div className="text-xs text-muted-foreground truncate">on {reply.topic_title || 'a topic'}</div>
                                                                 <div className="text-sm text-foreground mt-0.5 line-clamp-2">{reply.content}</div>

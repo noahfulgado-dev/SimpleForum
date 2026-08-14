@@ -4,6 +4,7 @@ import { usersAPI } from '@/services/api';
 import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { timeAgo } from '@/lib/time';
 import { UserPlus } from 'lucide-react';
+import { NowPlayingCard } from './now_playing';
 
 export function SidebarRight() {
   const navigate = useNavigate();
@@ -16,7 +17,8 @@ export function SidebarRight() {
   const following = followingData?.results ?? [];
 
   return (
-    <div className="hidden xl:flex fixed top-[88px] right-5 w-[300px] flex-col rounded-[15px] border border-border bg-card shadow-sm p-5 gap-5 z-40 h-[calc(100vh-108px)] overflow-y-auto">
+    <div className="hidden xl:flex fixed top-[88px] right-5 w-[300px] flex-col rounded-2xl border border-border bg-card shadow-sm p-5 gap-5 z-40 h-[calc(100vh-108px)] overflow-y-auto">
+      <NowPlayingCard />
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">Following</h3>
         <span className="text-[0.65rem] text-muted-foreground font-medium tabular-nums">{following.length}</span>

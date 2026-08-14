@@ -4,6 +4,7 @@ import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { Button } from './button';
 import { forumAPI, type Topic } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { ModalShell, ModalHeader } from './modal';
 
 interface CreatePostProps {
     onClose: () => void;
@@ -79,26 +80,13 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
     };
 
     return (
-        <>
-            <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-            >
-                <div className="w-[40rem] border border-border rounded-2xl shadow-2xl shadow-black/20 p-5 flex flex-row gap-5 bg-card">
-                    <div className="relative group w-10 h-10 flex items-center justify-center transition-all duration-300 ease-in-out cursor-pointer shrink-0">
-                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-border rounded-full" />
-                        <div className="absolute rounded-full inset-0 bg-gray-900/0 transition-colors duration-300 group-hover:bg-muted/30"></div>
-                    </div>
-                    <div className="flex flex-col bg-transparent w-full">
-                        <div className="flex justify-end">
-                            <button
-                                onClick={onClose}
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200 text-lg leading-none cursor-pointer"
-                                aria-label="Close"
-                            >
-                                ✕
-                            </button>
-                        </div>
+        <ModalShell onClose={onClose} label="Create post">
+            <div className="flex flex-col gap-4 p-6">
+                <ModalHeader eyebrow="new post · Nº 01" onClose={onClose} />
+
+                <div className="flex flex-row gap-3 items-start">
+                    <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 shrink-0 border border-border rounded-full" />
+                    <div className="flex flex-col w-full gap-1">
                         <div className="font-semibold text-2xl text-foreground">
                             <input
                                 type="text"
@@ -117,51 +105,52 @@ export function CreatePost({ onClose, onPostCreated }: CreatePostProps) {
                                 className="w-full h-fit resize-none focus:outline-none focus:ring-0 focus:border-transparent bg-transparent text-foreground placeholder:text-muted-foreground"
                             />
                         </div>
-                        {imagePreview && (
-                            <div className="relative mt-2 w-full max-h-48 overflow-hidden rounded-[5px]">
-                                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-[5px]" />
-                                <button
-                                    onClick={removeImage}
-                                    className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-xs cursor-pointer hover:bg-black/70"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        )}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageSelect}
-                            className="hidden"
-                        />
-                        {error && (
-                            <p className="text-destructive text-sm mt-1">{error}</p>
-                        )}
-                        <div className="border-t border-border mt-2 pt-2 flex justify-between items-center">
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer text-muted-foreground hover:text-foreground"
-                                title="Attach Image"
-                            >
-                                <svg className="w-5 h-5" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                    <circle cx="8.5" cy="8.5" r="1.5" />
-                                    <polyline points="21 15 16 10 5 21" />
-                                </svg>
-                            </button>
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={topicMutation.isPending || !title.trim() || !description.trim()}
-                                className="rounded-[5px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary! hover:brightness-75"
-                            >
-                                {topicMutation.isPending ? 'Posting...' : 'Post'}
-                            </Button>
-                        </div>
                     </div>
                 </div>
+
+                {imagePreview && (
+                    <div className="relative mt-2 w-full max-h-48 overflow-hidden rounded-xl">
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                        <button
+                            onClick={removeImage}
+                            className="absolute top-2 right-2 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-xs cursor-pointer hover:bg-black/70"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                />
+                {error && (
+                    <p className="text-destructive text-sm">{error}</p>
+                )}
+                <div className="border-t border-border pt-4 flex justify-between items-center">
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer text-muted-foreground hover:text-foreground"
+                        title="Attach Image"
+                    >
+                        <svg className="w-5 h-5" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                    </button>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={topicMutation.isPending || !title.trim() || !description.trim()}
+                        className="rounded-full px-5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {topicMutation.isPending ? 'Posting...' : 'Post'}
+                    </Button>
+                </div>
             </div>
-        </>
+        </ModalShell>
     )
 }
 
