@@ -4,6 +4,7 @@ import defaultAvatar from './../../assets/image/default_avatar.jpg';
 import { Button } from './button';
 import { forumAPI, type Topic } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { ModalShell, ModalHeader } from './modal';
 
 interface ShareModalProps {
     topic: Topic;
@@ -48,25 +49,12 @@ export function ShareModal({ topic, onClose, onShare }: ShareModalProps) {
     };
 
     return (
-        <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-        >
-            <div className="w-[40rem] border border-border rounded-2xl shadow-2xl shadow-black/20 p-5 flex flex-col gap-4 bg-card">
-                <div className="flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200 text-lg leading-none cursor-pointer"
-                        aria-label="Close"
-                    >
-                        ✕
-                    </button>
-                </div>
+        <ModalShell onClose={onClose} label="Share post">
+            <div className="flex flex-col gap-4 p-6">
+                <ModalHeader eyebrow="share · Nº 03" onClose={onClose} />
 
                 <div className="flex flex-row gap-3 items-start">
-                    <div className="relative group w-10 h-10 flex items-center justify-center shrink-0">
-                        <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 border border-border rounded-full" />
-                    </div>
+                    <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-10 h-10 shrink-0 border border-border rounded-full" />
                     <textarea
                         ref={textareaRef}
                         value={content}
@@ -76,10 +64,8 @@ export function ShareModal({ topic, onClose, onShare }: ShareModalProps) {
                     />
                 </div>
 
-                <div className="border border-border rounded-[10px] p-4 bg-muted/30 flex flex-row gap-3">
-                    <div className="relative group w-8 h-8 flex items-center justify-center shrink-0">
-                        <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full" />
-                    </div>
+                <div className="border border-border rounded-2xl p-4 bg-primary/[0.06] flex flex-row gap-3">
+                    <img src={topic.user.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 shrink-0 border border-border rounded-full" />
                     <div className="flex flex-col min-w-0">
                         <span className="text-[0.8rem] font-medium text-foreground">
                             @{topic.user.username}
@@ -99,17 +85,17 @@ export function ShareModal({ topic, onClose, onShare }: ShareModalProps) {
                     <p className="text-destructive text-sm">{error}</p>
                 )}
 
-                <div className="border-t border-border pt-3 flex justify-end">
+                <div className="border-t border-border pt-4 flex justify-end">
                     <Button
                         onClick={handleSubmit}
                         disabled={shareMutation.isPending}
-                        className="rounded-[5px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="rounded-full px-5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {shareMutation.isPending ? 'Sharing...' : 'Share'}
                     </Button>
                 </div>
             </div>
-        </div>
+        </ModalShell>
     )
 }
 

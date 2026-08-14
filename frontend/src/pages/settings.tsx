@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersAPI } from '@/services/api'
 
 export function Settings() {
-  document.title = "Settings | SimpleForum"
+  document.title = "Settings | HuniSpace"
   const { theme, toggleTheme } = useTheme()
   const { user: authUser } = useAuth()
   const queryClient = useQueryClient()
@@ -113,7 +113,7 @@ export function Settings() {
           <Navbar />
         </div>
         <SidebarLeft />
-        <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+        <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-24 xl:pb-5">
           <div className="flex gap-5 justify-center min-h-full">
             <div className="hidden xl:block w-[300px] shrink-0" />
             <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8">
@@ -140,7 +140,7 @@ export function Settings() {
           <Navbar />
         </div>
         <SidebarLeft />
-        <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+        <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-24 xl:pb-5">
           <div className="flex gap-5 justify-center min-h-full">
             <div className="hidden xl:block w-[300px] shrink-0" />
             <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8 flex justify-center items-center">
@@ -159,7 +159,7 @@ export function Settings() {
         <Navbar />
       </div>
       <SidebarLeft />
-      <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-5">
+      <div className="flex-1 overflow-y-auto px-3 md:px-5 pb-24 xl:pb-5">
         <div className="flex gap-5 justify-center min-h-full">
           <div className="hidden xl:block w-[300px] shrink-0" />
           <div className="flex-1 max-w-[900px] min-w-0 mt-0 md:mt-8">

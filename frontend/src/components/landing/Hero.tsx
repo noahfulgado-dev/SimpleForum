@@ -128,7 +128,7 @@ export function Hero() {
           initial="hidden"
           animate="show"
           style={{ y, rotateX, scale, opacity, transformPerspective: 900 }}
-          className="grid w-full items-center gap-14 lg:grid-cols-[1.15fr_0.85fr]"
+          className="grid w-full items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14"
         >
           {/* Left — type */}
           <div className="text-left">
@@ -155,14 +155,14 @@ export function Hero() {
 
             <motion.p
               variants={item}
-              className="tertiary-font mt-7 max-w-lg text-lg font-light leading-relaxed text-muted-foreground"
+              className="tertiary-font mt-5 max-w-lg text-lg font-light leading-relaxed text-muted-foreground sm:mt-7"
             >
               A cozy corner of the internet to{' '}
               <span className="font-unna italic text-foreground">share your taste</span>, discover
               tracks, and connect with people who feel the same.
             </motion.p>
 
-            <motion.div variants={item} className="mt-9 flex flex-wrap items-center gap-3">
+            <motion.div variants={item} className="mt-7 flex flex-wrap items-center gap-3 sm:mt-9">
               <Link to="/signup">
                 <Button className="primary-font h-12 cursor-pointer px-8 text-base">Get Started</Button>
               </Link>
@@ -173,7 +173,7 @@ export function Hero() {
               </Link>
             </motion.div>
 
-            <motion.div variants={item} className="mt-8 flex flex-wrap items-center gap-2.5">
+            <motion.div variants={item} className="mt-6 flex flex-wrap items-center gap-2.5 sm:mt-8">
               <MonoChip>0 ads</MonoChip>
               <MonoChip>∞ conversations</MonoChip>
               <MonoChip>100% cozy</MonoChip>
@@ -181,19 +181,19 @@ export function Hero() {
           </div>
 
           {/* Right — mark + mini player */}
-          <motion.div variants={item} className="relative hidden items-center justify-center sm:flex">
+          <motion.div variants={item} className="relative flex items-center justify-center">
             <motion.div
               style={{ y: markY }}
-              className="relative flex h-[300px] w-[300px] items-center justify-center sm:h-[400px] sm:w-[400px]"
+              className="relative flex h-[200px] w-[200px] items-center justify-center sm:h-[400px] sm:w-[400px]"
             >
-              <OrbitRing className="h-[280px] w-[280px] sm:h-[360px] sm:w-[360px]" duration={26} />
-              <OrbitRing className="h-[400px] w-[400px] sm:h-[520px] sm:w-[520px]" duration={44} reverse />
+              <OrbitRing className="h-[180px] w-[180px] sm:h-[360px] sm:w-[360px]" duration={26} />
+              <OrbitRing className="h-[260px] w-[260px] sm:h-[520px] sm:w-[520px]" duration={44} reverse />
               <motion.div
                 animate={{ y: [0, -14, 0] }}
                 transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
               >
                 <motion.div style={{ rotateX: rotX, rotateY: rotY, transformStyle: 'preserve-3d' }}>
-                  <Huni className="h-40 w-auto sm:h-52" />
+                  <Huni className="h-28 w-auto sm:h-52" />
                 </motion.div>
               </motion.div>
             </motion.div>
@@ -202,7 +202,7 @@ export function Hero() {
             <motion.div
               animate={{ y: [0, -12, 0], rotate: [-2, 2, -2] }}
               transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -bottom-8 left-0 z-10 sm:-left-6"
+              className="absolute -bottom-8 left-0 z-10 hidden sm:block sm:-left-6"
             >
               <motion.div
                 style={{ rotateX: rotX, rotateY: rotY, transformStyle: 'preserve-3d' }}

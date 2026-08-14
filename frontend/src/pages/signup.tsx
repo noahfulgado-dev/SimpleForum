@@ -78,12 +78,12 @@ export function Signup() {
         <div className="absolute inset-0 -z-10 h-full w-full bg-background flex items-center justify-center overflow-hidden">
             <AuthBackdrop />
             <div className="relative z-10 w-full max-w-md px-4 flex items-center justify-center flex-col gap-6">
-                <div className="flex-row flex items-center gap-1">
+                <Link to="/" className="flex-row flex items-center gap-1 cursor-pointer">
                     <Huni></Huni>
                     <h1 className="text-[clamp(1.5rem,5vw,3rem)] tracking-wider font-bold leading-none text-foreground primary-font">
                         huni
                     </h1>
-                </div>
+                </Link>
                 <Card className="w-full shadow-xl shadow-black/5">
                     <CardHeader>
                         <span className="font-cousine text-[0.65rem] uppercase tracking-[0.3em] text-primary">

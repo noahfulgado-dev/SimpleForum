@@ -15,6 +15,8 @@ import PostMenu from '@/components/ui/post_menu';
 import ShareModal from '@/components/ui/share_modal';
 import { SharedQuoteCard, parseSharedDescription } from '@/components/ui/shared_quote_card';
 import { TopicDetailSkeleton } from '@/components/ui/skeleton';
+import { PullIndicator } from '@/components/ui/pull_indicator';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { timeAgo } from '@/lib/time';
 
 export function TopicDetail() {
@@ -23,6 +25,9 @@ export function TopicDetail() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const topicId = Number(id);
+    const { containerRef, pull, refreshing } = usePullToRefresh(() =>
+        queryClient.invalidateQueries({ queryKey: ['topic', topicId] })
+    );
     const [replyContent, setReplyContent] = useState('');
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [replyingTo, setReplyingTo] = useState<Reply | null>(null);
@@ -225,7 +230,7 @@ export function TopicDetail() {
         const isConfirmDelete = replyConfirmDelete[reply.id] ?? false;
 
         return (
-            <div key={reply.id} className="relative pl-10">
+            <div key={reply.id} className="relative pl-6 md:pl-10">
                 <div className="absolute left-[22px] top-0 w-[18px] h-[34px] border-l-2 border-b-2 dark:border-white/20 border-border/60 rounded-bl-[4px] pointer-events-none"></div>
                 <div className="flex-1 flex flex-row gap-3 p-4 border border-border rounded-[10px] bg-card">
                     <div
@@ -356,7 +361,7 @@ export function TopicDetail() {
                     </div>
                 </div>
                 {children.length > 0 && (
-                    <div className="ml-8 flex flex-col gap-3 mt-3">
+                    <div className="ml-4 md:ml-8 flex flex-col gap-3 mt-3">
                         {(isExpanded ? children : children.slice(0, 3)).map((child) =>
                             renderReply(child, depth + 1)
                         )}
@@ -406,7 +411,8 @@ export function TopicDetail() {
             </div>
             <SidebarLeft />
             <SidebarRight />
-            <div className="flex-1 overflow-y-auto px-0 md:px-5 pb-0 md:pb-5">
+            <div ref={containerRef} className="relative flex-1 overflow-y-auto px-3 md:px-5 pb-24 xl:pb-5">
+                <PullIndicator pull={pull} refreshing={refreshing} />
                 <div className="flex gap-5 justify-center min-h-full">
                     <div className="hidden xl:block w-[300px] shrink-0" />
                     <div className="flex-1 max-w-[900px] min-w-0">

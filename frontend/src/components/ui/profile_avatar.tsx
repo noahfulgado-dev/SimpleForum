@@ -10,11 +10,11 @@ interface ProfileAvatarProps {
 
 export function ProfileAvatar({ src, uploading, fileInputRef, onClick, onChange }: ProfileAvatarProps) {
   return (
-    <div className="relative w-24 h-24 shrink-0 group">
+    <div className="relative w-20 h-20 shrink-0 group">
       <img
         src={src}
         alt="Avatar"
-        className="w-24 h-24 border border-border rounded-full object-cover ring-4 ring-card"
+        className="w-20 h-20 border-4 border-card rounded-full object-cover shadow-md"
       />
       <input
         ref={fileInputRef}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { House, Bookmark, User, Plus, Settings, Search } from 'lucide-react';
+import { House, Bookmark, User, Plus, Settings, Search, Moon, Sun, LogOut } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Huni } from './huni';
 import { Button } from './button';
@@ -18,6 +18,7 @@ export function Navbar() {
     const { theme, toggleTheme } = useTheme();
     const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [hasUnread, setHasUnread] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -49,9 +50,9 @@ export function Navbar() {
 
     return (
         <>
-            <nav className="hidden xl:flex [grid-area:navbar] border border-border rounded-[10px] p-2 pl-5 pr-5 items-center justify-between bg-background w-full relative">
+            <nav className="hidden xl:flex [grid-area:navbar] border border-border rounded-2xl p-2 pl-5 pr-5 items-center justify-between bg-background w-full relative">
                 <div className="w-[33.3%] flex items-center justify-start gap-2">
-                    <Link to="/feed">
+                    <Link to={user ? '/feed' : '/'}>
                         <div className="text-[1.2rem] text-foreground font-medium font-cousine rounded-[10px] flex items-center gap-2">
                             <Huni className="h-8 w-auto hover:-rotate-4 transition-all duration-150 ease-in-out" />
                             <span className="hidden sm:inline">huni</span>
@@ -88,13 +89,16 @@ export function Navbar() {
                     </div>
                     {isOpen && (
                         <div className="absolute top-20 right-5 w-48 bg-card border border-border rounded-xl p-2 flex flex-col gap-2 z-50 shadow-xl shadow-black/10">
-                            <Link to="/profile"><button className="w-full text-left p-2 rounded-[5px] text-foreground hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">Profile</button></Link>
+                            <Link to="/profile"><button className="w-full text-left px-2 py-2 rounded-lg text-foreground flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"><User className="w-4 h-4" strokeWidth={1.75} />Profile</button></Link>
                             <div className="border-t border-border" />
                             <button
                                 onClick={toggleTheme}
-                                className="w-full flex items-center justify-between p-2 rounded-[5px] text-foreground hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-foreground hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
                             >
-                                <span>Dark mode</span>
+                                <span className="flex items-center gap-2">
+                                    {theme === 'dark' ? <Moon className="w-4 h-4" strokeWidth={1.75} /> : <Sun className="w-4 h-4" strokeWidth={1.75} />}
+                                    Dark mode
+                                </span>
                                 <div className={`w-9 h-5 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-primary' : 'bg-muted-foreground/30'} relative`}>
                                     <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
                                 </div>
@@ -102,14 +106,89 @@ export function Navbar() {
                             <div className="border-t border-border" />
                             <button
                                 onClick={() => { logout(); navigate('/'); }}
-                                className="w-full text-left p-2 rounded-[5px] text-destructive hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                                className="w-full text-left px-2 py-2 rounded-lg text-destructive flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
                             >
+                                <LogOut className="w-4 h-4" strokeWidth={1.75} />
                                 Logout
                             </button>
                         </div>
                     )}
                 </div>
             </nav>
+
+            <div className="xl:hidden relative z-40 shrink-0 border-b border-border bg-background/90 backdrop-blur-md">
+                <div className="flex h-14 items-center justify-between gap-3 px-4">
+                    {mobileSearchOpen ? (
+                        <form onSubmit={handleSearch} className="flex w-full items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1.5 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
+                            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <input
+                                autoFocus
+                                type="text"
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-transparent focus:outline-none w-full text-foreground text-sm placeholder:text-muted-foreground"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setMobileSearchOpen(false)}
+                                className="text-muted-foreground text-xs cursor-pointer shrink-0"
+                            >
+                                Cancel
+                            </button>
+                        </form>
+                    ) : (
+                        <>
+                            <Link to={user ? '/feed' : '/'} className="shrink-0">
+                                <div className="flex items-center gap-2 text-[1.1rem] text-foreground font-medium font-cousine">
+                                    <Huni className="h-7 w-auto" />
+                                    <span>huni</span>
+                                </div>
+                            </Link>
+                            <div className="flex items-center gap-1">
+                                <Button variant="ghost" size="icon" className="hover:bg-muted" onClick={() => setMobileSearchOpen(true)}>
+                                    <Search className="w-5 h-5" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="hover:bg-muted">
+                                    <BellIcon hasUnread={hasUnread} />
+                                </Button>
+                                <div
+                                    className="relative w-8 h-8 flex items-center justify-center cursor-pointer"
+                                    onClick={() => setIsOpen(!isOpen)}
+                                >
+                                    <img src={user?.avatar || defaultAvatar} alt="Avatar" className="w-8 h-8 border border-border rounded-full object-cover" />
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+                {isOpen && (
+                    <div className="absolute right-4 top-14 w-48 bg-card border border-border rounded-xl p-2 flex flex-col gap-2 z-50 shadow-xl shadow-black/10">
+                        <Link to="/profile"><button onClick={() => setIsOpen(false)} className="w-full text-left px-2 py-2 rounded-lg text-foreground flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"><User className="w-4 h-4" strokeWidth={1.75} />Profile</button></Link>
+                        <div className="border-t border-border" />
+                        <button
+                            onClick={toggleTheme}
+                            className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-foreground hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                        >
+                            <span className="flex items-center gap-2">
+                                {theme === 'dark' ? <Moon className="w-4 h-4" strokeWidth={1.75} /> : <Sun className="w-4 h-4" strokeWidth={1.75} />}
+                                Dark mode
+                            </span>
+                            <div className={`w-9 h-5 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-primary' : 'bg-muted-foreground/30'} relative`}>
+                                <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+                            </div>
+                        </button>
+                        <div className="border-t border-border" />
+                        <button
+                            onClick={() => { setIsOpen(false); logout(); navigate('/'); }}
+                            className="w-full text-left px-2 py-2 rounded-lg text-destructive flex items-center gap-2 hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer"
+                        >
+                            <LogOut className="w-4 h-4" strokeWidth={1.75} />
+                            Logout
+                        </button>
+                    </div>
+                )}
+            </div>
 
             <div className="xl:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card/90 backdrop-blur-md border border-border/50 rounded-full px-6 py-3 flex items-center gap-6 shadow-xl shadow-black/10">
                 {navItems.slice(0, 1).map((item) => {

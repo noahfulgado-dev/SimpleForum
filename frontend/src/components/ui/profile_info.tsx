@@ -29,7 +29,7 @@ export function ProfileInfo({
     </div>
   ) : (
     <div className="flex items-center gap-2">
-      <h2 className="text-2xl font-semibold text-foreground">{username}</h2>
+      <h2 className="primary-font text-lg font-semibold text-foreground">{username}</h2>
       <button
         onClick={onStartEditUsername}
         className="text-muted-foreground hover:text-foreground transition-colors"
