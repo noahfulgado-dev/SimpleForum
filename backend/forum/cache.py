@@ -12,19 +12,19 @@ def _ver():
     return v
 
 
-def _page_key(page):
-    return f"{PREFIX}:p{page}:v{_ver()}"
+def _page_key(user_id, page):
+    return f"{PREFIX}:u{user_id}:p{page}:v{_ver()}"
 
 
-def get_cached_topic_ids(page):
-    data = cache.get(_page_key(page))
+def get_cached_topic_page(user_id, page):
+    data = cache.get(_page_key(user_id, page))
     if data is not None:
-        return data["ids"], data["total"]
+        return data["results"], data["count"]
     return None, None
 
 
-def set_cached_topic_ids(page, ids, total):
-    cache.set(_page_key(page), {"ids": ids, "total": total}, TTL)
+def set_cached_topic_page(user_id, page, results, count):
+    cache.set(_page_key(user_id, page), {"results": results, "count": count}, TTL)
 
 
 def clear_topic_cache():

@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.contrib.contenttypes.models import ContentType
 
 from forum.models import Topic, Reply
+from forum.cache import clear_topic_cache
 from interactions.models import Likes, Bookmark, Share
 from interactions.serializers import BookmarkSerializer, ShareSerializer
 
@@ -24,12 +25,14 @@ def toggle_topic_like(request, topic_id):
     if not created:
         like.delete()
         cache.delete(f"profile:{topic.user.id}")
+        clear_topic_cache()
         return Response({
             'status': 'unliked',
             'like_count': topic.likes.count()
         })
 
     cache.delete(f"profile:{topic.user.id}")
+    clear_topic_cache()
     return Response({
         'status': 'liked',
         'like_count': topic.likes.count()
@@ -75,11 +78,13 @@ def toggle_topic_bookmark(request, topic_id):
 
     if not created:
         bookmark.delete()
+        clear_topic_cache()
         return Response({
             'status': 'unbookmarked',
             'bookmark_count': Bookmark.objects.filter(content_type=topic_type, object_id=topic.id).count()
         })
 
+    clear_topic_cache()
     return Response({
         'status': 'bookmarked',
         'bookmark_count': Bookmark.objects.filter(content_type=topic_type, object_id=topic.id).count()
@@ -142,6 +147,7 @@ def toggle_topic_share(request, topic_id):
         share.delete()
         cache.delete(f"profile:{request.user.id}")
         cache.delete(f"profile:{topic.user.id}")
+        clear_topic_cache()
         return Response({
             'status': 'unshared',
             'shared_count': Share.objects.filter(content_type=topic_type, object_id=topic.id).count()
@@ -149,6 +155,7 @@ def toggle_topic_share(request, topic_id):
 
     cache.delete(f"profile:{request.user.id}")
     cache.delete(f"profile:{topic.user.id}")
+    clear_topic_cache()
     return Response({
         'status': 'shared',
         'shared_count': Share.objects.filter(content_type=topic_type, object_id=topic.id).count()
