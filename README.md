@@ -12,7 +12,7 @@ A fullstack discussion forum — create topics, reply nested threads, like, book
 - **Follow system** — Follow/unfollow users with follower and following counts
 - **JWT authentication** — Secure HttpOnly cookie-based auth with email login
 - **Google OAuth** — Sign in with Google via allauth
-- **Rate limiting** — Anonymous (5/min), authenticated (200/day), with stricter limits on login (3/min) and registration (2/min)
+- **Rate limiting** — Anonymous (5/min), authenticated (10000/day), with stricter limits on login (3/min) and registration (2/min)
 - **Notifications** — Real-time alerts for replies and likes with rate-limited batching
 - **Client-side caching** — TanStack Query caches feed data for instant back navigation
 - **API documentation** — Auto-generated Swagger UI and ReDoc
@@ -275,8 +275,7 @@ Topic and reply responses include `user_has_liked`, `user_has_bookmarked`, `user
 ```
 simpleforum/
 ├── .github/workflows/
-│   ├── ci.yml                 # Backend tests on push/PR
-│   └── cd.yml                 # Auto-deploy to Render on push to main
+│   └── ci.yml                 # Backend tests on push/PR + auto-deploy to Render on push to main
 ├── backend/
 │   ├── core/                  # Django project config (settings, urls, health)
 │   ├── accounts/              # User management, follow system
@@ -285,7 +284,7 @@ simpleforum/
 │   ├── notifications/         # Notification system with rate-limiting
 │   ├── manage.py
 │   └── requirements.txt
-├── frontend/                  # React + Vite SPA (WIP)
+├── frontend/                  # React + Vite SPA
 ├── .gitignore
 └── README.md
 ```
@@ -308,7 +307,6 @@ The test suite covers models, serializers, views, and authentication flows. Test
 2. Environment variables are managed via [Doppler](https://doppler.com). For Render, either:
    - **Doppler Sync** (recommended) — link your Doppler project in Integrations → Render, secrets sync automatically
    - **Service Token** — set `DOPPLER_TOKEN` in Render dashboard and prefix commands with `doppler run`
-3. **Build Command:** `pip install -r backend/requirements.txt`
 3. **Build Command:** `pip install -r backend/requirements.txt`
 4. **Start Command:**
    ```bash
