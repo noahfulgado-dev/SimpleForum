@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -103,6 +104,7 @@ class BookmarkAPITest(TestCase):
     """Test Bookmark API endpoints."""
 
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
@@ -242,11 +244,84 @@ class BookmarkAPITest(TestCase):
         response = self.client.post(f'/api/topics/{self.topic.id}/bookmark/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_bookmark_list_content_includes_counts(self):
+        """Test bookmark list content includes counts and flags (not silently omitted)."""
+        Bookmark.objects.create(
+            user=self.user,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/bookmarks/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.data['results'][0]['content']
+        for field in ('like_count', 'reply_count', 'shared_count',
+                      'user_has_liked', 'user_has_bookmarked', 'user_has_shared'):
+            self.assertIn(field, content)
+        self.assertEqual(content['like_count'], 0)
+        self.assertEqual(content['reply_count'], 1)
+
+    def test_bookmark_list_bounded_queries(self):
+        """Test bookmark list stays query-bounded (no N+1 per content object)."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        topics = []
+        for i in range(3):
+            topic = Topic.objects.create(
+                title=f'Topic {i}',
+                description='desc',
+                user=self.other_user
+            )
+            Reply.objects.create(topic=topic, user=self.other_user, content='reply 1')
+            Reply.objects.create(topic=topic, user=self.other_user, content='reply 2')
+            topics.append(topic)
+            Bookmark.objects.create(user=self.user, content_type=self.topic_type, object_id=topic.id)
+        Bookmark.objects.create(user=self.user, content_type=self.reply_type, object_id=self.reply.id)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        with CaptureQueriesContext(connection) as ctx:
+            response = self.client.get('/api/bookmarks/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 4)
+        self.assertLessEqual(len(ctx.captured_queries), 20)
+
+    def test_bookmark_list_cache_hit_reduces_queries(self):
+        """Test cached bookmark list serves with fewer DB queries."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        Bookmark.objects.create(
+            user=self.user,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        with CaptureQueriesContext(connection) as miss_ctx:
+            self.client.get('/api/bookmarks/')
+        with CaptureQueriesContext(connection) as hit_ctx:
+            response = self.client.get('/api/bookmarks/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        self.assertLess(len(hit_ctx.captured_queries), len(miss_ctx.captured_queries))
+
+    def test_bookmark_list_cache_invalidated_on_unbookmark(self):
+        """Test unbookmarking refreshes the cached bookmark list."""
+        Bookmark.objects.create(
+            user=self.user,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.get('/api/bookmarks/')
+        self.client.post(f'/api/topics/{self.topic.id}/bookmark/')
+        response = self.client.get('/api/bookmarks/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
+
 
 class ShareAPITest(TestCase):
     """Test Share API endpoints."""
 
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
@@ -360,3 +435,37 @@ class ShareAPITest(TestCase):
         """Test unauthenticated users cannot access the share list."""
         response = self.client.get('/api/shares/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_share_list_content_includes_counts(self):
+        """Test share list content includes counts and flags (not silently omitted)."""
+        Share.objects.create(
+            user=self.user,
+            content_type=self.topic_type,
+            object_id=self.topic.id
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/shares/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.data['results'][0]['content']
+        for field in ('like_count', 'reply_count', 'shared_count',
+                      'user_has_liked', 'user_has_bookmarked', 'user_has_shared'):
+            self.assertIn(field, content)
+
+    def test_share_list_bounded_queries(self):
+        """Test share list stays query-bounded (no N+1 per content object)."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        for i in range(3):
+            topic = Topic.objects.create(
+                title=f'Topic {i}',
+                description='desc',
+                user=self.other_user
+            )
+            Reply.objects.create(topic=topic, user=self.other_user, content='reply 1')
+            Share.objects.create(user=self.user, content_type=self.topic_type, object_id=topic.id)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        with CaptureQueriesContext(connection) as ctx:
+            response = self.client.get('/api/shares/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
+        self.assertLessEqual(len(ctx.captured_queries), 15)
