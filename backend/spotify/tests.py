@@ -1,13 +1,16 @@
 from unittest import mock
 
 from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
+from allauth.socialaccount.providers.base import ProviderException
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from spotify.providers import SpotifyOAuth2AdapterExt
 
 User = get_user_model()
 
@@ -131,3 +134,51 @@ class NowPlayingAPITest(TestCase):
             self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}')
             self.client.get('/api/spotify/now-playing/')
         self.assertEqual(mock_get.call_count, 2)
+
+
+class SpotifyProviderOverrideTest(TestCase):
+    def setUp(self):
+        self.app = SocialApp.objects.create(
+            provider='spotify', name='Spotify', client_id='test-cid', secret='test-secret'
+        )
+        self.app.sites.add(Site.objects.get_current())
+
+    def _adapter(self):
+        self.request = RequestFactory().get('/accounts/spotify/login/callback/')
+        return SpotifyOAuth2AdapterExt(self.request)
+
+    def _patch_session(self, session):
+        return mock.patch(
+            'spotify.providers.get_adapter',
+            return_value=mock.Mock(get_requests_session=mock.Mock(return_value=session)),
+        )
+
+    def test_profile_ok(self):
+        session = mock.Mock()
+        session.get.return_value = mock.Mock(
+            status_code=200,
+            json=lambda: {'id': 'spotify-uid', 'display_name': 'Tester', 'email': 't@example.com'},
+        )
+        adapter = self._adapter()
+        with self._patch_session(session):
+            login = adapter.complete_login(self.request, self.app, mock.Mock(token='access-token'))
+        self.assertEqual(login.account.uid, 'spotify-uid')
+        session.get.assert_called_once()
+        headers = session.get.call_args.kwargs['headers']
+        self.assertEqual(headers['Authorization'], 'Bearer access-token')
+
+    def test_profile_error_raises_provider_exception(self):
+        session = mock.Mock()
+        session.get.return_value = mock.Mock(
+            status_code=429, text='Rate limit has been reached',
+        )
+        adapter = self._adapter()
+        with self._patch_session(session), self.assertRaises(ProviderException):
+            adapter.complete_login(self.request, self.app, mock.Mock(token='access-token'))
+
+    def test_profile_unauthorized_raises_provider_exception(self):
+        session = mock.Mock()
+        session.get.return_value = mock.Mock(status_code=401, text='The access token expired')
+        adapter = self._adapter()
+        with self._patch_session(session), self.assertRaises(ProviderException):
+            adapter.complete_login(self.request, self.app, mock.Mock(token='access-token'))
