@@ -5,6 +5,7 @@ import threading
 from allauth.account.forms import default_token_generator
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.prefetch import GenericPrefetch
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import close_old_connections
@@ -96,7 +97,9 @@ def test_email(request):
 
 from accounts.serializers import UserSerializer, UserDetailSerializer
 from accounts.models import Follow
+from forum.annotations import annotate_reply_qs, annotate_topic_qs
 from forum.serializers import TopicListSerializer, ReplySerializer
+from forum.models import Topic, Reply
 from interactions.serializers import ShareSerializer
 from interactions.models import Likes
 
@@ -130,19 +133,28 @@ class CachedProfileMixin(GenericAPIView):
 
     def _build_cached_profile(self, user, request):
         topics = list(
-            user.topics.select_related('user').annotate(
-                like_count=Count('likes', distinct=True), reply_count=Count('replies', distinct=True)
-            )[:10]
+            annotate_topic_qs(user.topics.select_related('user'), request.user)[:10]
         )
         topic_data = TopicListSerializer(topics, many=True, context={'request': request}).data
 
         replies = list(
-            user.replies.select_related('user', 'topic')[:10]
+            annotate_reply_qs(
+                user.replies.select_related('user', 'topic'),
+                request.user,
+            ).prefetch_related('likes')[:10]
         )
         reply_data = ReplySerializer(replies, many=True, context={'request': request}).data
 
         shares = list(
-            user.shares.select_related('content_type').order_by('-created')[:10]
+            user.shares.select_related('content_type').prefetch_related(
+                GenericPrefetch('content_object', [
+                    annotate_topic_qs(Topic.objects.select_related('user'), request.user),
+                    annotate_reply_qs(
+                        Reply.objects.select_related('user', 'topic'),
+                        request.user,
+                    ).prefetch_related('likes'),
+                ])
+            ).order_by('-created')[:10]
         )
         share_data = ShareSerializer(shares, many=True, context={'request': request}).data
 
