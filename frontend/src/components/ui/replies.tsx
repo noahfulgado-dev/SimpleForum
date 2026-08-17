@@ -443,7 +443,7 @@ export function Replies({ topic, onClose }: RepliesProps) {
                     <ModalHeader eyebrow="replies · Nº 04" onClose={onClose} />
                 </div>
 
-                    <div className="overflow-y-auto px-5 pb-3">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-3">
                         <div className="relative">
                             <div className="flex flex-col gap-3">
                                 <div className="flex flex-row gap-3 items-start">
@@ -582,10 +582,14 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                 {isLoading && (
                                     <div className="flex flex-col gap-4 py-4">
                                         <TopicDetailSkeleton />
-                                        <div className="border-t border-border" />
-                                        <ReplySkeleton />
-                                        <ReplySkeleton />
-                                        <ReplySkeleton />
+                                        {(topic.reply_count ?? 0) > 0 && (
+                                            <>
+                                                <div className="border-t border-border" />
+                                                <ReplySkeleton />
+                                                <ReplySkeleton />
+                                                <ReplySkeleton />
+                                            </>
+                                        )}
                                     </div>
                                 )}
         

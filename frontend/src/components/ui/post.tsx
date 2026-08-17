@@ -78,7 +78,7 @@ export function Post({ topic, onDelete }: PostProps) {
 
     return (
         <>
-            <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-[linear-gradient(135deg,var(--accent)/0.15_0%,transparent_60%)] bg-card border-0 md:border md:border-border/60 shadow-[0_1px_3px_rgb(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted/40 hover:-translate-y-0.5 transition-all duration-300 ease-in-out overflow-hidden max-w-[700px] w-full self-center">
+            <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-[linear-gradient(135deg,var(--accent)/0.15_0%,transparent_60%)] bg-card border-0 md:border md:border-border/60 shadow-[0_1px_3px_rgb(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted hover:-translate-y-0.5 transition-all duration-300 ease-in-out overflow-hidden max-w-[700px] w-full self-center">
                 <div className="p-7 pb-2 flex flex-row gap-5">
                     <div className="flex-1 min-w-0 flex flex-col gap-2">
                         <div className="flex flex-row gap-2 items-center">
@@ -201,15 +201,12 @@ export function Post({ topic, onDelete }: PostProps) {
                             {likeCount}
                         </span>
                     </button>
-                    <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={(e) => { e.stopPropagation(); setIsRepliesOpen(true); document.body.style.overflow = 'hidden'; }}>
+                    <button className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer" onClick={(e) => { e.stopPropagation(); setIsRepliesOpen(true); }}>
                         <Reply />
                         <span className={`text-sm m-1 text-muted-foreground`}>
                             {topic.reply_count ?? topic.replies?.length ?? 0}
                         </span>
                     </button>
-                    {isRepliesOpen && (
-                        <Replies topic={topic} onClose={() => { setIsRepliesOpen(false); document.body.style.overflow = 'visible'; }} />
-                    )}
                     <button onClick={(e) => { e.stopPropagation(); setIsShareModalOpen(true); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                         <Share />
                         <span className={`text-sm m-1 text-muted-foreground`}>
@@ -217,14 +214,17 @@ export function Post({ topic, onDelete }: PostProps) {
                         </span>
                     </button>
                 </div>
-                {isShareModalOpen && (
-                    <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} onShare={() => setShareCount(c => c + 1)} />
-                )}
-                {isEditModalOpen && (
-                    <EditPostModal topic={topic} onClose={() => setIsEditModalOpen(false)} />
-                )}
             </div>
 
+            {isRepliesOpen && (
+                <Replies topic={topic} onClose={() => setIsRepliesOpen(false)} />
+            )}
+            {isShareModalOpen && (
+                <ShareModal topic={topic} onClose={() => setIsShareModalOpen(false)} onShare={() => setShareCount(c => c + 1)} />
+            )}
+            {isEditModalOpen && (
+                <EditPostModal topic={topic} onClose={() => setIsEditModalOpen(false)} />
+            )}
 
         </>
     )
