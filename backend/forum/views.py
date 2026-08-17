@@ -5,13 +5,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import BooleanField, Case, Count, Exists, ExpressionWrapper, F, FloatField, IntegerField, OuterRef, Subquery, Value, When
+from django.db.models import BooleanField, Count, Exists, ExpressionWrapper, F, FloatField, OuterRef, Subquery, Value
 from django.db.models.functions import Coalesce, Extract, Now
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 
 from accounts.utils import upload_to_imgbb
-from forum.cache import clear_topic_cache, get_cached_topic_ids, set_cached_topic_ids
+from forum.cache import clear_topic_cache, get_cached_topic_page, set_cached_topic_page
 from forum.models import Topic, Reply
 from forum.serializers import TopicListSerializer, TopicSerializer, ReplySerializer
 from interactions.models import Likes, Bookmark, Share
@@ -85,48 +85,35 @@ class TopicListView(generics.ListCreateAPIView):
             return self.get_paginated_response(serializer.data)
 
         page = request.query_params.get(self.paginator.page_query_param, 1)
-        cached_ids, cached_total = get_cached_topic_ids(page)
+        cached_results, cached_count = get_cached_topic_page(request.user.id, page)
 
-        if cached_ids is not None and cached_total is not None:
-            preserved = Case(
-                *[When(id=id, then=Value(i)) for i, id in enumerate(cached_ids)],
-                output_field=IntegerField(),
-            )
-            qs = self._build_annotated_qs(
-                Topic.objects.filter(id__in=cached_ids).order_by(preserved)
-            )
-            topics = list(qs)
-            total = cached_total
-        else:
-            qs = self._build_annotated_qs(Topic.objects.all()).order_by('-hot_score', '-created')
-            page_obj = self.paginate_queryset(qs)
-            topics = list(page_obj)
-            total = self.paginator.page.paginator.count
-
-            ids = [t.id for t in topics]
-            if ids:
-                set_cached_topic_ids(page, ids, total)
-
-        serializer = self.get_serializer(topics, many=True)
-
-        if cached_ids is not None:
+        if cached_results is not None and cached_count is not None:
             page_size = self.paginator.get_page_size(request)
-            total_pages = (total - 1) // page_size + 1
+            total_pages = (cached_count - 1) // page_size + 1
             current = int(page)
             next_url = request.build_absolute_uri(f"?page={current + 1}") if current < total_pages else None
             previous_url = request.build_absolute_uri(f"?page={current - 1}") if current > 1 else None
             return Response(OrderedDict([
-                ('count', total),
+                ('count', cached_count),
                 ('next', next_url),
                 ('previous', previous_url),
-                ('results', serializer.data),
+                ('results', cached_results),
             ]))
+
+        qs = self._build_annotated_qs(Topic.objects.all()).order_by('-hot_score', '-created')
+        page_obj = self.paginate_queryset(qs)
+        topics = list(page_obj)
+        total = self.paginator.page.paginator.count
+
+        serializer = self.get_serializer(topics, many=True)
+        set_cached_topic_page(request.user.id, page, serializer.data, total)
 
         return self.get_paginated_response(serializer.data)
 
     def perform_create(self, serializer):
         topic = serializer.save(user=self.request.user)
         cache.delete(f"profile:{topic.user.id}")
+        clear_topic_cache()
 
 
 class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -189,6 +176,7 @@ class ReplyCreateView(generics.CreateAPIView):
             raise ValidationError({'parent': 'Parent reply must belong to the same topic.'})
         serializer.save(topic=topic, user=self.request.user)
         cache.delete(f"profile:{self.request.user.id}")
+        clear_topic_cache()
 
 
 class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -228,6 +216,7 @@ class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
         if instance.user != self.request.user and not self.request.user.is_staff:
             raise PermissionDenied("You do not have permission to delete this reply.")
         instance.delete()
+        clear_topic_cache()
 
 
 @api_view(['POST'])

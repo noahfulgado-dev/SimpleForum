@@ -193,38 +193,93 @@ class TopicAPITest(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response = self.client.get('/api/topics/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        from forum.cache import get_cached_topic_ids
-        ids, total = get_cached_topic_ids(1)
-        self.assertIsNotNone(ids)
-        self.assertEqual(total, 1)
+        from forum.cache import get_cached_topic_page
+        results, count = get_cached_topic_page(self.user.id, 1)
+        self.assertIsNotNone(results)
+        self.assertEqual(count, 1)
 
     def test_topic_list_cache_hit_returns_same_structure(self):
         """Test cache-hit path returns the same response structure as miss."""
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         response1 = self.client.get('/api/topics/')
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        from forum.cache import get_cached_topic_ids
-        ids, total = get_cached_topic_ids(1)
-        self.assertIsNotNone(ids)
+        from forum.cache import get_cached_topic_page
+        results, count = get_cached_topic_page(self.user.id, 1)
+        self.assertIsNotNone(results)
         response2 = self.client.get('/api/topics/')
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertIn('count', response2.data)
         self.assertIn('results', response2.data)
-        self.assertEqual(len(response2.data['results']), len(response1.data['results']))
+        self.assertEqual(response1.data, response2.data)
 
     def test_topic_list_cache_hit_includes_user_flags(self):
         """Test cache-hit response includes fresh user flags."""
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
         self.client.get('/api/topics/')
-        from forum.cache import get_cached_topic_ids
-        ids, total = get_cached_topic_ids(1)
-        self.assertIsNotNone(ids)
+        from forum.cache import get_cached_topic_page
+        results, count = get_cached_topic_page(self.user.id, 1)
+        self.assertIsNotNone(results)
         response = self.client.get('/api/topics/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         for topic in response.data['results']:
             self.assertIn('user_has_liked', topic)
             self.assertIn('user_has_bookmarked', topic)
             self.assertIn('user_has_shared', topic)
+
+    def test_topic_list_cache_hit_reduces_db_queries(self):
+        """Test cache-hit serves the response with fewer DB queries than a miss."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        with CaptureQueriesContext(connection) as miss_ctx:
+            self.client.get('/api/topics/')
+        with CaptureQueriesContext(connection) as hit_ctx:
+            response = self.client.get('/api/topics/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(len(hit_ctx.captured_queries), len(miss_ctx.captured_queries))
+
+    def test_topic_list_cache_keyed_per_user(self):
+        """Test different users get their own cached flags."""
+        other = User.objects.create_user(username='otheruser', password='testpass123')
+        other_token = str(RefreshToken.for_user(other).access_token)
+        Likes.objects.create(user=self.user, topic=self.topic)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        response = self.client.get('/api/topics/')
+        self.assertTrue(response.data['results'][0]['user_has_liked'])
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {other_token}')
+        response = self.client.get('/api/topics/')
+        self.assertFalse(response.data['results'][0]['user_has_liked'])
+
+    def test_topic_list_cache_invalidated_on_create(self):
+        """Test creating a topic immediately appears in the cached list."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.get('/api/topics/')
+        self.client.post('/api/topics/', {
+            'title': 'Brand New',
+            'description': 'Brand new description',
+        })
+        response = self.client.get('/api/topics/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        titles = [t['title'] for t in response.data['results']]
+        self.assertIn('Brand New', titles)
+
+    def test_topic_list_cache_invalidated_on_like(self):
+        """Test toggling a like refreshes the cached list flags."""
+        other = User.objects.create_user(username='otheruser', password='testpass123')
+        other_topic = Topic.objects.create(
+            title='Other Topic',
+            description='Other description',
+            user=other,
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.get('/api/topics/')
+        response = self.client.post(f'/api/topics/{other_topic.id}/like/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get('/api/topics/')
+        liked = next(t for t in response.data['results'] if t['id'] == other_topic.id)
+        self.assertTrue(liked['user_has_liked'])
+        self.assertEqual(liked['like_count'], 1)
 
 
 class ReplyAPITest(TestCase):
