@@ -35,7 +35,10 @@ class TopicSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created', 'updated', 'user']
 
     def get_replies(self, obj):
-        replies = obj.replies.filter(parent__isnull=True).select_related('user').prefetch_related('likes')[:20]
+        if hasattr(obj, 'top_replies'):
+            replies = obj.top_replies
+        else:
+            replies = obj.replies.filter(parent__isnull=True).select_related('user', 'topic').prefetch_related('likes')[:20]
         return ReplySerializer(replies, many=True, context={**self.context, 'depth': 1}).data
 
     def get_user_has_liked(self, obj):
@@ -58,6 +61,8 @@ class TopicSerializer(serializers.ModelSerializer):
         return False
 
     def get_shared_count(self, obj):
+        if hasattr(obj, 'shared_count'):
+            return obj.shared_count
         from django.contrib.contenttypes.models import ContentType
         from interactions.models import Share
         topic_type = ContentType.objects.get_for_model(Topic)
@@ -144,7 +149,10 @@ class ReplySerializer(serializers.ModelSerializer):
         depth = self.context.get('depth', 0)
         if depth <= 0:
             return []
-        children = obj.children.select_related('user').prefetch_related('likes')
+        if hasattr(obj, 'prefetched_children'):
+            children = obj.prefetched_children
+        else:
+            children = obj.children.select_related('user', 'topic').prefetch_related('likes')
         return ReplySerializer(children, many=True, context={**self.context, 'depth': depth - 1}).data
 
     def get_user_has_liked(self, obj):
@@ -167,6 +175,8 @@ class ReplySerializer(serializers.ModelSerializer):
         return False
 
     def get_shared_count(self, obj):
+        if hasattr(obj, 'shared_count'):
+            return obj.shared_count
         from django.contrib.contenttypes.models import ContentType
         from interactions.models import Share
         reply_type = ContentType.objects.get_for_model(Reply)
