@@ -310,6 +310,7 @@ SOCIALACCOUNT_PROVIDERS = {
     },
     "spotify": {
         "SCOPE": ["user-read-currently-playing", "user-read-playback-state"],
+        "provider_class": "spotify.providers.SpotifyProvider",
     }
 }
 
