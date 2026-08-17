@@ -281,6 +281,71 @@ class TopicAPITest(TestCase):
         self.assertTrue(liked['user_has_liked'])
         self.assertEqual(liked['like_count'], 1)
 
+    def test_topic_detail_cache_hit_reduces_queries(self):
+        """Test cached topic detail serves with fewer DB queries."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        with CaptureQueriesContext(connection) as miss_ctx:
+            self.client.get(f'/api/topics/{self.topic.id}/')
+        with CaptureQueriesContext(connection) as hit_ctx:
+            response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(len(hit_ctx.captured_queries), len(miss_ctx.captured_queries))
+
+    def test_topic_detail_bounded_queries(self):
+        """Test topic detail stays query-bounded (no N+1 on replies/children)."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        for i in range(3):
+            reply = Reply.objects.create(
+                topic=self.topic,
+                user=self.user,
+                content=f'reply {i}',
+            )
+            Reply.objects.create(
+                topic=self.topic,
+                user=self.user,
+                parent=reply,
+                content=f'child {i}',
+            )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        with CaptureQueriesContext(connection) as ctx:
+            response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['reply_count'], 6)
+        self.assertLessEqual(len(ctx.captured_queries), 20)
+
+    def test_topic_detail_cache_invalidated_on_reply_create(self):
+        """Test creating a reply refreshes the cached topic detail."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.get(f'/api/topics/{self.topic.id}/')
+        response = self.client.post(f'/api/topics/{self.topic.id}/replies/', {
+            'content': 'New reply',
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.get(f'/api/topics/{self.topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['reply_count'], 1)
+        self.assertEqual(len(response.data['replies']), 1)
+
+    def test_topic_detail_cache_invalidated_on_like(self):
+        """Test liking a topic refreshes the cached topic detail."""
+        other = User.objects.create_user(username='otheruser', password='testpass123')
+        other_topic = Topic.objects.create(
+            title='Other Topic',
+            description='Other description',
+            user=other,
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.client.get(f'/api/topics/{other_topic.id}/')
+        response = self.client.post(f'/api/topics/{other_topic.id}/like/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(f'/api/topics/{other_topic.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['user_has_liked'])
+        self.assertEqual(response.data['like_count'], 1)
+
 
 class ReplyAPITest(TestCase):
     """Test Reply API endpoints."""

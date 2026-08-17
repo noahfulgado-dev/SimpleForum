@@ -5,13 +5,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.db.models import Prefetch
 from django.db.models import BooleanField, Count, Exists, ExpressionWrapper, F, FloatField, OuterRef, Subquery, Value
 from django.db.models.functions import Coalesce, Extract, Now
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 
 from accounts.utils import upload_to_imgbb
-from forum.cache import clear_topic_cache, get_cached_topic_page, set_cached_topic_page
+from forum.annotations import annotate_reply_qs, annotate_topic_qs
+from forum.cache import clear_topic_cache, get_cached_topic_detail, get_cached_topic_page, set_cached_topic_detail, set_cached_topic_page
 from forum.models import Topic, Reply
 from forum.serializers import TopicListSerializer, TopicSerializer, ReplySerializer
 from interactions.models import Likes, Bookmark, Share
@@ -117,35 +119,44 @@ class TopicListView(generics.ListCreateAPIView):
 
 
 class TopicDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Topic.objects.select_related('user').prefetch_related(
-        'replies__user',
-    ).annotate(
-        like_count=Count('likes', distinct=True), reply_count=Count('replies', distinct=True)
-    )
     serializer_class = TopicSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        qs = super().get_queryset()
         user = self.request.user
-        if user.is_authenticated:
-            topic_type = ContentType.objects.get_for_model(Topic)
-            return qs.annotate(
-                user_has_liked=Exists(
-                    Likes.objects.filter(user=user, topic=OuterRef('pk'))
+        return annotate_topic_qs(
+            Topic.objects.select_related('user').prefetch_related(
+                Prefetch(
+                    'replies',
+                    queryset=annotate_reply_qs(
+                        Reply.objects.filter(parent__isnull=True)
+                        .select_related('user', 'topic')
+                        .prefetch_related('likes'),
+                        user,
+                    )[:20],
+                    to_attr='top_replies',
                 ),
-                user_has_bookmarked=Exists(
-                    Bookmark.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
+                Prefetch(
+                    'top_replies__children',
+                    queryset=annotate_reply_qs(
+                        Reply.objects.select_related('user', 'topic')
+                        .prefetch_related('likes'),
+                        user,
+                    ),
+                    to_attr='prefetched_children',
                 ),
-                user_has_shared=Exists(
-                    Share.objects.filter(user=user, content_type=topic_type, object_id=OuterRef('pk'))
-                )
-            )
-        return qs.annotate(
-            user_has_liked=Value(False, output_field=BooleanField()),
-            user_has_bookmarked=Value(False, output_field=BooleanField()),
-            user_has_shared=Value(False, output_field=BooleanField())
+            ),
+            user,
         )
+
+    def retrieve(self, request, *args, **kwargs):
+        cached = get_cached_topic_detail(request.user.id, kwargs['pk'])
+        if cached is not None:
+            return Response(cached)
+        response = super().retrieve(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK and hasattr(response, 'data'):
+            set_cached_topic_detail(request.user.id, kwargs['pk'], response.data)
+        return response
 
     def perform_update(self, serializer):
         topic = self.get_object()
@@ -211,6 +222,7 @@ class ReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
         if reply.user != self.request.user and not self.request.user.is_staff:
             raise PermissionDenied("You do not have permission to edit this reply.")
         serializer.save()
+        clear_topic_cache()
 
     def perform_destroy(self, instance):
         if instance.user != self.request.user and not self.request.user.is_staff:
