@@ -51,22 +51,25 @@ The frontend is deployed on Vercel. A `vercel.json` at the project root provides
 - **Authentication** — JWT-based auth with HttpOnly cookies, login/register/logout
 - **Google OAuth** — Sign in with Google
 - **TanStack Query** — Client-side caching with 5-minute stale time and `placeholderData` for smooth pagination
+- **PWA** — Installable progressive web app with a service worker via `vite-plugin-pwa`
 - **Responsive** — Mobile-friendly layout with sidebar navigation
 
 ## Project Structure
 
 ```
 frontend/
-├── public/
+├── public/            # Static assets served as-is (favicon, manifest, icons)
 ├── src/
-│   ├── components/       # UI components (post, replies, modals, navbar, sidebar)
-│   ├── hooks/            # Custom React hooks (auth, follow, etc.)
-│   ├── lib/              # Utilities (timeAgo, API client)
-│   ├── pages/            # Route pages (feed, topic detail, profile, auth)
-│   ├── services/         # API service layer and TypeScript interfaces
-│   ├── types/            # Shared TypeScript types
+│   ├── assets/        # Bundled assets (fonts, icons)
+│   ├── components/    # UI components (post, replies, modals, navbar, sidebar)
+│   ├── context/       # React context providers (auth, etc.)
+│   ├── hooks/         # Custom React hooks (auth, follow, etc.)
+│   ├── lib/           # Utilities (timeAgo, API client)
+│   ├── pages/         # Route pages (feed, topic detail, profile, auth)
+│   ├── services/      # API service layer and TypeScript interfaces
 │   ├── App.tsx
-│   └── main.tsx
+│   ├── main.tsx
+│   └── index.css
 ├── vercel.json
 ├── vite.config.ts
 ├── tsconfig.json
