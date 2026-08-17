@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from interactions.models import Likes, Bookmark, Share
 from accounts.serializers import UserSerializer
-from forum.serializers import TopicSerializer, ReplySerializer
+from forum.serializers import TopicListSerializer, ReplySerializer
 from forum.models import Topic, Reply
 
 
@@ -28,7 +28,7 @@ class BookmarkSerializer(serializers.ModelSerializer):
 
     def get_content(self, obj):
         if isinstance(obj.content_object, Topic):
-            return TopicSerializer(obj.content_object, context=self.context).data
+            return TopicListSerializer(obj.content_object, context=self.context).data
         if isinstance(obj.content_object, Reply):
             return ReplySerializer(obj.content_object, context=self.context).data
         return None
@@ -48,7 +48,7 @@ class ShareSerializer(serializers.ModelSerializer):
 
     def get_content(self, obj):
         if isinstance(obj.content_object, Topic):
-            return TopicSerializer(obj.content_object, context=self.context).data
+            return TopicListSerializer(obj.content_object, context=self.context).data
         if isinstance(obj.content_object, Reply):
             return ReplySerializer(obj.content_object, context=self.context).data
         return None

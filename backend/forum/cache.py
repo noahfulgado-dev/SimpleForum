@@ -27,6 +27,18 @@ def set_cached_topic_page(user_id, page, results, count):
     cache.set(_page_key(user_id, page), {"results": results, "count": count}, TTL)
 
 
+def get_content_version():
+    return _ver()
+
+
+def get_cached_topic_detail(user_id, topic_id):
+    return cache.get(f"{PREFIX}:d:u{user_id}:t{topic_id}:v{_ver()}")
+
+
+def set_cached_topic_detail(user_id, topic_id, payload):
+    cache.set(f"{PREFIX}:d:u{user_id}:t{topic_id}:v{_ver()}", payload, TTL)
+
+
 def clear_topic_cache():
     try:
         cache.incr(f"{PREFIX}:ver")
