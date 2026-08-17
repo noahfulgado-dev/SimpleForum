@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import defaultAvatar from '../../assets/image/default_avatar.jpg'
 import { Dots, Wave, Waveform } from '../decor'
+import { useIsMobile } from '../../hooks/useMediaQuery'
 
 const TINT = 'rgba(158, 193, 163, 0.05)'
 
@@ -39,6 +40,7 @@ function WordReveal({
   className?: string
   delay?: number
 }) {
+  const isMobile = useIsMobile()
   const chars = text.split('')
   return (
     <span className={className} role="text" aria-label={text}>
@@ -48,9 +50,13 @@ function WordReveal({
         ) : (
           <span key={i} className="inline-block align-bottom">
             <motion.span
-              className="inline-block origin-center will-change-transform"
-              style={{ transformPerspective: 800 }}
-              initial={{ scale: 0.15, z: -320, rotateX: 35, rotate: -5, opacity: 0 }}
+              className="inline-block origin-center"
+              style={{ transformPerspective: isMobile ? 500 : 800 }}
+              initial={
+                isMobile
+                  ? { scale: 0.4, z: -120, rotateX: 18, rotate: -2, opacity: 0 }
+                  : { scale: 0.15, z: -320, rotateX: 35, rotate: -5, opacity: 0 }
+              }
               whileInView={{ scale: 1, z: 0, rotateX: 0, rotate: 0, opacity: 1 }}
               viewport={{ once: true, margin: '-10%' }}
               transition={{ duration: 0.7, delay: delay + i * 0.06, ease: [0.22, 1, 0.36, 1] }}
@@ -474,7 +480,7 @@ export function Stats() {
 
   return (
     <section ref={ref} className="relative h-[560vh]">
-      <div className="sticky top-0 flex h-screen flex-col overflow-hidden bg-primary/[0.05] [perspective:1400px]">
+      <div className="sticky top-0 flex h-[100dvh] flex-col overflow-hidden bg-primary/[0.05] [perspective:1400px]">
         <Wave className="top-0 z-20 h-[9vw] max-h-32" fill={TINT} />
         <Wave flip className="bottom-0 z-20 h-[9vw] max-h-32" fill={TINT} />
         <Dots className="absolute right-0 top-1/2 h-72 w-72 -translate-y-1/2 [mask-image:radial-gradient(circle,black_10%,transparent_65%)]" />

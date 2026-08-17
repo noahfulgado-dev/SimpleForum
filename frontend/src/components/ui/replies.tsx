@@ -534,12 +534,16 @@ export function Replies({ topic, onClose }: RepliesProps) {
                                         <img
                                             src={topic.image}
                                             alt=""
+                                            loading="lazy"
+                                            decoding="async"
                                             className="absolute inset-0 w-full h-full scale-110 blur-xl opacity-50 object-cover"
                                             aria-hidden="true"
                                         />
                                         <img
                                             src={topic.image}
                                             alt="Post image"
+                                            loading="lazy"
+                                            decoding="async"
                                             className="relative w-full max-h-[468px] object-cover"
                                         />
                                     </div>

@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { motion, useTransform } from 'motion/react'
+import { motion, useTransform, useInView } from 'motion/react'
 import { Music } from 'lucide-react'
 import { useSmoothScrollProgress } from '../../lib/useSmoothScroll'
 
@@ -43,17 +43,19 @@ function Track({
   italic,
   reverse,
   duration,
+  running,
 }: {
   words: string[]
   italic: boolean
   reverse: boolean
   duration: number
+  running: boolean
 }) {
   return (
     <motion.div
       className="flex w-max"
-      animate={{ x: reverse ? ['-50%', '0%'] : ['0%', '-50%'] }}
-      transition={{ duration, repeat: Infinity, ease: 'linear' }}
+      animate={running ? { x: reverse ? ['-50%', '0%'] : ['0%', '-50%'] } : { x: '0%' }}
+      transition={running ? { duration, repeat: Infinity, ease: 'linear' } : { duration: 0 }}
     >
       <Row words={words} italic={italic} />
       <Row words={words} italic={italic} hidden />
@@ -63,6 +65,7 @@ function Track({
 
 export function Marquee() {
   const ref = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { margin: '200px' })
   const { smooth } = useSmoothScrollProgress({
     target: ref,
     offset: ['start end', 'end start'],
@@ -76,10 +79,10 @@ export function Marquee() {
       <section ref={ref} className="relative -rotate-2 border-y border-border bg-primary/10 py-5">
         <motion.div style={{ y }} className="flex flex-col gap-3">
           <motion.div style={{ x: solidX }}>
-            <Track words={WORDS_SOLID} italic={false} reverse={false} duration={22} />
+            <Track words={WORDS_SOLID} italic={false} reverse={false} duration={22} running={inView} />
           </motion.div>
           <motion.div style={{ x: italicX }}>
-            <Track words={WORDS_ITALIC} italic reverse duration={18} />
+            <Track words={WORDS_ITALIC} italic reverse duration={18} running={inView} />
           </motion.div>
         </motion.div>
       </section>

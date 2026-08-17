@@ -1,6 +1,8 @@
+import { useRef } from 'react'
 import type { ReactNode } from 'react'
-import { motion } from 'motion/react'
+import { motion, useInView } from 'motion/react'
 import { Music2, Music4 } from 'lucide-react'
+import { useIsMobile } from '../hooks/useMediaQuery'
 
 const DEFAULT_WAVEFORM = [
   34, 52, 40, 66, 48, 74, 56, 84, 60, 46, 70, 52, 64, 78, 50, 38, 60, 44, 72, 56, 40, 62, 48, 68,
@@ -48,14 +50,18 @@ export function Waveform({
   pulse?: boolean
   duration?: number
 }) {
+  const isMobile = useIsMobile()
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { margin: '150px' })
+  const activeBars = isMobile ? bars.slice(0, 12) : bars
   return (
-    <div aria-hidden="true" className={`pointer-events-none flex items-end gap-[3px] ${className ?? ''}`}>
-      {bars.map((h, i) => (
+    <div ref={ref} aria-hidden="true" className={`pointer-events-none flex items-end gap-[3px] ${className ?? ''}`}>
+      {activeBars.map((h, i) => (
         <motion.span
           key={i}
-          animate={pulse ? { scaleY: [1, 0.35, 1] } : undefined}
+          animate={pulse && inView ? { scaleY: [1, 0.35, 1] } : { scaleY: 1 }}
           transition={
-            pulse
+            pulse && inView
               ? { duration, repeat: Infinity, ease: 'easeInOut', delay: (i % 8) * 0.14 }
               : undefined
           }
@@ -87,11 +93,14 @@ export function OrbitRing({
   duration?: number
   reverse?: boolean
 }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { margin: '150px' })
   return (
     <motion.div
+      ref={ref}
       aria-hidden="true"
-      animate={{ rotate: reverse ? -360 : 360 }}
-      transition={{ duration, repeat: Infinity, ease: 'linear' }}
+      animate={inView ? { rotate: reverse ? -360 : 360 } : { rotate: 0 }}
+      transition={inView ? { duration, repeat: Infinity, ease: 'linear' } : { duration: 0 }}
       className={`pointer-events-none absolute inset-0 rounded-full border border-dashed border-primary/30 ${className ?? ''}`}
     />
   )

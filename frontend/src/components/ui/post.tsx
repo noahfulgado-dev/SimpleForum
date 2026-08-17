@@ -78,7 +78,7 @@ export function Post({ topic, onDelete }: PostProps) {
 
     return (
         <>
-            <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-[linear-gradient(135deg,var(--accent)/0.15_0%,transparent_60%)] bg-card border-0 md:border md:border-border/60 shadow-[0_1px_3px_rgb(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted/40 hover:-translate-y-0.5 transition-all duration-300 ease-in-out overflow-hidden max-w-[700px] w-full self-center">
+            <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-[linear-gradient(135deg,var(--accent)/0.15_0%,transparent_60%)] bg-card border-0 md:border md:border-border/60 shadow-[0_1px_3px_rgb(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted/40 hover:-translate-y-0.5 transition-all duration-300 ease-in-out overflow-hidden max-w-[700px] w-full self-center [content-visibility:auto] [contain-intrinsic-size:auto_460px]">
                 <div className="p-7 pb-2 flex flex-row gap-5">
                     <div className="flex-1 min-w-0 flex flex-col gap-2">
                         <div className="flex flex-row gap-2 items-center">
@@ -179,12 +179,16 @@ export function Post({ topic, onDelete }: PostProps) {
                         <img
                             src={topic.image}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="absolute inset-0 w-full h-full scale-110 blur-xl opacity-50 object-cover"
                             aria-hidden="true"
                         />
                         <img
                             src={topic.image}
                             alt="Post image"
+                            loading="lazy"
+                            decoding="async"
                             className="relative w-full max-h-[468px] object-cover"
                         />
                     </div>

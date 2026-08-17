@@ -15,15 +15,9 @@ export function Landing() {
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const lenis = new Lenis({ lerp: 0.08 })
-    let rafId = 0
-    const raf = (time: number) => {
-      lenis.raf(time)
-      rafId = requestAnimationFrame(raf)
-    }
-    rafId = requestAnimationFrame(raf)
+    if (window.matchMedia('(pointer: coarse)').matches) return
+    const lenis = new Lenis({ lerp: 0.1, autoRaf: true })
     return () => {
-      cancelAnimationFrame(rafId)
       lenis.destroy()
     }
   }, [])

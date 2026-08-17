@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useTransform, useSpring, useMotionValue, type Variants } from 'motion/react'
+import { motion, useTransform, useSpring, useMotionValue, useInView, type Variants } from 'motion/react'
 import { Music, Music4, SkipBack, SkipForward, Play } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Huni } from '../ui/huni'
@@ -30,6 +30,7 @@ const NOTES = [
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { margin: '100px' })
   const { smooth } = useSmoothScrollProgress({
     target: ref,
     offset: ['start start', 'end start'],
@@ -97,8 +98,12 @@ export function Hero() {
           aria-hidden="true"
         >
           <motion.div
-            animate={{ y: [0, -14, 0], rotate: [-8, 8, -8] }}
-            transition={{ duration: note.dur, repeat: Infinity, ease: 'easeInOut' }}
+            animate={inView ? { y: [0, -14, 0], rotate: [-8, 8, -8] } : { y: 0, rotate: 0 }}
+            transition={
+              inView
+                ? { duration: note.dur, repeat: Infinity, ease: 'easeInOut' }
+                : { duration: 0 }
+            }
           >
             {i % 2 ? (
               <Music4 className={note.size} strokeWidth={1.5} />
@@ -189,8 +194,8 @@ export function Hero() {
               <OrbitRing className="h-[180px] w-[180px] sm:h-[360px] sm:w-[360px]" duration={26} />
               <OrbitRing className="h-[260px] w-[260px] sm:h-[520px] sm:w-[520px]" duration={44} reverse />
               <motion.div
-                animate={{ y: [0, -14, 0] }}
-                transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
+                animate={inView ? { y: [0, -14, 0] } : { y: 0 }}
+                transition={inView ? { duration: 5.5, repeat: Infinity, ease: 'easeInOut' } : { duration: 0 }}
               >
                 <motion.div style={{ rotateX: rotX, rotateY: rotY, transformStyle: 'preserve-3d' }}>
                   <Huni className="h-28 w-auto sm:h-52" />
@@ -200,8 +205,10 @@ export function Hero() {
 
             {/* mini now-playing mockup */}
             <motion.div
-              animate={{ y: [0, -12, 0], rotate: [-2, 2, -2] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              animate={inView ? { y: [0, -12, 0], rotate: [-2, 2, -2] } : { y: 0, rotate: 0 }}
+              transition={
+                inView ? { duration: 6, repeat: Infinity, ease: 'easeInOut' } : { duration: 0 }
+              }
               className="absolute -bottom-8 left-0 z-10 hidden sm:block sm:-left-6"
             >
               <motion.div

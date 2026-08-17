@@ -331,7 +331,7 @@ export function Profile() {
                             <div className="font-medium text-foreground text-sm">{topic.title}</div>
                             <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{topic.description}</div>
                             {topic.image && (
-                              <img src={topic.image} alt="" className="w-full h-24 object-cover rounded-lg mt-1" />
+                              <img src={topic.image} alt="" loading="lazy" decoding="async" className="w-full h-24 object-cover rounded-lg mt-1" />
                             )}
                             <div className="flex items-center gap-2 mt-1.5 text-[0.65rem] text-muted-foreground">
                               <span>{topic.like_count ?? 0} likes</span>
