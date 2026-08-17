@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/', include('forum.urls')),
     path('api/', include('interactions.urls')),
     path('api/', include('notifications.urls')),
+    path('api/spotify/', include('spotify.urls')),
 
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name="schema-json"),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name="schema-swagger-ui"),
