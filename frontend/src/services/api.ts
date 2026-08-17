@@ -79,6 +79,20 @@ export interface AuthTokens {
   user: User;
 }
 
+export interface NowPlaying {
+  connected: boolean;
+  playing?: boolean;
+  title?: string;
+  artists?: string[];
+  album?: string;
+  album_art?: string;
+  progress_ms?: number;
+  duration_ms?: number;
+  is_playing?: boolean;
+  device?: string;
+  preview_url?: string | null;
+}
+
 export const authAPI = {
   login: (credentials: LoginCredentials) =>
     axiosInstance.post<AuthTokens>('/auth/login/', credentials),
@@ -193,6 +207,11 @@ export const forumAPI = {
 export const notificationsAPI = {
   getUnreadCount: () =>
     axiosInstance.get<{ count: number }>('/api/notifications/unread-count/'),
+};
+
+export const spotifyAPI = {
+  getNowPlaying: () =>
+    axiosInstance.get<NowPlaying>('/api/spotify/now-playing/'),
 };
 
 export default {

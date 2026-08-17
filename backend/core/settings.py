@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.spotify',
 
     'dj_rest_auth',
     'dj_rest_auth.registration',
@@ -106,6 +107,7 @@ INSTALLED_APPS = [
     'forum',
     'interactions',
     'notifications',
+    'spotify',
     'corsheaders',
 ]
 
@@ -305,6 +307,9 @@ SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": ["profile", "email"],
         "AUTH_PARAMS": {"access_type": "online"},
+    },
+    "spotify": {
+        "SCOPE": ["user-read-currently-playing", "user-read-playback-state"],
     }
 }
 
