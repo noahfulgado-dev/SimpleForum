@@ -2,10 +2,13 @@ from datetime import timedelta
 
 import requests
 from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
+from allauth.socialaccount.providers.oauth2.views import OAuth2CallbackView, OAuth2LoginView
 from django.core.cache import cache
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from spotify.providers import SpotifyOAuth2AdapterExt
 
 SPOTIFY_NOW_PLAYING_URL = "https://api.spotify.com/v1/me/player/currently-playing"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -102,3 +105,7 @@ class NowPlayingView(APIView):
         if "error" in payload:
             return Response(payload, status=503)
         return Response(payload)
+
+
+oauth2_login = OAuth2LoginView.adapter_view(SpotifyOAuth2AdapterExt)
+oauth2_callback = OAuth2CallbackView.adapter_view(SpotifyOAuth2AdapterExt)

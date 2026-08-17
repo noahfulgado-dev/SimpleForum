@@ -182,3 +182,19 @@ class SpotifyProviderOverrideTest(TestCase):
         adapter = self._adapter()
         with self._patch_session(session), self.assertRaises(ProviderException):
             adapter.complete_login(self.request, self.app, mock.Mock(token='access-token'))
+
+    def test_provider_urlpatterns_include_spotify_routes(self):
+        from django.urls import URLResolver
+        from allauth.urls import build_provider_urlpatterns
+        patterns = build_provider_urlpatterns()
+        spotify = next(p for p in patterns if str(p.pattern) == 'spotify/')
+        inner = [
+            str(p.pattern)
+            for p in spotify.url_patterns  # type: ignore[attr-defined]
+            if isinstance(p, URLResolver)
+        ] or [
+            str(p.pattern)
+            for p in spotify.url_patterns  # type: ignore[attr-defined]
+        ]
+        self.assertTrue('login/' in inner, inner)
+        self.assertTrue('login/callback/' in inner, inner)
