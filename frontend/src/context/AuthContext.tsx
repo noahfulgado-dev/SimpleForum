@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { authAPI, type User } from '../services/api';
-import { ACCESS_KEY, REFRESH_KEY } from '../services/axios';
+import { ACCESS_KEY, REFRESH_KEY, PENDING_SPOTIFY_KEY, SPOTIFY_CONNECT_URL } from '../services/axios';
 
 const USER_STORAGE_KEY = 'simpleforum_user';
 
@@ -53,6 +53,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('auth:logout', handleLogout);
     return () => window.removeEventListener('auth:logout', handleLogout);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (localStorage.getItem(PENDING_SPOTIFY_KEY)) {
+      localStorage.removeItem(PENDING_SPOTIFY_KEY);
+      window.location.href = SPOTIFY_CONNECT_URL;
+    }
+  }, [isAuthenticated]);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authAPI.login({ email, password });

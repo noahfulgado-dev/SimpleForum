@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Music4, Pause, Play, Radio } from 'lucide-react';
 import { Waveform } from '../decor';
 import { spotifyAPI } from '@/services/api';
-import axiosInstance from '@/services/axios';
+import { PENDING_SPOTIFY_KEY, SPOTIFY_CONNECT_URL } from '@/services/axios';
+import { useAuth } from '@/context/AuthContext';
 
 const FALLBACK = {
   title: 'slow mornings',
@@ -12,8 +14,6 @@ const FALLBACK = {
   time: '01:24',
   total: '03:12',
 } as const;
-
-const CONNECT_URL = `${(axiosInstance.defaults.baseURL ?? '').replace(/\/$/, '')}/accounts/spotify/login/?process=connect`;
 
 function fmt(ms: number): string {
   if (!ms || ms <= 0) return '00:00';
@@ -27,6 +27,17 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
   const [tick, setTick] = useState(0);
   const [previewing, setPreviewing] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleConnect = () => {
+    if (isAuthenticated) {
+      window.location.href = SPOTIFY_CONNECT_URL;
+    } else {
+      localStorage.setItem(PENDING_SPOTIFY_KEY, '1');
+      navigate('/login');
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['spotify', 'now-playing'],
@@ -88,13 +99,13 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
             </p>
           </div>
         </div>
-        <a
-          href={CONNECT_URL}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-all duration-200 hover:opacity-90"
+        <button
+          onClick={handleConnect}
+          className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-all duration-200 hover:opacity-90"
         >
           <Radio className="h-3.5 w-3.5" strokeWidth={2} />
           Connect Spotify
-        </a>
+        </button>
       </div>
     );
   }
