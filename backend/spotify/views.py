@@ -121,9 +121,12 @@ def _get_premium(user, token):
     value = cache.get(key)
     if value is not None:
         return value
-    resp = _api_call("get", SPOTIFY_ME_URL, token)
+    try:
+        resp = _api_call("get", SPOTIFY_ME_URL, token)
+    except requests.RequestException:
+        return None
     if resp.status_code != 200:
-        return False
+        return None
     value = resp.json().get("product") == "premium"
     cache.set(key, value, PREMIUM_TTL)
     return value
@@ -136,6 +139,11 @@ class NowPlayingView(APIView):
             return Response({"connected": False})
 
         premium = _get_premium(request.user, token)
+        if premium is None:
+            # Couldn't determine account tier; assume Premium so controls
+            # show. A free account's first control call gets 403 → the
+            # premium cache is cleared → next poll downgrades the card.
+            premium = True
         key = f"{CACHE_PREFIX}{request.user.id}"
         payload = cache.get(key)
         if payload is None:

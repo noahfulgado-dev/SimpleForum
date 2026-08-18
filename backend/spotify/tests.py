@@ -81,8 +81,20 @@ class NowPlayingAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.data,
-            {"connected": True, "playing": False, "premium": False},
+            {"connected": True, "playing": False, "premium": True},
         )
+
+    def test_premium_unknown_defaults_to_controls(self):
+        self.auth()
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.side_effect = [
+                mock_spotify(429),
+                mock_spotify(200, TRACK_PAYLOAD),
+            ]
+            response = self.client.get('/api/spotify/now-playing/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['premium'], True)
+        self.assertIsNone(cache.get(f"spotify:premium:u{self.user.id}"))
 
     def test_playing_payload(self):
         self.auth()
