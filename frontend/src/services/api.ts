@@ -228,6 +228,12 @@ export const spotifyAPI = {
 
   control: (cmd: SpotifyControlAction) =>
     axiosInstance.post<{ ok: boolean }>('/api/spotify/control/', cmd),
+
+  getStatus: () =>
+    axiosInstance.get<{ connected: boolean; premium: boolean | null }>('/api/spotify/status/'),
+
+  disconnect: () =>
+    axiosInstance.post<{ disconnected: boolean }>('/api/spotify/disconnect/'),
 };
 
 export default {
