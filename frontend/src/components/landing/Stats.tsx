@@ -474,7 +474,7 @@ export function Stats() {
 
   return (
     <section ref={ref} className="relative h-[560vh]">
-      <div className="sticky top-0 flex h-screen flex-col overflow-hidden bg-primary/[0.05] [perspective:1400px]">
+      <div className="sticky top-0 flex h-dvh flex-col overflow-hidden bg-primary/[0.05] [perspective:1400px]">
         <Wave className="top-0 z-20 h-[9vw] max-h-32" fill={TINT} />
         <Wave flip className="bottom-0 z-20 h-[9vw] max-h-32" fill={TINT} />
         <Dots className="absolute right-0 top-1/2 h-72 w-72 -translate-y-1/2 [mask-image:radial-gradient(circle,black_10%,transparent_65%)]" />

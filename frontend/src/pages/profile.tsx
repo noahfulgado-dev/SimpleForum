@@ -132,7 +132,7 @@ export function Profile() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col bg-background bg-grid">
+      <div className="h-dvh flex flex-col bg-background bg-grid">
         <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
@@ -153,7 +153,7 @@ export function Profile() {
 
   if (!profile) {
     return (
-      <div className="h-screen flex flex-col bg-background bg-grid">
+      <div className="h-dvh flex flex-col bg-background bg-grid">
         <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
@@ -173,7 +173,7 @@ export function Profile() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background bg-grid">
+    <div className="h-dvh flex flex-col bg-background bg-grid">
       <div className="p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
         <Navbar />
       </div>

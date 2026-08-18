@@ -389,7 +389,7 @@ export function TopicDetail() {
 
     if (error) {
         return (
-            <div className="h-screen flex flex-col bg-background">
+            <div className="h-dvh flex flex-col bg-background">
                 <div className="xl:block p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50"><Navbar /></div>
                 <SidebarLeft />
                 <SidebarRight />
@@ -405,7 +405,7 @@ export function TopicDetail() {
 
     return (
         <>
-        <div className="h-screen flex flex-col bg-background bg-grid">
+        <div className="h-dvh flex flex-col bg-background bg-grid">
             <div className="p-5 pb-0 shrink-0 relative z-50">
                 <Navbar />
             </div>
@@ -425,7 +425,7 @@ export function TopicDetail() {
                             {isLoading && <TopicDetailSkeleton />}
 
                             {topic && (
-                                <div className="border-0 md:border md:border-border rounded-none md:rounded-[10px] p-7 flex flex-row gap-5 bg-card">
+                                <div className="-mx-3 md:mx-0 border-0 md:border md:border-border rounded-none md:rounded-[10px] p-4 sm:p-7 flex flex-row gap-3 sm:gap-5 bg-card">
                                     <div className="w-full flex flex-col gap-2">
                                         <div className="flex flex-row gap-2">
                                             <div
@@ -480,7 +480,7 @@ export function TopicDetail() {
                                             </div>
                                         )}
 
-                                        <div className="flex flex-row gap-4 mt-2">
+                                        <div className="flex flex-row gap-2 sm:gap-4 mt-2">
                                             <button onClick={handleLike} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                                                 {isLiked ? <Liked fillColor="#ef4444" /> : <Like />}
                                                 <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-muted-foreground'} m-1`}>{likeCount}</span>

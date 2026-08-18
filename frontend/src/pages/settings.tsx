@@ -134,7 +134,7 @@ export function Settings() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col bg-background bg-grid">
+      <div className="h-dvh flex flex-col bg-background bg-grid">
         <div className="p-5 pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
@@ -161,7 +161,7 @@ export function Settings() {
 
   if (!profile) {
     return (
-      <div className="h-screen flex flex-col bg-background bg-grid">
+      <div className="h-dvh flex flex-col bg-background bg-grid">
         <div className="p-5 pb-0 shrink-0 relative z-50">
           <Navbar />
         </div>
@@ -180,7 +180,7 @@ export function Settings() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background bg-grid">
+    <div className="h-dvh flex flex-col bg-background bg-grid">
       <div className="p-5 pb-0 shrink-0 relative z-50">
         <Navbar />
       </div>
