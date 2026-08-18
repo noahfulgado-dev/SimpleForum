@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Music4, Pause, Play, Radio } from 'lucide-react';
+import { toast } from 'sonner';
+import { Music4, Pause, Play, Radio, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2 } from 'lucide-react';
 import { Waveform } from '../decor';
 import { spotifyAPI } from '@/services/api';
+import type { NowPlaying } from '@/services/api';
 import { PENDING_SPOTIFY_KEY, getSpotifyConnectUrl } from '@/services/axios';
 import { useAuth } from '@/context/AuthContext';
 
@@ -15,6 +17,14 @@ const FALLBACK = {
   total: '03:12',
 } as const;
 
+const CONTROL_ERRORS: Record<string, string> = {
+  not_connected: 'Connect Spotify first.',
+  premium_required: 'Spotify Premium required for controls.',
+  reconnect_required: 'Reconnect Spotify to unlock controls.',
+  no_device: 'Nothing playing on Spotify — start something on any device.',
+  player_command_failed: 'Spotify rejected the command.',
+};
+
 function fmt(ms: number): string {
   if (!ms || ms <= 0) return '00:00';
   const total = Math.floor(ms / 1000);
@@ -23,12 +33,18 @@ function fmt(ms: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+const NOW_PLAYING_KEY = ['spotify', 'now-playing'];
+
 export function NowPlayingCard({ className = '' }: { className?: string }) {
   const [tick, setTick] = useState(0);
   const [previewing, setPreviewing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [volume, setVolume] = useState(100);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const volumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleConnect = () => {
     if (isAuthenticated) {
@@ -39,8 +55,8 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
     }
   };
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['spotify', 'now-playing'],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: NOW_PLAYING_KEY,
     queryFn: () => spotifyAPI.getNowPlaying().then(r => r.data),
     refetchInterval: 20000,
     refetchOnWindowFocus: true,
@@ -50,6 +66,7 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
 
   const playing = data?.connected === true && data?.playing === true;
   const is_playing = playing && data?.is_playing !== false;
+  const premium = data?.premium === true;
 
   useEffect(() => {
     if (!playing) return;
@@ -65,10 +82,67 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
     }
   }, [data?.title]);
 
-  useEffect(() => () => { audioRef.current?.pause(); }, []);
+  useEffect(() => () => {
+    audioRef.current?.pause();
+    if (volumeTimer.current) clearTimeout(volumeTimer.current);
+  }, []);
 
   const elapsed = playing ? (data?.progress_ms ?? 0) + (is_playing ? tick * 1000 : 0) : 0;
   const pct = playing && data?.duration_ms ? Math.min(100, (elapsed / data.duration_ms) * 100) : 0;
+
+  const patch = (partial: Partial<NowPlaying>) => {
+    queryClient.setQueryData<NowPlaying>(NOW_PLAYING_KEY, old =>
+      old ? { ...old, ...partial } : old,
+    );
+  };
+
+  const runControl = async (cmd: Parameters<typeof spotifyAPI.control>[0], optimistic?: Partial<NowPlaying>) => {
+    if (busy) return;
+    setBusy(true);
+    if (optimistic) patch(optimistic);
+    try {
+      await spotifyAPI.control(cmd);
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { code?: string } } };
+      const code = axiosErr.response?.data?.code;
+      toast.error(CONTROL_ERRORS[code ?? ''] ?? 'Could not control Spotify.');
+      if (optimistic) refetch();
+    } finally {
+      setBusy(false);
+      refetch();
+    }
+  };
+
+  const togglePlay = () =>
+    runControl(is_playing ? { action: 'pause' } : { action: 'play' }, {
+      is_playing: !is_playing,
+    });
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    const position_ms = Math.round((data?.duration_ms ?? 0) * ratio);
+    if (!data?.duration_ms) return;
+    runControl({ action: 'seek', position_ms }, { progress_ms: position_ms });
+  };
+
+  const handleVolume = (value: number) => {
+    setVolume(value);
+    if (volumeTimer.current) clearTimeout(volumeTimer.current);
+    volumeTimer.current = setTimeout(() => {
+      runControl({ action: 'volume', volume_percent: value });
+    }, 350);
+  };
+
+  const toggleShuffle = () =>
+    runControl({ action: 'shuffle', state: !data?.shuffle }, { shuffle: !data?.shuffle });
+
+  const cycleRepeat = () => {
+    const order = ['off', 'context', 'track'] as const;
+    const current = data?.repeat ?? 'off';
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    runControl({ action: 'repeat', state: next }, { repeat: next });
+  };
 
   const togglePreview = () => {
     if (!data?.preview_url) return;
@@ -84,6 +158,8 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
     audioRef.current.play();
     setPreviewing(true);
   };
+
+  const RepeatIcon = data?.repeat === 'track' ? Repeat1 : Repeat;
 
   if (!isLoading && data?.connected === false) {
     return (
@@ -145,13 +221,28 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
               {(data?.artists ?? []).join(', ')} · {data?.device ?? 'spotify'}
             </p>
           </div>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            {is_playing ? (
-              <Pause className="h-4 w-4 fill-current" strokeWidth={0} />
-            ) : (
-              <Play className="ml-0.5 h-4 w-4 fill-current" strokeWidth={0} />
-            )}
-          </span>
+          {premium ? (
+            <button
+              onClick={togglePlay}
+              disabled={busy}
+              aria-label={is_playing ? 'Pause' : 'Play'}
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-60"
+            >
+              {is_playing ? (
+                <Pause className="h-4 w-4 fill-current" strokeWidth={0} />
+              ) : (
+                <Play className="ml-0.5 h-4 w-4 fill-current" strokeWidth={0} />
+              )}
+            </button>
+          ) : (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              {is_playing ? (
+                <Pause className="h-4 w-4 fill-current" strokeWidth={0} />
+              ) : (
+                <Play className="ml-0.5 h-4 w-4 fill-current" strokeWidth={0} />
+              )}
+            </span>
+          )}
         </div>
         <Waveform
           className="mt-3 h-4"
@@ -164,7 +255,10 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
           <span className="font-cousine text-[0.5rem] tracking-widest text-muted-foreground">
             {fmt(elapsed)}
           </span>
-          <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+          <div
+            onClick={premium ? handleSeek : undefined}
+            className={`h-1 flex-1 overflow-hidden rounded-full bg-muted ${premium ? 'cursor-pointer' : ''}`}
+          >
             <div
               className="h-full rounded-full bg-primary transition-[width] duration-1000 ease-linear"
               style={{ width: `${pct}%` }}
@@ -174,10 +268,58 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
             {fmt(data?.duration_ms ?? 0)}
           </span>
         </div>
-        {data?.preview_url && (
+        {premium && (
+          <div className="mt-3 flex items-center justify-center gap-4">
+            <button
+              onClick={toggleShuffle}
+              disabled={busy}
+              aria-label="Toggle shuffle"
+              className={`cursor-pointer transition-colors disabled:opacity-60 ${data?.shuffle ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <Shuffle className="h-4 w-4" strokeWidth={2} />
+            </button>
+            <button
+              onClick={() => runControl({ action: 'previous' })}
+              disabled={busy}
+              aria-label="Previous"
+              className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground disabled:opacity-60"
+            >
+              <SkipBack className="h-5 w-5 fill-current" strokeWidth={0} />
+            </button>
+            <button
+              onClick={() => runControl({ action: 'next' })}
+              disabled={busy}
+              aria-label="Next"
+              className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground disabled:opacity-60"
+            >
+              <SkipForward className="h-5 w-5 fill-current" strokeWidth={0} />
+            </button>
+            <button
+              onClick={cycleRepeat}
+              disabled={busy}
+              aria-label="Repeat"
+              className={`cursor-pointer transition-colors disabled:opacity-60 ${data?.repeat !== 'off' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <RepeatIcon className="h-4 w-4" strokeWidth={2} />
+            </button>
+            <div className="ml-1 flex items-center gap-1.5">
+              <Volume2 className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={volume}
+                onChange={e => handleVolume(Number(e.target.value))}
+                aria-label="Volume"
+                className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-muted accent-primary"
+              />
+            </div>
+          </div>
+        )}
+        {!premium && data?.preview_url && (
           <button
             onClick={togglePreview}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary transition-all duration-200 hover:bg-primary/20 cursor-pointer"
+            className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary transition-all duration-200 hover:bg-primary/20"
           >
             {previewing ? <Pause className="h-3.5 w-3.5 fill-current" strokeWidth={0} /> : <Play className="ml-0.5 h-3.5 w-3.5 fill-current" strokeWidth={0} />}
             {previewing ? 'Pause preview' : 'Play 30s preview'}

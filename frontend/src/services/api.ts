@@ -91,7 +91,20 @@ export interface NowPlaying {
   is_playing?: boolean;
   device?: string;
   preview_url?: string | null;
+  premium?: boolean;
+  shuffle?: boolean;
+  repeat?: 'track' | 'context' | 'off';
 }
+
+export type SpotifyControlAction =
+  | { action: 'play'; position_ms?: number }
+  | { action: 'pause' }
+  | { action: 'next' }
+  | { action: 'previous' }
+  | { action: 'seek'; position_ms: number }
+  | { action: 'volume'; volume_percent: number }
+  | { action: 'shuffle'; state: boolean }
+  | { action: 'repeat'; state: 'track' | 'context' | 'off' };
 
 export const authAPI = {
   login: (credentials: LoginCredentials) =>
@@ -212,6 +225,9 @@ export const notificationsAPI = {
 export const spotifyAPI = {
   getNowPlaying: () =>
     axiosInstance.get<NowPlaying>('/api/spotify/now-playing/'),
+
+  control: (cmd: SpotifyControlAction) =>
+    axiosInstance.post<{ ok: boolean }>('/api/spotify/control/', cmd),
 };
 
 export default {
