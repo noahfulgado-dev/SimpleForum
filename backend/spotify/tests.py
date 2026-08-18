@@ -18,6 +18,8 @@ TRACK_PAYLOAD = {
     "device": {"name": "MacBook"},
     "is_playing": True,
     "progress_ms": 42000,
+    "shuffle_state": True,
+    "repeat_state": "context",
     "item": {
         "name": "Golden Hour",
         "duration_ms": 192000,
@@ -29,6 +31,15 @@ TRACK_PAYLOAD = {
         ]},
     },
 }
+
+ME_PREMIUM = {"product": "premium"}
+
+
+def mock_spotify(status=200, json_data=None, text=""):
+    resp = mock.Mock(status_code=status, text=text)
+    if json_data is not None:
+        resp.json = mock.Mock(return_value=json_data)
+    return resp
 
 
 class NowPlayingAPITest(TestCase):
@@ -65,16 +76,18 @@ class NowPlayingAPITest(TestCase):
 
     def test_nothing_playing(self):
         self.auth()
-        with mock.patch('spotify.views.requests.get') as mock_get:
-            mock_get.return_value = mock.Mock(status_code=204)
+        with mock.patch('spotify.views.requests.request', return_value=mock_spotify(204)):
             response = self.client.get('/api/spotify/now-playing/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"connected": True, "playing": False})
+        self.assertEqual(
+            response.data,
+            {"connected": True, "playing": False, "premium": False},
+        )
 
     def test_playing_payload(self):
         self.auth()
-        with mock.patch('spotify.views.requests.get') as mock_get:
-            mock_get.return_value = mock.Mock(status_code=200, json=lambda: TRACK_PAYLOAD)
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.return_value = mock_spotify(200, TRACK_PAYLOAD)
             response = self.client.get('/api/spotify/now-playing/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['playing'], True)
@@ -85,20 +98,47 @@ class NowPlayingAPITest(TestCase):
         self.assertEqual(response.data['duration_ms'], 192000)
         self.assertEqual(response.data['device'], 'MacBook')
         self.assertEqual(response.data['preview_url'], 'https://p.scdn.co/mp3-preview/abc')
+        self.assertEqual(response.data['shuffle'], True)
+        self.assertEqual(response.data['repeat'], 'context')
+
+    def test_premium_flag_from_cache(self):
+        cache.set(f"spotify:premium:u{self.user.id}", True, 86400)
+        self.auth()
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.return_value = mock_spotify(200, TRACK_PAYLOAD)
+            response = self.client.get('/api/spotify/now-playing/')
+        self.assertEqual(response.data['premium'], True)
+        me_calls = [
+            c for c in mock_request.call_args_list
+            if c.args[1] == 'https://api.spotify.com/v1/me'
+        ]
+        self.assertEqual(len(me_calls), 0)
+
+    def test_premium_fetched_and_cached(self):
+        self.auth()
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.side_effect = [
+                mock_spotify(200, ME_PREMIUM),
+                mock_spotify(200, TRACK_PAYLOAD),
+            ]
+            response = self.client.get('/api/spotify/now-playing/')
+        self.assertEqual(response.data['premium'], True)
+        self.assertEqual(cache.get(f"spotify:premium:u{self.user.id}"), True)
 
     def test_token_refresh_retry(self):
         self.auth()
-        mock_get = mock.Mock()
-        mock_get.side_effect = [
-            mock.Mock(status_code=401),
-            mock.Mock(status_code=200, json=lambda: TRACK_PAYLOAD),
+        mock_request = mock.Mock()
+        mock_request.side_effect = [
+            mock_spotify(200, ME_PREMIUM),
+            mock_spotify(401),
+            mock_spotify(200, TRACK_PAYLOAD),
         ]
         mock_post = mock.Mock()
-        mock_post.return_value = mock.Mock(
-            status_code=200,
-            json=lambda: {"access_token": "new-access", "expires_in": 3600},
+        mock_post.return_value = mock_spotify(
+            200,
+            {"access_token": "new-access", "expires_in": 3600},
         )
-        with mock.patch('spotify.views.requests.get', mock_get), mock.patch('spotify.views.requests.post', mock_post):
+        with mock.patch('spotify.views.requests.request', mock_request), mock.patch('spotify.views.requests.post', mock_post):
             response = self.client.get('/api/spotify/now-playing/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Golden Hour')
@@ -108,32 +148,32 @@ class NowPlayingAPITest(TestCase):
 
     def test_rate_limited(self):
         self.auth()
-        with mock.patch('spotify.views.requests.get') as mock_get:
-            mock_get.return_value = mock.Mock(status_code=429)
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.return_value = mock_spotify(429)
             response = self.client.get('/api/spotify/now-playing/')
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
         self.assertEqual(response.data['error'], 'rate_limited')
 
     def test_cached_response_skips_network(self):
         self.auth()
-        with mock.patch('spotify.views.requests.get') as mock_get:
-            mock_get.return_value = mock.Mock(status_code=200, json=lambda: TRACK_PAYLOAD)
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.return_value = mock_spotify(200, TRACK_PAYLOAD)
             self.client.get('/api/spotify/now-playing/')
             self.client.get('/api/spotify/now-playing/')
-        self.assertEqual(mock_get.call_count, 1)
+        self.assertEqual(mock_request.call_count, 2)
 
     def test_cache_isolated_per_user(self):
         other = User.objects.create_user(username='otheruser', password='testpass123')
         SocialAccount.objects.create(user=other, provider='spotify', uid='other-uid')
         SocialToken.objects.create(account=other.socialaccount_set.get(provider='spotify'), app=self.app, token='other-token')
-        with mock.patch('spotify.views.requests.get') as mock_get:
-            mock_get.return_value = mock.Mock(status_code=200, json=lambda: TRACK_PAYLOAD)
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.return_value = mock_spotify(200, TRACK_PAYLOAD)
             self.auth()
             self.client.get('/api/spotify/now-playing/')
             refresh = RefreshToken.for_user(other)
             self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}')
             self.client.get('/api/spotify/now-playing/')
-        self.assertEqual(mock_get.call_count, 2)
+        self.assertEqual(mock_request.call_count, 4)
 
 
 class SpotifyProviderOverrideTest(TestCase):
@@ -221,7 +261,7 @@ class SpotifyAuthorizeBridgeTest(TestCase):
         self.assertTrue(response.url.startswith('https://accounts.spotify.com/authorize'))
         self.assertIn('client_id=test-cid', response.url)
         self.assertIn('redirect_uri=http%3A%2F%2Ftestserver%2Fapi%2Fspotify%2Fcallback%2F', response.url)
-        self.assertIn('scope=user-read-currently-playing+user-read-playback-state', response.url)
+        self.assertIn('scope=user-read-currently-playing+user-read-playback-state+user-modify-playback-state', response.url)
         self.assertIn('state=', response.url)
 
     def test_state_is_signed_with_user_id(self):
@@ -292,6 +332,7 @@ class SpotifyCallbackTest(TestCase):
         self.assertEqual(token.token, 'access-token')
         self.assertEqual(token.token_secret, 'refresh-token')
         self.assertEqual(token.app, self.app)
+        self.assertEqual(cache.get(f"spotify:premium:u{self.user.id}"), False)
 
     def test_callback_requires_spotify_app(self):
         self.app.delete()
@@ -326,6 +367,203 @@ class SpotifyCallbackTest(TestCase):
                 f'/api/spotify/callback/?state={self.state}&code=auth-code'
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class SpotifyControlTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='ctrluser', password='testpass123')
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+        self.app = SocialApp.objects.create(
+            provider='spotify', name='Spotify', client_id='test-cid', secret='test-secret'
+        )
+        self.app.sites.add(Site.objects.get_current())
+        self.account = SocialAccount.objects.create(
+            user=self.user, provider='spotify', uid='spotify-uid'
+        )
+        self.token = SocialToken.objects.create(
+            account=self.account, app=self.app, token='access-token', token_secret='refresh-token'
+        )
+        cache.clear()
+
+    def auth(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+
+    def _patch_request(self, status=202, text=''):
+        return mock.patch(
+            'spotify.views.requests.request',
+            return_value=mock_spotify(status, text=text),
+        )
+
+    def _last_call(self, mock_request):
+        return mock_request.call_args_list[-1]
+
+    def test_requires_authentication(self):
+        response = self.client.post('/api/spotify/control/', {'action': 'play'})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_not_connected(self):
+        self.user.socialaccount_set.all().delete()
+        self.auth()
+        response = self.client.post('/api/spotify/control/', {'action': 'play'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['code'], 'not_connected')
+
+    def test_unknown_action(self):
+        self.auth()
+        response = self.client.post('/api/spotify/control/', {'action': 'hack'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_play(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post('/api/spotify/control/', {'action': 'play'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'ok': True})
+        method, url = self._last_call(mock_request).args[0], self._last_call(mock_request).args[1]
+        self.assertEqual(method, 'put')
+        self.assertEqual(url, 'https://api.spotify.com/v1/me/player/play')
+
+    def test_play_with_position(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post(
+                '/api/spotify/control/', {'action': 'play', 'position_ms': 5000},
+                format='json',
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self._last_call(mock_request).kwargs['json'], {'position_ms': 5000})
+
+    def test_play_with_bad_position(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post(
+                '/api/spotify/control/', {'action': 'play', 'position_ms': -1}
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_pause(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post('/api/spotify/control/', {'action': 'pause'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        method, url = self._last_call(mock_request).args
+        self.assertEqual(method, 'put')
+        self.assertEqual(url, 'https://api.spotify.com/v1/me/player/pause')
+
+    def test_next_and_previous(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            self.client.post('/api/spotify/control/', {'action': 'next'})
+            self.client.post('/api/spotify/control/', {'action': 'previous'})
+        urls = [c.args[1] for c in mock_request.call_args_list]
+        self.assertEqual(urls, [
+            'https://api.spotify.com/v1/me/player/next',
+            'https://api.spotify.com/v1/me/player/previous',
+        ])
+        self.assertEqual(mock_request.call_args_list[0].args[0], 'post')
+        self.assertEqual(mock_request.call_args_list[1].args[0], 'post')
+
+    def test_seek(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post(
+                '/api/spotify/control/', {'action': 'seek', 'position_ms': 60000},
+                format='json',
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        call = self._last_call(mock_request)
+        self.assertEqual(call.args[1], 'https://api.spotify.com/v1/me/player/seek')
+        self.assertEqual(call.kwargs['params'], {'position_ms': 60000})
+
+    def test_seek_requires_position(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post('/api/spotify/control/', {'action': 'seek'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_volume(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post(
+                '/api/spotify/control/', {'action': 'volume', 'volume_percent': 42},
+                format='json',
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        call = self._last_call(mock_request)
+        self.assertEqual(call.args[1], 'https://api.spotify.com/v1/me/player/volume')
+        self.assertEqual(call.kwargs['params'], {'volume_percent': 42})
+
+    def test_volume_out_of_range(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post(
+                '/api/spotify/control/', {'action': 'volume', 'volume_percent': 101}
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_shuffle(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post('/api/spotify/control/', {'action': 'shuffle', 'state': True}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        call = self._last_call(mock_request)
+        self.assertEqual(call.args[1], 'https://api.spotify.com/v1/me/player/shuffle')
+        self.assertEqual(call.kwargs['params'], {'state': 'true'})
+
+    def test_repeat(self):
+        self.auth()
+        with self._patch_request() as mock_request:
+            response = self.client.post(
+                '/api/spotify/control/', {'action': 'repeat', 'state': 'track'}
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        call = self._last_call(mock_request)
+        self.assertEqual(call.args[1], 'https://api.spotify.com/v1/me/player/repeat')
+        self.assertEqual(call.kwargs['params'], {'state': 'track'})
+
+    def test_repeat_bad_state(self):
+        self.auth()
+        response = self.client.post('/api/spotify/control/', {'action': 'repeat', 'state': 'loud'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_premium_required_clears_premium_cache(self):
+        cache.set(f"spotify:premium:u{self.user.id}", True, 86400)
+        self.auth()
+        with self._patch_request(403, text='Player command failed: Premium required') as mock_request:
+            response = self.client.post('/api/spotify/control/', {'action': 'play'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['code'], 'premium_required')
+        self.assertIsNone(cache.get(f"spotify:premium:u{self.user.id}"))
+
+    def test_insufficient_scope_maps_to_reconnect(self):
+        self.auth()
+        with self._patch_request(403, text='Insufficient client scope') as mock_request:
+            response = self.client.post('/api/spotify/control/', {'action': 'play'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['code'], 'reconnect_required')
+
+    def test_no_device(self):
+        self.auth()
+        with self._patch_request(404, text='Device not found') as mock_request:
+            response = self.client.post('/api/spotify/control/', {'action': 'play'})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['code'], 'no_device')
+
+    def test_refresh_retry_on_control(self):
+        self.auth()
+        mock_request = mock.Mock()
+        mock_request.side_effect = [mock_spotify(401), mock_spotify(202)]
+        mock_post = mock.Mock()
+        mock_post.return_value = mock_spotify(
+            200, {"access_token": "new-access", "expires_in": 3600}
+        )
+        with mock.patch('spotify.views.requests.request', mock_request), mock.patch('spotify.views.requests.post', mock_post):
+            response = self.client.post('/api/spotify/control/', {'action': 'play'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.token.refresh_from_db()
+        self.assertEqual(self.token.token, 'new-access')
 
 
 class SocialAccountAdapterRedirectTest(TestCase):

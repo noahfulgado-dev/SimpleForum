@@ -290,6 +290,7 @@ REST_FRAMEWORK = {
         'login': '3/minute',
         'register': '2/minute',
         'dj_rest_auth': '3/minute',
+        'spotify_control': '30/minute',
     }
 }
 
