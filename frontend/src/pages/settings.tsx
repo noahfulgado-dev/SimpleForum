@@ -8,7 +8,9 @@ import { useAuth } from "@/context/AuthContext"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { usersAPI } from '@/services/api'
+import { usersAPI, spotifyAPI } from '@/services/api'
+import { getSpotifyConnectUrl } from '@/services/axios'
+import { Radio } from "lucide-react"
 
 export function Settings() {
   document.title = "Settings | HuniSpace"
@@ -63,6 +65,30 @@ export function Settings() {
       }
     },
   })
+
+  const { data: spotifyStatus } = useQuery({
+    queryKey: ['spotify', 'status'],
+    queryFn: () => spotifyAPI.getStatus().then(r => r.data),
+  })
+
+  const disconnectMutation = useMutation({
+    mutationFn: () => spotifyAPI.disconnect().then(r => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['spotify', 'status'] })
+      queryClient.invalidateQueries({ queryKey: ['spotify', 'now-playing'] })
+      toast.success('Spotify unlinked')
+    },
+    onError: () => toast.error('Failed to unlink Spotify'),
+  })
+
+  const handleConnectSpotify = () => {
+    window.location.href = getSpotifyConnectUrl()
+  }
+
+  const handleDisconnect = () => {
+    if (!window.confirm('Unlink your Spotify account? The Now Playing card will disconnect.')) return
+    disconnectMutation.mutate()
+  }
 
   const saving = profileMutation.isPending
 
@@ -262,6 +288,44 @@ export function Settings() {
                         </svg>
                       </button>
                     </div>
+                  )}
+                </div>
+
+                {/* Spotify */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1db954,#121212)]">
+                      <Radio className="h-4 w-4 text-white/90" strokeWidth={2} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">Spotify</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {spotifyStatus?.connected
+                          ? spotifyStatus.premium === true
+                            ? 'Connected · Premium'
+                            : 'Connected'
+                          : 'Connect to show your Now Playing'}
+                      </p>
+                    </div>
+                  </div>
+                  {spotifyStatus?.connected ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleDisconnect}
+                      disabled={disconnectMutation.isPending}
+                    >
+                      {disconnectMutation.isPending ? 'Unlinking…' : 'Unlink'}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={handleConnectSpotify}
+                      className="bg-[#1db954] hover:bg-[#1db954]/90 text-white"
+                    >
+                      <Radio className="h-3.5 w-3.5" strokeWidth={2} />
+                      Connect
+                    </Button>
                   )}
                 </div>
                 </div>
