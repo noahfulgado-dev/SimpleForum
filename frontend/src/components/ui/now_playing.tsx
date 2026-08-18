@@ -55,7 +55,7 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
     }
   };
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: NOW_PLAYING_KEY,
     queryFn: () => spotifyAPI.getNowPlaying().then(r => r.data),
     refetchInterval: 20000,
@@ -66,7 +66,7 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
 
   const playing = data?.connected === true && data?.playing === true;
   const is_playing = playing && data?.is_playing !== false;
-  const premium = data?.premium === true;
+  const premium = data?.premium !== false;
 
   useEffect(() => {
     if (!playing) return;
@@ -182,6 +182,24 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
           <Radio className="h-3.5 w-3.5" strokeWidth={2} />
           Connect Spotify
         </button>
+      </div>
+    );
+  }
+
+  if (!isLoading && !data && error) {
+    return (
+      <div className={`rounded-2xl border border-border bg-card p-4 shadow-sm ${className}`}>
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[linear-gradient(135deg,#1db954,#121212)]">
+            <Radio className="h-7 w-7 text-white/90" strokeWidth={1.25} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-unna text-base font-bold italic text-foreground">Spotify hiccup</p>
+            <p className="mt-0.5 font-cousine text-[0.6rem] uppercase tracking-[0.15em] text-muted-foreground">
+              couldn't reach Spotify — retrying
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
