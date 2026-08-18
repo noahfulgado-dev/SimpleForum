@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { authAPI, type User } from '../services/api';
-import { ACCESS_KEY, REFRESH_KEY, PENDING_SPOTIFY_KEY, SPOTIFY_CONNECT_URL } from '../services/axios';
+import { ACCESS_KEY, REFRESH_KEY, PENDING_SPOTIFY_KEY, getSpotifyConnectUrl } from '../services/axios';
 
 const USER_STORAGE_KEY = 'simpleforum_user';
 
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isAuthenticated) return;
     if (localStorage.getItem(PENDING_SPOTIFY_KEY)) {
       localStorage.removeItem(PENDING_SPOTIFY_KEY);
-      window.location.href = SPOTIFY_CONNECT_URL;
+      window.location.href = getSpotifyConnectUrl();
     }
   }, [isAuthenticated]);
 
