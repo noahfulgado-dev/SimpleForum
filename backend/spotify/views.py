@@ -3,11 +3,15 @@ from datetime import timedelta
 import requests
 from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
 from allauth.socialaccount.providers.oauth2.views import OAuth2CallbackView, OAuth2LoginView
+from django.contrib.auth import login
 from django.core.cache import cache
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.authentication import CookieJWTAuthentication
 from spotify.providers import SpotifyOAuth2AdapterExt
 
 SPOTIFY_NOW_PLAYING_URL = "https://api.spotify.com/v1/me/player/currently-playing"
@@ -105,6 +109,42 @@ class NowPlayingView(APIView):
         if "error" in payload:
             return Response(payload, status=503)
         return Response(payload)
+
+
+class SpotifyAuthorizeView(APIView):
+    """Bridge the JWT session into a Django/allauth session via a top-level
+    navigation, so the spotify connect flow runs as the authenticated user.
+    """
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        user = self._resolve_user(request)
+        if user is None:
+            return Response(
+                {"detail": "Authentication credentials were not provided."},
+                status=401,
+            )
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        return HttpResponseRedirect(reverse("spotify_login") + "?process=connect")
+
+    def _resolve_user(self, request):
+        cookie_auth = CookieJWTAuthentication()
+        try:
+            result = cookie_auth.authenticate(request)
+            if result is not None:
+                return result[0]
+        except Exception:
+            pass
+        raw = request.query_params.get("access")
+        if raw:
+            try:
+                token = cookie_auth.get_validated_token(raw)
+                return cookie_auth.get_user(token)
+            except Exception:
+                return None
+        return None
 
 
 oauth2_login = OAuth2LoginView.adapter_view(SpotifyOAuth2AdapterExt)

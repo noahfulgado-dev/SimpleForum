@@ -198,3 +198,48 @@ class SpotifyProviderOverrideTest(TestCase):
         ]
         self.assertTrue('login/' in inner, inner)
         self.assertTrue('login/callback/' in inner, inner)
+
+
+class SpotifyAuthorizeBridgeTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='bridgeuser', password='testpass123')
+        self.refresh = RefreshToken.for_user(self.user)
+
+    def test_requires_authentication(self):
+        response = self.client.get('/api/spotify/authorize/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_establishes_session_and_redirects_to_connect(self):
+        response = self.client.get(
+            f'/api/spotify/authorize/?access={self.refresh.access_token}'
+        )
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertIn('process=connect', response.url)
+        self.assertTrue(response.url.startswith('/accounts/spotify/login/'))
+        session_user_id = self.client.session.get('_auth_user_id')
+        self.assertEqual(str(self.user.id), str(session_user_id))
+
+    def test_rejects_invalid_token(self):
+        response = self.client.get('/api/spotify/authorize/?access=not-a-token')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_authenticates_via_http_only_cookie(self):
+        from rest_framework_simplejwt.tokens import AccessToken
+        access = AccessToken.for_user(self.user)
+        response = self.client.get(
+            '/api/spotify/authorize/', HTTP_COOKIE=f'core-app-auth={access}'
+        )
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertIn('process=connect', response.url)
+
+
+class SocialAccountAdapterRedirectTest(TestCase):
+    def test_connect_redirect_url_is_frontend(self):
+        from django.conf import settings
+        from django.test import RequestFactory
+        from accounts.adapters import SocialAccountAdapter
+        adapter = SocialAccountAdapter()
+        url = adapter.get_connect_redirect_url(
+            RequestFactory().get('/'), mock.Mock()
+        )
+        self.assertEqual(url, settings.LOGIN_REDIRECT_URL)

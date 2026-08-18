@@ -316,6 +316,8 @@ SOCIALACCOUNT_PROVIDERS = {
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
+SOCIALACCOUNT_ADAPTER = "accounts.adapters.SocialAccountAdapter"
+
 LOGIN_REDIRECT_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 ACCOUNT_LOGOUT_REDIRECT_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 

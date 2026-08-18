@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Music4, Pause, Play, Radio } from 'lucide-react';
 import { Waveform } from '../decor';
 import { spotifyAPI } from '@/services/api';
-import { PENDING_SPOTIFY_KEY, SPOTIFY_CONNECT_URL } from '@/services/axios';
+import { PENDING_SPOTIFY_KEY, getSpotifyConnectUrl } from '@/services/axios';
 import { useAuth } from '@/context/AuthContext';
 
 const FALLBACK = {
@@ -32,7 +32,7 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
 
   const handleConnect = () => {
     if (isAuthenticated) {
-      window.location.href = SPOTIFY_CONNECT_URL;
+      window.location.href = getSpotifyConnectUrl();
     } else {
       localStorage.setItem(PENDING_SPOTIFY_KEY, '1');
       navigate('/login');
