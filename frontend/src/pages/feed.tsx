@@ -18,7 +18,7 @@ export function Feed() {
     );
 
     return (
-        <div className="h-screen flex flex-col bg-background bg-grid">
+        <div className="h-dvh flex flex-col bg-background bg-grid">
             <div className="xl:block p-0 xl:p-5 xl:pb-0 shrink-0 relative z-50">
                 <Navbar />
             </div>
@@ -33,7 +33,7 @@ export function Feed() {
                         <div className="xl:hidden mt-4">
                             <NowPlayingCard />
                         </div>
-                        <div className="mb-6 mt-6 flex items-center justify-center gap-3 md:mt-8">
+                        <div className="mb-6 mt-6 flex flex-wrap items-center justify-center gap-3 md:mt-8">
                             <span className="h-2.5 w-2.5 rounded-[2px] bg-primary" aria-hidden="true" />
                             <span className="font-cousine text-[0.7rem] uppercase tracking-[0.3em] text-foreground">
                                 the feed

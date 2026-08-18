@@ -78,8 +78,8 @@ export function Post({ topic, onDelete }: PostProps) {
 
     return (
         <>
-            <div className="rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-[linear-gradient(135deg,var(--accent)/0.15_0%,transparent_60%)] bg-card border-0 md:border md:border-border/60 shadow-[0_1px_3px_rgb(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted hover:-translate-y-0.5 transition-all duration-300 ease-in-out overflow-hidden max-w-[700px] w-full self-center">
-                <div className="p-7 pb-2 flex flex-row gap-5">
+            <div className="-mx-3 md:mx-0 rounded-none md:rounded-[10px] p-0 min-h-[100px] bg-[linear-gradient(135deg,var(--accent)/0.15_0%,transparent_60%)] bg-card border-0 md:border md:border-border/60 shadow-[0_1px_3px_rgb(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:bg-muted hover:-translate-y-0.5 transition-all duration-300 ease-in-out overflow-hidden max-w-[700px] w-full self-center">
+                <div className="p-4 sm:p-7 pb-2 flex flex-row gap-3 sm:gap-5">
                     <div className="flex-1 min-w-0 flex flex-col gap-2">
                         <div className="flex flex-row gap-2 items-center">
                             <div
@@ -156,7 +156,7 @@ export function Post({ topic, onDelete }: PostProps) {
                     </div>
                 </div>
 
-                <div className="font-extralight tertiary-font cursor-pointer px-7" onClick={() => navigate(`/topic/${topic.id}`)}>
+                <div className="font-extralight tertiary-font cursor-pointer px-4 sm:px-7" onClick={() => navigate(`/topic/${topic.id}`)}>
                     <div className="font-semibold text-[1.2rem]">
                         {topic.title}
                     </div>
@@ -190,7 +190,7 @@ export function Post({ topic, onDelete }: PostProps) {
                     </div>
                 )}
 
-                <div className="flex flex-row gap-4 px-7 mt-2 pb-4">
+                <div className="flex flex-row gap-2 sm:gap-4 px-4 sm:px-7 mt-2 pb-4">
                     <button onClick={(e) => { e.stopPropagation(); handleLike(); }} className="w-max h-7 rounded-[5px] flex items-center justify-center hover:bg-muted transition-all duration-300 ease-in-out cursor-pointer">
                         {isLiked ? (
                             <Liked fillColor="#ef4444" />

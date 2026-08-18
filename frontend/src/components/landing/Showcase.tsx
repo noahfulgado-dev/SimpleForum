@@ -246,7 +246,7 @@ export function Showcase() {
 
   return (
     <section ref={ref} className="relative h-[280vh]">
-      <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden [perspective:1400px]">
+      <div className="sticky top-0 flex h-dvh flex-col justify-center overflow-hidden [perspective:1400px]">
         <GhostWord
           text="the feed"
           className="absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 rotate-6 whitespace-nowrap text-[16vw]"

@@ -287,7 +287,7 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
           </span>
         </div>
         {premium && (
-          <div className="mt-3 flex items-center justify-center gap-4">
+          <div className="mt-3 flex items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={toggleShuffle}
               disabled={busy}
@@ -329,7 +329,7 @@ export function NowPlayingCard({ className = '' }: { className?: string }) {
                 value={volume}
                 onChange={e => handleVolume(Number(e.target.value))}
                 aria-label="Volume"
-                className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-muted accent-primary"
+                className="h-1 w-12 cursor-pointer appearance-none rounded-full bg-muted accent-primary sm:w-16"
               />
             </div>
           </div>
