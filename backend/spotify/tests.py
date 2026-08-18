@@ -204,20 +204,36 @@ class SpotifyAuthorizeBridgeTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='bridgeuser', password='testpass123')
         self.refresh = RefreshToken.for_user(self.user)
+        self.app = SocialApp.objects.create(
+            provider='spotify', name='Spotify', client_id='test-cid', secret='test-secret'
+        )
+        self.app.sites.add(Site.objects.get_current())
 
     def test_requires_authentication(self):
         response = self.client.get('/api/spotify/authorize/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_establishes_session_and_redirects_to_connect(self):
+    def test_redirects_directly_to_spotify_authorize(self):
         response = self.client.get(
             f'/api/spotify/authorize/?access={self.refresh.access_token}'
         )
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertIn('process=connect', response.url)
-        self.assertTrue(response.url.startswith('/accounts/spotify/login/'))
-        session_user_id = self.client.session.get('_auth_user_id')
-        self.assertEqual(str(self.user.id), str(session_user_id))
+        self.assertTrue(response.url.startswith('https://accounts.spotify.com/authorize'))
+        self.assertIn('client_id=test-cid', response.url)
+        self.assertIn('redirect_uri=http%3A%2F%2Ftestserver%2Fapi%2Fspotify%2Fcallback%2F', response.url)
+        self.assertIn('scope=user-read-currently-playing+user-read-playback-state', response.url)
+        self.assertIn('state=', response.url)
+
+    def test_state_is_signed_with_user_id(self):
+        from urllib.parse import unquote
+        from django.core.signing import loads as signing_loads
+        from spotify.views import STATE_SALT
+        response = self.client.get(
+            f'/api/spotify/authorize/?access={self.refresh.access_token}'
+        )
+        state = unquote(response.url.split('state=')[1])
+        payload = signing_loads(state, salt=STATE_SALT)
+        self.assertEqual(payload['uid'], self.user.id)
 
     def test_rejects_invalid_token(self):
         response = self.client.get('/api/spotify/authorize/?access=not-a-token')
@@ -230,7 +246,86 @@ class SpotifyAuthorizeBridgeTest(TestCase):
             '/api/spotify/authorize/', HTTP_COOKIE=f'core-app-auth={access}'
         )
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertIn('process=connect', response.url)
+        self.assertTrue(response.url.startswith('https://accounts.spotify.com/authorize'))
+
+
+class SpotifyCallbackTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='cbuser', password='testpass123')
+        self.app = SocialApp.objects.create(
+            provider='spotify', name='Spotify', client_id='test-cid', secret='test-secret'
+        )
+        self.app.sites.add(Site.objects.get_current())
+        from spotify.views import STATE_SALT
+        from django.core.signing import dumps as signing_dumps
+        self.state = signing_dumps({'uid': self.user.id}, salt=STATE_SALT)
+
+    def _patch_exchange(self, token_data):
+        return mock.patch(
+            'spotify.views.requests.post',
+            return_value=mock.Mock(status_code=200, json=lambda: token_data),
+        )
+
+    def _patch_profile(self, profile):
+        return mock.patch(
+            'spotify.views.requests.get',
+            return_value=mock.Mock(status_code=200, json=lambda: profile),
+        )
+
+    def test_callback_links_token_and_redirects(self):
+        token_data = {
+            'access_token': 'access-token',
+            'refresh_token': 'refresh-token',
+            'expires_in': 3600,
+        }
+        profile = {'id': 'spotify-uid', 'display_name': 'Tester'}
+        with self._patch_exchange(token_data), self._patch_profile(profile):
+            response = self.client.get(
+                f'/api/spotify/callback/?state={self.state}&code=auth-code'
+            )
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        from django.conf import settings
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
+        account = SocialAccount.objects.get(user=self.user, provider='spotify')
+        self.assertEqual(account.uid, 'spotify-uid')
+        token = SocialToken.objects.get(account=account)
+        self.assertEqual(token.token, 'access-token')
+        self.assertEqual(token.token_secret, 'refresh-token')
+        self.assertEqual(token.app, self.app)
+
+    def test_callback_requires_spotify_app(self):
+        self.app.delete()
+        with self._patch_exchange({'access_token': 't'}), self._patch_profile({'id': 'u'}):
+            response = self.client.get(
+                f'/api/spotify/callback/?state={self.state}&code=auth-code'
+            )
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    def test_callback_rejects_bad_state(self):
+        response = self.client.get('/api/spotify/callback/?state=forged&code=auth-code')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_callback_rejects_expired_state(self):
+        from spotify.views import STATE_MAX_AGE
+        with mock.patch('spotify.views.STATE_MAX_AGE', -1):
+            response = self.client.get(
+                f'/api/spotify/callback/?state={self.state}&code=auth-code'
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_callback_rejects_missing_code(self):
+        response = self.client.get(f'/api/spotify/callback/?state={self.state}')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_callback_rejects_failed_code_exchange(self):
+        with mock.patch(
+            'spotify.views.requests.post',
+            return_value=mock.Mock(status_code=400, text='bad request'),
+        ):
+            response = self.client.get(
+                f'/api/spotify/callback/?state={self.state}&code=auth-code'
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class SocialAccountAdapterRedirectTest(TestCase):

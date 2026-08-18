@@ -3,11 +3,14 @@ from datetime import timedelta
 import requests
 from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
 from allauth.socialaccount.providers.oauth2.views import OAuth2CallbackView, OAuth2LoginView
-from django.contrib.auth import login
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.signing import BadSignature, SignatureExpired, dumps, loads
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
+from urllib.parse import urlencode
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -15,7 +18,12 @@ from accounts.authentication import CookieJWTAuthentication
 from spotify.providers import SpotifyOAuth2AdapterExt
 
 SPOTIFY_NOW_PLAYING_URL = "https://api.spotify.com/v1/me/player/currently-playing"
+SPOTIFY_ME_URL = "https://api.spotify.com/v1/me"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
+SPOTIFY_AUTHORIZE_URL = "https://accounts.spotify.com/authorize"
+SPOTIFY_SCOPE = "user-read-currently-playing user-read-playback-state"
+STATE_SALT = "spotify-connect-state"
+STATE_MAX_AGE = 600
 CACHE_PREFIX = "spotify:now_playing:u"
 CACHE_TTL = 20
 
@@ -112,12 +120,18 @@ class NowPlayingView(APIView):
 
 
 class SpotifyAuthorizeView(APIView):
-    """Bridge the JWT session into a Django/allauth session via a top-level
-    navigation, so the spotify connect flow runs as the authenticated user.
+    """Start the Spotify connect flow for the JWT-authenticated user.
+
+    Cookie/session-free: authenticates via JWT, signs a short-lived state
+    token embedding the user id, and redirects straight to Spotify's
+    official authorize page. The callback verifies the state and exchanges
+    the code server-side, so no server session has to survive the
+    cross-site round trip (Firefox Total Cookie Protection / Safari ITP).
     """
 
     authentication_classes = []
     permission_classes = []
+    throttle_classes = []
 
     def get(self, request):
         user = self._resolve_user(request)
@@ -126,8 +140,23 @@ class SpotifyAuthorizeView(APIView):
                 {"detail": "Authentication credentials were not provided."},
                 status=401,
             )
-        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        return HttpResponseRedirect(reverse("spotify_login") + "?process=connect")
+        app = SocialApp.objects.filter(provider="spotify").first()
+        if app is None:
+            return Response(
+                {"detail": "Spotify app is not configured."}, status=503
+            )
+        state = dumps({"uid": user.id}, salt=STATE_SALT)
+        redirect_uri = request.build_absolute_uri(reverse("spotify-callback"))
+        params = {
+            "client_id": app.client_id,
+            "response_type": "code",
+            "redirect_uri": redirect_uri,
+            "scope": SPOTIFY_SCOPE,
+            "state": state,
+        }
+        return HttpResponseRedirect(
+            f"{SPOTIFY_AUTHORIZE_URL}?{urlencode(params)}"
+        )
 
     def _resolve_user(self, request):
         cookie_auth = CookieJWTAuthentication()
@@ -145,6 +174,92 @@ class SpotifyAuthorizeView(APIView):
             except Exception:
                 return None
         return None
+
+
+class SpotifyCallbackView(APIView):
+    """Handle the Spotify OAuth callback without any session state."""
+
+    authentication_classes = []
+    permission_classes = []
+    throttle_classes = []
+
+    def get(self, request):
+        state = request.query_params.get("state", "")
+        try:
+            payload = loads(state, salt=STATE_SALT, max_age=STATE_MAX_AGE)
+        except (BadSignature, SignatureExpired):
+            return Response({"detail": "Invalid or expired state."}, status=400)
+
+        user_id = payload.get("uid")
+        User = get_user_model()
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=400)
+
+        app = SocialApp.objects.filter(provider="spotify").first()
+        if app is None:
+            return Response({"detail": "Spotify app is not configured."}, status=503)
+
+        code = request.query_params.get("code")
+        if not code:
+            return Response({"detail": "Missing authorization code."}, status=400)
+
+        redirect_uri = request.build_absolute_uri(reverse("spotify-callback"))
+        token_data = _exchange_code(app, code, redirect_uri)
+        if token_data is None:
+            return Response(
+                {"detail": "Failed to exchange authorization code."}, status=400
+            )
+
+        access_token = token_data["access_token"]
+        profile = _fetch_profile(access_token)
+        if profile is None:
+            return Response({"detail": "Failed to fetch Spotify profile."}, status=400)
+
+        account, _ = SocialAccount.objects.get_or_create(
+            user=user, provider="spotify", uid=profile["id"]
+        )
+        token, _ = SocialToken.objects.update_or_create(
+            account=account,
+            defaults={
+                "app": app,
+                "token": access_token,
+                "token_secret": token_data.get("refresh_token", ""),
+                "expires_at": timezone.now()
+                + timedelta(seconds=token_data.get("expires_in", 3600)),
+            },
+        )
+        token.save()
+        cache.delete(f"{CACHE_PREFIX}{user.id}")
+        return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
+
+
+def _exchange_code(app, code, redirect_uri):
+    resp = requests.post(
+        SPOTIFY_TOKEN_URL,
+        data={
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirect_uri,
+        },
+        auth=(app.client_id, app.secret),
+        timeout=10,
+    )
+    if resp.status_code != 200:
+        return None
+    return resp.json()
+
+
+def _fetch_profile(access_token):
+    resp = requests.get(
+        SPOTIFY_ME_URL,
+        headers={"Authorization": f"Bearer {access_token}"},
+        timeout=10,
+    )
+    if resp.status_code != 200:
+        return None
+    return resp.json()
 
 
 oauth2_login = OAuth2LoginView.adapter_view(SpotifyOAuth2AdapterExt)
