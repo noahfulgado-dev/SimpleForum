@@ -8,6 +8,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://simpleforum-1m94.onrend
 
 const ACCESS_KEY = 'simpleforum_access';
 const REFRESH_KEY = 'simpleforum_refresh';
+const PENDING_SPOTIFY_KEY = 'pending_spotify_connect';
+const SPOTIFY_CONNECT_URL = `${API_URL}/accounts/spotify/login/?process=connect`;
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_URL,
@@ -75,6 +77,6 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export { ACCESS_KEY, REFRESH_KEY };
+export { ACCESS_KEY, REFRESH_KEY, PENDING_SPOTIFY_KEY, SPOTIFY_CONNECT_URL };
 
 export default axiosInstance;
