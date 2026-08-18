@@ -1,7 +1,5 @@
-from django.urls import path
+from allauth.socialaccount.providers.oauth2.urls import default_urlpatterns
 
-from spotify.views import NowPlayingView
+from spotify.providers import SpotifyProvider
 
-urlpatterns = [
-    path('now-playing/', NowPlayingView.as_view(), name='now-playing'),
-]
+urlpatterns = default_urlpatterns(SpotifyProvider)
