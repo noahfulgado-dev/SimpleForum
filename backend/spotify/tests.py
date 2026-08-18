@@ -96,6 +96,33 @@ class NowPlayingAPITest(TestCase):
         self.assertEqual(response.data['premium'], True)
         self.assertIsNone(cache.get(f"spotify:premium:u{self.user.id}"))
 
+    def test_absent_product_defaults_to_controls(self):
+        from spotify.views import PREMIUM_UNKNOWN
+        self.auth()
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.side_effect = [
+                mock_spotify(200, {"id": "spotify-uid"}),
+                mock_spotify(200, TRACK_PAYLOAD),
+            ]
+            response = self.client.get('/api/spotify/now-playing/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['premium'], True)
+        self.assertEqual(
+            cache.get(f"spotify:premium:u{self.user.id}"), PREMIUM_UNKNOWN
+        )
+
+    def test_free_product_hides_controls(self):
+        self.auth()
+        with mock.patch('spotify.views.requests.request') as mock_request:
+            mock_request.side_effect = [
+                mock_spotify(200, {"product": "free"}),
+                mock_spotify(200, TRACK_PAYLOAD),
+            ]
+            response = self.client.get('/api/spotify/now-playing/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['premium'], False)
+        self.assertEqual(cache.get(f"spotify:premium:u{self.user.id}"), False)
+
     def test_playing_payload(self):
         self.auth()
         with mock.patch('spotify.views.requests.request') as mock_request:
@@ -311,6 +338,7 @@ class SpotifyCallbackTest(TestCase):
         from spotify.views import STATE_SALT
         from django.core.signing import dumps as signing_dumps
         self.state = signing_dumps({'uid': self.user.id}, salt=STATE_SALT)
+        cache.clear()
 
     def _patch_exchange(self, token_data):
         return mock.patch(
@@ -344,7 +372,7 @@ class SpotifyCallbackTest(TestCase):
         self.assertEqual(token.token, 'access-token')
         self.assertEqual(token.token_secret, 'refresh-token')
         self.assertEqual(token.app, self.app)
-        self.assertEqual(cache.get(f"spotify:premium:u{self.user.id}"), False)
+        self.assertIsNone(cache.get(f"spotify:premium:u{self.user.id}"))
 
     def test_callback_requires_spotify_app(self):
         self.app.delete()
@@ -576,6 +604,98 @@ class SpotifyControlTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.token.refresh_from_db()
         self.assertEqual(self.token.token, 'new-access')
+
+
+class SpotifyStatusTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='statususer', password='testpass123')
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+        self.app = SocialApp.objects.create(
+            provider='spotify', name='Spotify', client_id='test-cid', secret='test-secret'
+        )
+        self.app.sites.add(Site.objects.get_current())
+        self.account = SocialAccount.objects.create(
+            user=self.user, provider='spotify', uid='spotify-uid'
+        )
+        SocialToken.objects.create(
+            account=self.account, app=self.app, token='access-token', token_secret='refresh-token'
+        )
+        cache.clear()
+
+    def auth(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+
+    def test_requires_authentication(self):
+        response = self.client.get('/api/spotify/status/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_connected_with_premium_from_cache(self):
+        cache.set(f"spotify:premium:u{self.user.id}", True, 86400)
+        self.auth()
+        response = self.client.get('/api/spotify/status/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"connected": True, "premium": True})
+
+    def test_connected_without_premium_known(self):
+        self.auth()
+        response = self.client.get('/api/spotify/status/')
+        self.assertEqual(response.data, {"connected": True, "premium": None})
+
+    def test_not_connected(self):
+        self.user.socialaccount_set.all().delete()
+        self.auth()
+        response = self.client.get('/api/spotify/status/')
+        self.assertEqual(response.data, {"connected": False, "premium": None})
+
+
+class SpotifyDisconnectTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='discuser', password='testpass123')
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+        self.app = SocialApp.objects.create(
+            provider='spotify', name='Spotify', client_id='test-cid', secret='test-secret'
+        )
+        self.app.sites.add(Site.objects.get_current())
+        self.account = SocialAccount.objects.create(
+            user=self.user, provider='spotify', uid='spotify-uid'
+        )
+        SocialToken.objects.create(
+            account=self.account, app=self.app, token='access-token', token_secret='refresh-token'
+        )
+        cache.set(f"spotify:now_playing:u{self.user.id}", {"connected": True}, 20)
+        cache.set(f"spotify:premium:u{self.user.id}", True, 86400)
+
+    def auth(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+
+    def test_requires_authentication(self):
+        response = self.client.post('/api/spotify/disconnect/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_disconnect_removes_account_and_caches(self):
+        self.auth()
+        response = self.client.post('/api/spotify/disconnect/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"disconnected": True})
+        self.assertFalse(
+            SocialAccount.objects.filter(user=self.user, provider='spotify').exists()
+        )
+        self.assertFalse(
+            SocialToken.objects.filter(account__user=self.user, account__provider='spotify').exists()
+        )
+        self.assertIsNone(cache.get(f"spotify:now_playing:u{self.user.id}"))
+        self.assertIsNone(cache.get(f"spotify:premium:u{self.user.id}"))
+
+    def test_disconnect_is_idempotent(self):
+        self.user.socialaccount_set.all().delete()
+        self.auth()
+        response = self.client.post('/api/spotify/disconnect/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"disconnected": True})
 
 
 class SocialAccountAdapterRedirectTest(TestCase):
