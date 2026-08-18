@@ -22,13 +22,14 @@ SPOTIFY_PLAYER_URL = "https://api.spotify.com/v1/me/player"
 SPOTIFY_ME_URL = "https://api.spotify.com/v1/me"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_AUTHORIZE_URL = "https://accounts.spotify.com/authorize"
-SPOTIFY_SCOPE = "user-read-currently-playing user-read-playback-state user-modify-playback-state"
+SPOTIFY_SCOPE = "user-read-currently-playing user-read-playback-state user-modify-playback-state user-read-private"
 STATE_SALT = "spotify-connect-state"
 STATE_MAX_AGE = 600
 CACHE_PREFIX = "spotify:now_playing:u"
 CACHE_TTL = 20
 PREMIUM_KEY = "spotify:premium:u{}"
 PREMIUM_TTL = 86400
+PREMIUM_UNKNOWN = "unknown"
 
 
 def _get_token(user):
@@ -116,9 +117,19 @@ def _fetch_now_playing(token):
     return _build_payload(resp.json())
 
 
+def _product_is_premium(product):
+    if product is None:
+        return None
+    if product in ("free", "open"):
+        return False
+    return True
+
+
 def _get_premium(user, token):
     key = PREMIUM_KEY.format(user.id)
     value = cache.get(key)
+    if value == PREMIUM_UNKNOWN:
+        return None
     if value is not None:
         return value
     try:
@@ -127,8 +138,8 @@ def _get_premium(user, token):
         return None
     if resp.status_code != 200:
         return None
-    value = resp.json().get("product") == "premium"
-    cache.set(key, value, PREMIUM_TTL)
+    value = _product_is_premium(resp.json().get("product"))
+    cache.set(key, PREMIUM_UNKNOWN if value is None else value, PREMIUM_TTL)
     return value
 
 
@@ -253,11 +264,11 @@ class SpotifyCallbackView(APIView):
         profile = _fetch_profile(access_token)
         if profile is None:
             return Response({"detail": "Failed to fetch Spotify profile."}, status=400)
-        cache.set(
-            PREMIUM_KEY.format(user.id),
-            profile.get("product") == "premium",
-            PREMIUM_TTL,
-        )
+        product_premium = _product_is_premium(profile.get("product"))
+        if product_premium is not None:
+            cache.set(
+                PREMIUM_KEY.format(user.id), product_premium, PREMIUM_TTL
+            )
 
         account, _ = SocialAccount.objects.get_or_create(
             user=user, provider="spotify", uid=profile["id"]
@@ -373,6 +384,29 @@ class SpotifyControlView(APIView):
             {"detail": f"Spotify error {resp.status_code}.", "code": f"spotify_error_{resp.status_code}"},
             status=503,
         )
+
+
+class SpotifyStatusView(APIView):
+    """Lightweight connection status for settings; never hits the Spotify API."""
+
+    def get(self, request):
+        token = _get_token(request.user)
+        connected = token is not None
+        premium = (
+            cache.get(PREMIUM_KEY.format(request.user.id)) if connected else None
+        )
+        return Response({"connected": connected, "premium": premium})
+
+
+class SpotifyDisconnectView(APIView):
+    """Unlink the user's Spotify account and clear related caches."""
+
+    def post(self, request):
+        user = request.user
+        SocialAccount.objects.filter(user=user, provider="spotify").delete()
+        cache.delete(f"{CACHE_PREFIX}{user.id}")
+        cache.delete(PREMIUM_KEY.format(user.id))
+        return Response({"disconnected": True})
 
 
 def _exchange_code(app, code, redirect_uri):
